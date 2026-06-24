@@ -2,6 +2,7 @@
 import { mdiBackburger, mdiBellOutline, mdiForwardburger, mdiMenu } from '@mdi/js'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { filterNavigationByPermissions } from '@/auth/permissions.js'
 import { menuAsideMain, menuAsideBottom } from '@/menuAside.js'
 import menuNavBar from '@/menuNavBar.js'
 import { useDarkModeStore } from '@/stores/darkMode.js'
@@ -26,6 +27,9 @@ const isNotificationsOpen = ref(false)
 
 const routeTitle = computed(() => route.meta?.title ?? 'Dashboard')
 const routeSection = computed(() => route.meta?.section ?? 'MaintOps')
+const filteredMenuAsideMain = computed(() =>
+  filterNavigationByPermissions(menuAsideMain, authStore.roles),
+)
 
 const closeAside = () => {
   isAsideMobileExpanded.value = false
@@ -105,7 +109,7 @@ const menuClick = async (event, item) => {
       <AsideMenu
         :is-aside-mobile-expanded="isAsideMobileExpanded"
         :is-aside-lg-active="isAsideLgActive"
-        :menu="menuAsideMain"
+        :menu="filteredMenuAsideMain"
         :menu-bottom="menuAsideBottom"
         @menu-click="menuClick"
         @aside-lg-close-click="closeAside"

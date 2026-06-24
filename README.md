@@ -14,6 +14,7 @@ This repository is intentionally documented as an engineering portfolio piece. T
 - Clear separation between visual shell, routing, shared state, and reusable components.
 - API configuration through environment variables instead of hardcoded service URLs.
 - Frontend UX designed around backend-owned authorization, keeping Laravel as the security boundary.
+- Role-aware navigation and action availability that mirrors backend policies for a clearer console UX.
 
 ## Why Admin One
 
@@ -37,6 +38,7 @@ The current bootstrap includes:
 - Query helpers for filters, search, page, and pagination payloads.
 - JSDoc contracts for API responses, pagination, roles, users, and normalized errors.
 - Login, logout, `/auth/me`, Pinia session hydration, private route guards, and non-interactive role blocking.
+- Frontend permission matrices for routes, CRUD actions, assignable roles, audit access, Analytics visibility, and order status actions.
 - Docker and Docker Compose files for local execution.
 - `.env.example` with `VITE_API_BASE_URL`.
 - English and Spanish README documentation.
@@ -50,6 +52,7 @@ The current structure is compact and separates reusable UI primitives, layout sh
 ```text
 src/
   api/         Axios client, error normalization, query helpers, and API exports.
+  auth/        Role permission matrices and frontend UX helpers.
   components/  Reusable UI primitives and layout pieces.
   components/ui/  MaintOps-specific page, table, badge, dropdown, and empty-state components.
   config/      Runtime API configuration derived from Vite environment variables.
@@ -69,6 +72,8 @@ This structure keeps the bootstrap easy to inspect: layout behavior lives in `la
 The frontend reads its API base URL from `VITE_API_BASE_URL`. That keeps the web app portable across local, Docker, and deployed environments.
 
 Authorization-sensitive behavior belongs to the backend. The frontend can improve usability by hiding unavailable routes and actions, but it does not replace backend policies or validation.
+
+The frontend permission layer mirrors backend intent for route visibility, create/update/delete actions, assignable roles, audit access, Analytics visibility, and order/order-item status actions. That keeps the console role-aware while preserving the API as the source of truth.
 
 ### Interface Language
 

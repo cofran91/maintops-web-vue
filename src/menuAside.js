@@ -7,12 +7,14 @@ import {
   mdiTable,
   mdiViewList,
 } from '@mdi/js'
+import { ROUTE_KEYS } from '@/auth/permissions.js'
 
 export const menuAsideMain = [
   {
     to: '/dashboard',
     icon: mdiMonitor,
     label: 'Dashboard',
+    permissionKey: ROUTE_KEYS.DASHBOARD,
   },
   {
     label: 'Operations',
@@ -21,18 +23,22 @@ export const menuAsideMain = [
       {
         to: '/operations/users',
         label: 'Users',
+        permissionKey: ROUTE_KEYS.USERS,
       },
       {
         to: '/operations/owners',
         label: 'Owners',
+        permissionKey: ROUTE_KEYS.OWNERS,
       },
       {
         to: '/operations/workshops',
         label: 'Workshops',
+        permissionKey: ROUTE_KEYS.WORKSHOPS,
       },
       {
         to: '/operations/vehicles',
         label: 'Vehicles',
+        permissionKey: ROUTE_KEYS.VEHICLES,
       },
     ],
   },
@@ -43,10 +49,12 @@ export const menuAsideMain = [
       {
         to: '/maintenance/tasks',
         label: 'Tasks',
+        permissionKey: ROUTE_KEYS.MAINTENANCE_TASKS,
       },
       {
         to: '/maintenance/plans',
         label: 'Plans',
+        permissionKey: ROUTE_KEYS.MAINTENANCE_PLANS,
       },
     ],
   },
@@ -57,19 +65,23 @@ export const menuAsideMain = [
       {
         to: '/orders',
         label: 'Orders',
+        permissionKey: ROUTE_KEYS.ORDERS,
       },
       {
         to: '/orders/new',
         label: 'New order',
         icon: mdiSquareEditOutline,
+        permissionKey: ROUTE_KEYS.ORDER_CREATE,
       },
       {
         to: '/orders/detail',
         label: 'Order detail',
+        permissionKey: ROUTE_KEYS.ORDER_DETAIL,
       },
       {
         to: '/orders/items',
         label: 'Order items',
+        permissionKey: ROUTE_KEYS.ORDER_ITEMS,
       },
     ],
   },
@@ -80,6 +92,7 @@ export const menuAsideMain = [
       {
         to: '/access/audit',
         label: 'Audit log',
+        permissionKey: ROUTE_KEYS.AUDIT_LOG,
       },
     ],
   },

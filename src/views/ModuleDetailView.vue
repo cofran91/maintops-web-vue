@@ -2,17 +2,34 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { mdiAlertCircle, mdiSquareEditOutline, mdiTable } from '@mdi/js'
+import {
+  ORDER_ITEM_STATUS_LABELS,
+  ORDER_STATUS_LABELS,
+  canUpdateForAnyRole,
+  getAllowedOrderItemStatusActions,
+  getAllowedOrderStatusActions,
+} from '@/auth/permissions.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppDataTable from '@/components/ui/AppDataTable.vue'
 import AppPage from '@/components/ui/AppPage.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import CardBox from '@/components/CardBox.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
+import { useAuthStore } from '@/stores/auth.js'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 const title = computed(() => route.meta.title ?? 'Record detail')
 const subtitle = computed(() => route.meta.subtitle ?? 'Review the selected operational record.')
+const resource = computed(() => route.meta.resource)
+const canUpdateRecord = computed(() =>
+  Boolean(resource.value && canUpdateForAnyRole(authStore.roles, resource.value)),
+)
+const allowedOrderStatusActions = computed(() => getAllowedOrderStatusActions(authStore.roles))
+const allowedOrderItemStatusActions = computed(() =>
+  getAllowedOrderItemStatusActions(authStore.roles),
+)
 
 const detailRows = [
   { id: 'IT-1001', task: 'Initial inspection', assignee: 'Workshop team', status: 'Ready' },
@@ -36,6 +53,9 @@ const statusColor = (status) => {
 
   return colors[status] ?? 'neutral'
 }
+
+const orderStatusLabel = (status) => ORDER_STATUS_LABELS[status] ?? status
+const orderItemStatusLabel = (status) => ORDER_ITEM_STATUS_LABELS[status] ?? status
 </script>
 
 <template>
@@ -47,7 +67,13 @@ const statusColor = (status) => {
       :icon="mdiTable"
     >
       <template #actions>
-        <BaseButton to="/orders/new" color="info" :icon="mdiSquareEditOutline" label="Edit order" />
+        <BaseButton
+          :to="canUpdateRecord ? '/orders/new' : null"
+          color="info"
+          :icon="mdiSquareEditOutline"
+          label="Edit order"
+          :disabled="!canUpdateRecord"
+        />
         <BaseButton to="/orders" color="whiteDark" label="Back to list" />
       </template>
 
@@ -101,6 +127,44 @@ const statusColor = (status) => {
             <p class="mt-4 text-sm text-gray-500 dark:text-slate-400">
               Available actions depend on the assigned role and workshop responsibility.
             </p>
+            <div class="mt-4 space-y-4">
+              <div>
+                <p class="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-slate-400">
+                  Order status
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <AppBadge
+                    v-for="action in allowedOrderStatusActions"
+                    :key="action"
+                    :label="orderStatusLabel(action)"
+                    color="info"
+                  />
+                  <AppBadge
+                    v-if="allowedOrderStatusActions.length === 0"
+                    label="Read only"
+                    color="neutral"
+                  />
+                </div>
+              </div>
+              <div>
+                <p class="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-slate-400">
+                  Order items
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <AppBadge
+                    v-for="action in allowedOrderItemStatusActions"
+                    :key="action"
+                    :label="orderItemStatusLabel(action)"
+                    color="success"
+                  />
+                  <AppBadge
+                    v-if="allowedOrderItemStatusActions.length === 0"
+                    label="Read only"
+                    color="neutral"
+                  />
+                </div>
+              </div>
+            </div>
           </CardBox>
 
           <CardBox>

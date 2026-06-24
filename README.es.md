@@ -14,6 +14,7 @@ Este repositorio está documentado intencionalmente como pieza de portafolio de 
 - Separación clara entre shell visual, rutas, estado compartido y componentes reutilizables.
 - Configuración de API mediante variables de entorno en vez de URLs de servicio fijas.
 - UX frontend diseñada alrededor de autorización controlada por backend, manteniendo Laravel como frontera de seguridad.
+- Navegación y disponibilidad de acciones según rol, alineadas con las policies backend para una UX más clara.
 
 ## Por Qué Admin One
 
@@ -37,6 +38,7 @@ El bootstrap actual incluye:
 - Helpers de consulta para filtros, búsqueda, página y payloads de paginación.
 - Contratos JSDoc para respuestas de API, paginación, roles, usuarios y errores normalizados.
 - Login, logout, `/auth/me`, hidratación de sesión con Pinia, guards de rutas privadas y bloqueo de roles no interactivos.
+- Matrices frontend de permisos para rutas, acciones CRUD, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes.
 - Archivos Docker y Docker Compose para ejecución local.
 - `.env.example` con `VITE_API_BASE_URL`.
 - Documentación README en inglés y español.
@@ -50,6 +52,7 @@ La estructura actual es compacta y separa primitivas UI reutilizables, shells de
 ```text
 src/
   api/         Cliente Axios, normalización de errores, helpers de consulta y exports de API.
+  auth/        Matrices de permisos por rol y helpers de UX frontend.
   components/  Primitivas UI reutilizables y piezas de layout.
   components/ui/  Componentes MaintOps para páginas, tablas, badges, dropdowns y estados vacíos.
   config/      Configuración runtime de API derivada de variables de entorno de Vite.
@@ -69,6 +72,8 @@ Esta estructura mantiene el bootstrap fácil de revisar: el comportamiento de la
 El frontend lee la URL base de API desde `VITE_API_BASE_URL`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
 
 El comportamiento sensible a autorización pertenece al backend. El frontend puede mejorar la usabilidad ocultando rutas y acciones no disponibles, pero no reemplaza políticas ni validaciones del backend.
+
+La capa de permisos frontend refleja la intención del backend para visibilidad de rutas, acciones de crear/actualizar/eliminar, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes e ítems. Esto mantiene la consola consciente del rol sin mover la fuente de verdad fuera de la API.
 
 ### Idioma De La Interfaz
 

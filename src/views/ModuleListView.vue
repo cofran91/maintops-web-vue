@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { mdiTable } from '@mdi/js'
+import { canCreateForAnyRole } from '@/auth/permissions.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppDataTable from '@/components/ui/AppDataTable.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
@@ -11,8 +12,10 @@ import CardBox from '@/components/CardBox.vue'
 import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
+import { useAuthStore } from '@/stores/auth.js'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 const search = ref('')
 const status = ref('All')
@@ -23,6 +26,10 @@ const section = computed(() => route.meta.section ?? 'MaintOps')
 const isEmpty = computed(() => route.meta.isEmpty === true)
 const createTo = computed(() => route.meta.createTo)
 const detailTo = computed(() => route.meta.detailTo)
+const resource = computed(() => route.meta.resource)
+const canCreateRecord = computed(() =>
+  Boolean(createTo.value && resource.value && canCreateForAnyRole(authStore.roles, resource.value)),
+)
 
 const columns = [
   { key: 'id', label: 'ID' },
@@ -87,10 +94,10 @@ const statusColor = (value) => {
           ]"
         />
         <BaseButton
-          :to="createTo || null"
+          :to="canCreateRecord ? createTo : null"
           color="info"
           label="New record"
-          :disabled="!createTo"
+          :disabled="!canCreateRecord"
         />
       </template>
 
