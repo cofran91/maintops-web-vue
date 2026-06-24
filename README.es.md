@@ -36,6 +36,7 @@ El bootstrap actual incluye:
 - Cliente Axios compartido con inyección de token Bearer y normalización de errores estilo Laravel.
 - Helpers de consulta para filtros, búsqueda, página y payloads de paginación.
 - Contratos JSDoc para respuestas de API, paginación, roles, usuarios y errores normalizados.
+- Login, logout, `/auth/me`, hidratación de sesión con Pinia, guards de rutas privadas y bloqueo de roles no interactivos.
 - Archivos Docker y Docker Compose para ejecución local.
 - `.env.example` con `VITE_API_BASE_URL`.
 - Documentación README en inglés y español.
@@ -56,6 +57,7 @@ src/
   layouts/     Shells autenticado e invitado.
   router/      Definiciones de rutas de la consola.
   stores/      Estado compartido con Pinia.
+  modules/auth/  Servicio de autenticación y vista de login.
   types/       Contratos JSDoc de dominio y API.
   views/       Vistas de página.
 ```

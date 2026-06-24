@@ -15,15 +15,15 @@ const title = computed(() => route.meta.title ?? 'Record detail')
 const subtitle = computed(() => route.meta.subtitle ?? 'Review the selected operational record.')
 
 const detailRows = [
-  { id: 'IT-1001', task: 'Initial inspection', owner: 'Workshop team', status: 'Ready' },
-  { id: 'IT-1002', task: 'Parts approval', owner: 'Advisor', status: 'Pending' },
-  { id: 'IT-1003', task: 'Technician assignment', owner: 'Operations', status: 'Scheduled' },
+  { id: 'IT-1001', task: 'Initial inspection', assignee: 'Workshop team', status: 'Ready' },
+  { id: 'IT-1002', task: 'Parts approval', assignee: 'Advisor', status: 'Pending' },
+  { id: 'IT-1003', task: 'Technician assignment', assignee: 'Operations', status: 'Scheduled' },
 ]
 
 const columns = [
   { key: 'id', label: 'ID' },
   { key: 'task', label: 'Task' },
-  { key: 'owner', label: 'Owner' },
+  { key: 'assignee', label: 'Assignee' },
   { key: 'status', label: 'Status' },
 ]
 

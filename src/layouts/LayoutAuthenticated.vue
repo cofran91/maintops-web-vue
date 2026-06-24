@@ -1,7 +1,7 @@
 <script setup>
 import { mdiBackburger, mdiBellOutline, mdiForwardburger, mdiMenu } from '@mdi/js'
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { menuAsideMain, menuAsideBottom } from '@/menuAside.js'
 import menuNavBar from '@/menuNavBar.js'
 import { useDarkModeStore } from '@/stores/darkMode.js'
@@ -10,12 +10,15 @@ import NavBar from '@/components/NavBar.vue'
 import NavBarItemPlain from '@/components/NavBarItemPlain.vue'
 import AsideMenu from '@/components/AsideMenu.vue'
 import FooterBar from '@/components/FooterBar.vue'
+import { useAuthStore } from '@/stores/auth.js'
 
 const layoutAsidePadding = 'xl:pl-60'
 
 const darkModeStore = useDarkModeStore()
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 
 const isAsideMobileExpanded = ref(false)
 const isAsideLgActive = ref(false)
@@ -34,9 +37,15 @@ watch(() => route.fullPath, () => {
   isNotificationsOpen.value = false
 })
 
-const menuClick = (event, item) => {
+const menuClick = async (event, item) => {
   if (item.isToggleLightDark) {
     darkModeStore.set(null, true)
+  }
+
+  if (item.isLogout) {
+    event.preventDefault()
+    await authStore.logout()
+    await router.replace('/login')
   }
 }
 </script>

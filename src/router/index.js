@@ -3,6 +3,8 @@ import Home from '@/views/HomeView.vue'
 import ModuleDetailView from '@/views/ModuleDetailView.vue'
 import ModuleFormView from '@/views/ModuleFormView.vue'
 import ModuleListView from '@/views/ModuleListView.vue'
+import LoginView from '@/modules/auth/views/LoginView.vue'
+import { useAuthStore } from '@/stores/auth.js'
 
 const listRoute = (path, title, section, subtitle, options = {}) => ({
   meta: {
@@ -20,6 +22,16 @@ const routes = [
   {
     path: '/',
     redirect: '/dashboard',
+  },
+  {
+    meta: {
+      title: 'Login',
+      public: true,
+      guestOnly: true,
+    },
+    path: '/login',
+    name: 'login',
+    component: LoginView,
   },
   {
     meta: {
@@ -109,6 +121,43 @@ const router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     return savedPosition || { top: 0 }
   },
+})
+
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore()
+
+  authStore.initializeSession()
+
+  const isPublicRoute = to.matched.some((route) => route.meta.public)
+  const isGuestOnlyRoute = to.matched.some((route) => route.meta.guestOnly)
+
+  if (isPublicRoute && isGuestOnlyRoute && authStore.isAuthenticated) {
+    return { name: 'dashboard' }
+  }
+
+  if (isPublicRoute) {
+    return true
+  }
+
+  if (!authStore.isAuthenticated && authStore.token) {
+    try {
+      await authStore.fetchMe()
+    } catch {
+      return {
+        name: 'login',
+        query: { redirect: to.fullPath },
+      }
+    }
+  }
+
+  if (!authStore.isAuthenticated) {
+    return {
+      name: 'login',
+      query: { redirect: to.fullPath },
+    }
+  }
+
+  return true
 })
 
 export default router

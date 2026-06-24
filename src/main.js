@@ -3,14 +3,21 @@ import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
+import { useAuthStore } from '@/stores/auth.js'
 
 import './css/main.css'
 
 // Init Pinia
 const pinia = createPinia()
 
+const app = createApp(App)
+
 // Create Vue app
-createApp(App).use(router).use(pinia).mount('#app')
+app.use(pinia)
+
+useAuthStore().initializeSession()
+
+app.use(router).mount('#app')
 
 // Dark mode
 // Uncomment, if you'd like to restore persisted darkMode setting, or use `prefers-color-scheme: dark`.

@@ -1,6 +1,7 @@
 import {
   mdiAccountMultiple,
   mdiCogOutline,
+  mdiLogout,
   mdiMonitor,
   mdiSquareEditOutline,
   mdiTable,
@@ -84,4 +85,11 @@ export const menuAsideMain = [
   },
 ]
 
-export const menuAsideBottom = []
+export const menuAsideBottom = [
+  {
+    label: 'Sign out',
+    icon: mdiLogout,
+    color: 'info',
+    isLogout: true,
+  },
+]
