@@ -23,6 +23,8 @@ const emit = defineEmits(['cancel'])
         color="whiteDark"
         small
         rounded-full
+        title="Close"
+        aria-label="Close"
         @click.prevent="emit('cancel')"
       />
     </CardBoxComponentTitle>

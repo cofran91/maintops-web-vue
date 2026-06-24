@@ -21,6 +21,12 @@ const props = defineProps({
     type: String,
     default: 'Done',
   },
+  buttonIcon: String,
+  cancelIcon: String,
+  cancelLabel: {
+    type: String,
+    default: 'Cancel',
+  },
   hasCustomLayout: Boolean,
   hasCancel: Boolean,
   isForm: Boolean,
@@ -83,14 +89,26 @@ onUnmounted(() => {
         <CardBoxComponentFooter>
           <BaseButtons>
             <BaseButton
-              :label="buttonLabel"
+              :label="buttonIcon ? null : buttonLabel"
+              :icon="buttonIcon"
               :color="button"
+              :title="buttonLabel"
+              :aria-label="buttonLabel"
               @click="isForm ? null : confirm()"
               :type="isForm ? 'submit' : 'button'"
               :disabled="isProcessing"
               :class="{ 'opacity-25': isProcessing }"
             />
-            <BaseButton v-if="hasCancel" label="Cancel" :color="button" outline @click="cancel" />
+            <BaseButton
+              v-if="hasCancel"
+              :label="cancelIcon ? null : cancelLabel"
+              :icon="cancelIcon"
+              :color="button"
+              :title="cancelLabel"
+              :aria-label="cancelLabel"
+              outline
+              @click="cancel"
+            />
           </BaseButtons>
         </CardBoxComponentFooter>
       </template>

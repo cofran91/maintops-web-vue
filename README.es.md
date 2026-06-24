@@ -39,6 +39,7 @@ El bootstrap actual incluye:
 - Contratos JSDoc para respuestas de API, paginación, roles, usuarios y errores normalizados.
 - Login, logout, `/auth/me`, hidratación de sesión con Pinia, guards de rutas privadas y bloqueo de roles no interactivos.
 - Matrices frontend de permisos para rutas, acciones CRUD, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes.
+- Módulo de usuarios con servicio HTTP, filtros, paginación, detalle, formularios, acciones según rol y búsqueda paginada de talleres.
 - Archivos Docker y Docker Compose para ejecución local.
 - `.env.example` con `VITE_API_BASE_URL`.
 - Documentación README en inglés y español.
@@ -61,6 +62,7 @@ src/
   router/      Definiciones de rutas de la consola.
   stores/      Estado compartido con Pinia.
   modules/auth/  Servicio de autenticación y vista de login.
+  modules/users/  Servicio de usuarios, listado, detalle y formularios.
   types/       Contratos JSDoc de dominio y API.
   views/       Vistas de página.
 ```

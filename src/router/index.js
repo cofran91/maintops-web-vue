@@ -3,8 +3,17 @@ import Home from '@/views/HomeView.vue'
 import ModuleDetailView from '@/views/ModuleDetailView.vue'
 import ModuleFormView from '@/views/ModuleFormView.vue'
 import ModuleListView from '@/views/ModuleListView.vue'
-import { ROUTE_KEYS, RESOURCES, canAccessAnyRoute } from '@/auth/permissions.js'
+import {
+  RESOURCE_ACTIONS,
+  ROUTE_KEYS,
+  RESOURCES,
+  canAccessAnyRoute,
+  canUseResourceWithAnyRole,
+} from '@/auth/permissions.js'
 import LoginView from '@/modules/auth/views/LoginView.vue'
+import UserDetailView from '@/modules/users/views/UserDetailView.vue'
+import UserFormView from '@/modules/users/views/UserFormView.vue'
+import UsersListView from '@/modules/users/views/UsersListView.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
 const listRoute = (path, title, section, subtitle, options = {}) => ({
@@ -43,16 +52,58 @@ const routes = [
     name: 'dashboard',
     component: Home,
   },
-  listRoute(
-    '/operations/users',
-    'Users',
-    'Operations',
-    'Manage the people who operate and administer MaintOps.',
-    {
+  {
+    meta: {
+      title: 'Users',
+      section: 'Operations',
+      subtitle: 'Manage the people who operate and administer MaintOps.',
       permissionKey: ROUTE_KEYS.USERS,
       resource: RESOURCES.USERS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
     },
-  ),
+    path: '/operations/users',
+    name: 'operations-users',
+    component: UsersListView,
+  },
+  {
+    meta: {
+      title: 'Create user',
+      section: 'Operations',
+      subtitle: 'Create an operational console user and assign a role.',
+      permissionKey: ROUTE_KEYS.USERS,
+      resource: RESOURCES.USERS,
+      resourceAction: RESOURCE_ACTIONS.CREATE,
+    },
+    path: '/operations/users/new',
+    name: 'operations-users-new',
+    component: UserFormView,
+  },
+  {
+    meta: {
+      title: 'User detail',
+      section: 'Operations',
+      subtitle: 'Review role, contact, and workshop assignment details.',
+      permissionKey: ROUTE_KEYS.USERS,
+      resource: RESOURCES.USERS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/operations/users/:id',
+    name: 'operations-users-detail',
+    component: UserDetailView,
+  },
+  {
+    meta: {
+      title: 'Edit user',
+      section: 'Operations',
+      subtitle: 'Update operational profile, role, status, and assignment fields.',
+      permissionKey: ROUTE_KEYS.USERS,
+      resource: RESOURCES.USERS,
+      resourceAction: RESOURCE_ACTIONS.UPDATE,
+    },
+    path: '/operations/users/:id/edit',
+    name: 'operations-users-edit',
+    component: UserFormView,
+  },
   listRoute(
     '/operations/owners',
     'Owners',
@@ -201,6 +252,25 @@ router.beforeEach(async (to) => {
     .at(-1)
 
   if (permissionKey && !canAccessAnyRoute(authStore.roles, permissionKey)) {
+    return { name: 'dashboard' }
+  }
+
+  const restrictedResourceRoute = to.matched
+    .map((matchedRoute) => ({
+      action: matchedRoute.meta.resourceAction,
+      resource: matchedRoute.meta.resource,
+    }))
+    .filter((meta) => meta.action && meta.resource)
+    .at(-1)
+
+  if (
+    restrictedResourceRoute &&
+    !canUseResourceWithAnyRole(
+      authStore.roles,
+      restrictedResourceRoute.action,
+      restrictedResourceRoute.resource,
+    )
+  ) {
     return { name: 'dashboard' }
   }
 

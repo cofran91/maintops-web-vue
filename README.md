@@ -39,6 +39,7 @@ The current bootstrap includes:
 - JSDoc contracts for API responses, pagination, roles, users, and normalized errors.
 - Login, logout, `/auth/me`, Pinia session hydration, private route guards, and non-interactive role blocking.
 - Frontend permission matrices for routes, CRUD actions, assignable roles, audit access, Analytics visibility, and order status actions.
+- Users module with HTTP service, filters, pagination, detail view, create form, edit form, role-aware actions, and searchable paginated workshop lookup.
 - Docker and Docker Compose files for local execution.
 - `.env.example` with `VITE_API_BASE_URL`.
 - English and Spanish README documentation.
@@ -61,6 +62,7 @@ src/
   router/      Console route definitions.
   stores/      Shared Pinia state.
   modules/auth/  Authentication service and login view.
+  modules/users/  User service, list, detail, and form views.
   types/       JSDoc domain and API contracts.
   views/       Page-level views.
 ```
