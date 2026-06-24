@@ -3,6 +3,9 @@ import Home from '@/views/HomeView.vue'
 import ModuleDetailView from '@/views/ModuleDetailView.vue'
 import ModuleFormView from '@/views/ModuleFormView.vue'
 import ModuleListView from '@/views/ModuleListView.vue'
+import MaintenanceTaskDetailView from '@/modules/maintenance-tasks/views/MaintenanceTaskDetailView.vue'
+import MaintenanceTaskFormView from '@/modules/maintenance-tasks/views/MaintenanceTaskFormView.vue'
+import MaintenanceTasksListView from '@/modules/maintenance-tasks/views/MaintenanceTasksListView.vue'
 import OwnerDetailView from '@/modules/owners/views/OwnerDetailView.vue'
 import OwnerFormView from '@/modules/owners/views/OwnerFormView.vue'
 import OwnersListView from '@/modules/owners/views/OwnersListView.vue'
@@ -269,16 +272,58 @@ const routes = [
     name: 'operations-vehicles-edit',
     component: VehicleFormView,
   },
-  listRoute(
-    '/maintenance/tasks',
-    'Maintenance tasks',
-    'Maintenance',
-    'Standardize service tasks used by plans and order items.',
-    {
+  {
+    meta: {
+      title: 'Maintenance tasks',
+      section: 'Maintenance',
+      subtitle: 'Standardize reusable and vehicle-specific service tasks.',
       permissionKey: ROUTE_KEYS.MAINTENANCE_TASKS,
       resource: RESOURCES.MAINTENANCE_TASKS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
     },
-  ),
+    path: '/maintenance/tasks',
+    name: 'maintenance-tasks',
+    component: MaintenanceTasksListView,
+  },
+  {
+    meta: {
+      title: 'Create maintenance task',
+      section: 'Maintenance',
+      subtitle: 'Create a task definition for reusable or vehicle-specific work.',
+      permissionKey: ROUTE_KEYS.MAINTENANCE_TASKS,
+      resource: RESOURCES.MAINTENANCE_TASKS,
+      resourceAction: RESOURCE_ACTIONS.CREATE,
+    },
+    path: '/maintenance/tasks/new',
+    name: 'maintenance-tasks-new',
+    component: MaintenanceTaskFormView,
+  },
+  {
+    meta: {
+      title: 'Maintenance task detail',
+      section: 'Maintenance',
+      subtitle: 'Review task definition, status, scope, and vehicle context.',
+      permissionKey: ROUTE_KEYS.MAINTENANCE_TASKS,
+      resource: RESOURCES.MAINTENANCE_TASKS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/maintenance/tasks/:id',
+    name: 'maintenance-tasks-detail',
+    component: MaintenanceTaskDetailView,
+  },
+  {
+    meta: {
+      title: 'Edit maintenance task',
+      section: 'Maintenance',
+      subtitle: 'Update task definition, reusable scope, vehicle assignment, and estimates.',
+      permissionKey: ROUTE_KEYS.MAINTENANCE_TASKS,
+      resource: RESOURCES.MAINTENANCE_TASKS,
+      resourceAction: RESOURCE_ACTIONS.UPDATE,
+    },
+    path: '/maintenance/tasks/:id/edit',
+    name: 'maintenance-tasks-edit',
+    component: MaintenanceTaskFormView,
+  },
   listRoute(
     '/maintenance/plans',
     'Maintenance plans',
