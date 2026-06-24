@@ -33,6 +33,9 @@ El bootstrap actual incluye:
 - Topbar responsive con títulos contextuales y placeholder de notificaciones.
 - Patrones de layout para dashboard, listado, formulario, detalle y estado vacío.
 - Componentes UI base para páginas, badges, dropdowns, tablas responsive y estados vacíos.
+- Cliente Axios compartido con inyección de token Bearer y normalización de errores estilo Laravel.
+- Helpers de consulta para filtros, búsqueda, página y payloads de paginación.
+- Contratos JSDoc para respuestas de API, paginación, roles, usuarios y errores normalizados.
 - Archivos Docker y Docker Compose para ejecución local.
 - `.env.example` con `VITE_API_BASE_URL`.
 - Documentación README en inglés y español.
@@ -45,12 +48,15 @@ La estructura actual es compacta y separa primitivas UI reutilizables, shells de
 
 ```text
 src/
+  api/         Cliente Axios, normalización de errores, helpers de consulta y exports de API.
   components/  Primitivas UI reutilizables y piezas de layout.
   components/ui/  Componentes MaintOps para páginas, tablas, badges, dropdowns y estados vacíos.
+  config/      Configuración runtime de API derivada de variables de entorno de Vite.
   css/         Punto de entrada de Tailwind y variantes de estilo.
   layouts/     Shells autenticado e invitado.
   router/      Definiciones de rutas de la consola.
   stores/      Estado compartido con Pinia.
+  types/       Contratos JSDoc de dominio y API.
   views/       Vistas de página.
 ```
 

@@ -33,6 +33,9 @@ The current bootstrap includes:
 - Responsive topbar with contextual titles and a notification placeholder.
 - Dashboard, list, form, detail, and empty-state layout patterns.
 - Base UI components for pages, badges, dropdowns, responsive tables, and empty states.
+- Shared Axios client with Bearer token injection and Laravel-style error normalization.
+- Query helpers for filters, search, page, and pagination payloads.
+- JSDoc contracts for API responses, pagination, roles, users, and normalized errors.
 - Docker and Docker Compose files for local execution.
 - `.env.example` with `VITE_API_BASE_URL`.
 - English and Spanish README documentation.
@@ -45,12 +48,15 @@ The current structure is compact and separates reusable UI primitives, layout sh
 
 ```text
 src/
+  api/         Axios client, error normalization, query helpers, and API exports.
   components/  Reusable UI primitives and layout pieces.
   components/ui/  MaintOps-specific page, table, badge, dropdown, and empty-state components.
+  config/      Runtime API configuration derived from Vite environment variables.
   css/         Tailwind entrypoint and style variants.
   layouts/     Authenticated and guest shells.
   router/      Console route definitions.
   stores/      Shared Pinia state.
+  types/       JSDoc domain and API contracts.
   views/       Page-level views.
 ```
 
