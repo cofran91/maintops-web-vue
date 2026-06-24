@@ -17,6 +17,9 @@ import LoginView from '@/modules/auth/views/LoginView.vue'
 import UserDetailView from '@/modules/users/views/UserDetailView.vue'
 import UserFormView from '@/modules/users/views/UserFormView.vue'
 import UsersListView from '@/modules/users/views/UsersListView.vue'
+import VehicleDetailView from '@/modules/vehicles/views/VehicleDetailView.vue'
+import VehicleFormView from '@/modules/vehicles/views/VehicleFormView.vue'
+import VehiclesListView from '@/modules/vehicles/views/VehiclesListView.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
 const listRoute = (path, title, section, subtitle, options = {}) => ({
@@ -169,16 +172,58 @@ const routes = [
       resource: RESOURCES.WORKSHOPS,
     },
   ),
-  listRoute(
-    '/operations/vehicles',
-    'Vehicles',
-    'Operations',
-    'Track fleet and owner vehicles prepared for maintenance workflows.',
-    {
+  {
+    meta: {
+      title: 'Vehicles',
+      section: 'Operations',
+      subtitle: 'Track fleet and owner vehicles prepared for maintenance workflows.',
       permissionKey: ROUTE_KEYS.VEHICLES,
       resource: RESOURCES.VEHICLES,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
     },
-  ),
+    path: '/operations/vehicles',
+    name: 'operations-vehicles',
+    component: VehiclesListView,
+  },
+  {
+    meta: {
+      title: 'Create vehicle',
+      section: 'Operations',
+      subtitle: 'Create a vehicle record attached to an active owner.',
+      permissionKey: ROUTE_KEYS.VEHICLES,
+      resource: RESOURCES.VEHICLES,
+      resourceAction: RESOURCE_ACTIONS.CREATE,
+    },
+    path: '/operations/vehicles/new',
+    name: 'operations-vehicles-new',
+    component: VehicleFormView,
+  },
+  {
+    meta: {
+      title: 'Vehicle detail',
+      section: 'Operations',
+      subtitle: 'Review vehicle identity, owner contact data, and current mileage.',
+      permissionKey: ROUTE_KEYS.VEHICLES,
+      resource: RESOURCES.VEHICLES,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/operations/vehicles/:id',
+    name: 'operations-vehicles-detail',
+    component: VehicleDetailView,
+  },
+  {
+    meta: {
+      title: 'Edit vehicle',
+      section: 'Operations',
+      subtitle: 'Update owner assignment, vehicle identity data, and odometer.',
+      permissionKey: ROUTE_KEYS.VEHICLES,
+      resource: RESOURCES.VEHICLES,
+      resourceAction: RESOURCE_ACTIONS.UPDATE,
+    },
+    path: '/operations/vehicles/:id/edit',
+    name: 'operations-vehicles-edit',
+    component: VehicleFormView,
+  },
   listRoute(
     '/maintenance/tasks',
     'Maintenance tasks',

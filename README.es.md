@@ -41,6 +41,7 @@ El bootstrap actual incluye:
 - Matrices frontend de permisos para rutas, acciones CRUD, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes.
 - Módulo de usuarios con servicio HTTP, filtros, paginación, detalle, formularios, acciones según rol y búsqueda paginada de talleres.
 - Módulo de propietarios con servicio HTTP, filtros por búsqueda y estado, paginación, detalle, formularios y acciones de eliminación según permisos.
+- Módulo de vehículos con servicio HTTP, filtros avanzados, paginación, detalle, formularios, búsqueda paginada de propietarios y acciones de eliminación según permisos.
 - Archivos Docker y Docker Compose para ejecución local.
 - `.env.example` con `VITE_API_BASE_URL`.
 - Documentación README en inglés y español.
@@ -65,6 +66,7 @@ src/
   modules/auth/  Servicio de autenticación y vista de login.
   modules/owners/  Servicio de propietarios, listado, detalle y formularios.
   modules/users/  Servicio de usuarios, listado, detalle y formularios.
+  modules/vehicles/  Servicio de vehículos, listado, detalle y formularios.
   types/       Contratos JSDoc de dominio y API.
   views/       Vistas de página.
 ```
