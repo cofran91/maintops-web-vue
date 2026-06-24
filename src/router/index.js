@@ -20,6 +20,9 @@ import UsersListView from '@/modules/users/views/UsersListView.vue'
 import VehicleDetailView from '@/modules/vehicles/views/VehicleDetailView.vue'
 import VehicleFormView from '@/modules/vehicles/views/VehicleFormView.vue'
 import VehiclesListView from '@/modules/vehicles/views/VehiclesListView.vue'
+import WorkshopDetailView from '@/modules/workshops/views/WorkshopDetailView.vue'
+import WorkshopFormView from '@/modules/workshops/views/WorkshopFormView.vue'
+import WorkshopsListView from '@/modules/workshops/views/WorkshopsListView.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
 const listRoute = (path, title, section, subtitle, options = {}) => ({
@@ -162,16 +165,58 @@ const routes = [
     name: 'operations-owners-edit',
     component: OwnerFormView,
   },
-  listRoute(
-    '/operations/workshops',
-    'Workshops',
-    'Operations',
-    'Organize service locations and workshop administration.',
-    {
+  {
+    meta: {
+      title: 'Workshops',
+      section: 'Operations',
+      subtitle: 'Organize service locations and workshop administration.',
       permissionKey: ROUTE_KEYS.WORKSHOPS,
       resource: RESOURCES.WORKSHOPS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
     },
-  ),
+    path: '/operations/workshops',
+    name: 'operations-workshops',
+    component: WorkshopsListView,
+  },
+  {
+    meta: {
+      title: 'Create workshop',
+      section: 'Operations',
+      subtitle: 'Create a service location with manager, systems, technicians, and schedule.',
+      permissionKey: ROUTE_KEYS.WORKSHOPS,
+      resource: RESOURCES.WORKSHOPS,
+      resourceAction: RESOURCE_ACTIONS.CREATE,
+    },
+    path: '/operations/workshops/new',
+    name: 'operations-workshops-new',
+    component: WorkshopFormView,
+  },
+  {
+    meta: {
+      title: 'Workshop detail',
+      section: 'Operations',
+      subtitle: 'Review manager, systems, technicians, contact data, and schedule.',
+      permissionKey: ROUTE_KEYS.WORKSHOPS,
+      resource: RESOURCES.WORKSHOPS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/operations/workshops/:id',
+    name: 'operations-workshops-detail',
+    component: WorkshopDetailView,
+  },
+  {
+    meta: {
+      title: 'Edit workshop',
+      section: 'Operations',
+      subtitle: 'Update manager, systems, technicians, contact data, and schedule.',
+      permissionKey: ROUTE_KEYS.WORKSHOPS,
+      resource: RESOURCES.WORKSHOPS,
+      resourceAction: RESOURCE_ACTIONS.UPDATE,
+    },
+    path: '/operations/workshops/:id/edit',
+    name: 'operations-workshops-edit',
+    component: WorkshopFormView,
+  },
   {
     meta: {
       title: 'Vehicles',

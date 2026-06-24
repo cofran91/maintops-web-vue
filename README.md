@@ -42,6 +42,7 @@ The current bootstrap includes:
 - Users module with HTTP service, filters, pagination, detail view, create form, edit form, role-aware actions, and searchable paginated workshop lookup.
 - Owners module with HTTP service, search and status filters, pagination, detail view, create form, edit form, and policy-aware delete actions.
 - Vehicles module with HTTP service, advanced filters, pagination, detail view, create form, edit form, owner lookup, and policy-aware delete actions.
+- Workshops module with HTTP service, advanced filters, manager lookup, vehicle systems, technician assignment, weekly schedule, and policy-aware actions.
 - Docker and Docker Compose files for local execution.
 - `.env.example` with `VITE_API_BASE_URL`.
 - English and Spanish README documentation.
@@ -67,6 +68,8 @@ src/
   modules/owners/  Owner service, list, detail, and form views.
   modules/users/  User service, list, detail, and form views.
   modules/vehicles/  Vehicle service, list, detail, and form views.
+  modules/vehicle-systems/  Vehicle system lookup service.
+  modules/workshops/  Workshop service, list, detail, and form views.
   types/       JSDoc domain and API contracts.
   views/       Page-level views.
 ```
