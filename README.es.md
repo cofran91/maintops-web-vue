@@ -44,6 +44,7 @@ El bootstrap actual incluye:
 - Módulo de vehículos con servicio HTTP, filtros avanzados, paginación, detalle, formularios, búsqueda paginada de propietarios y acciones de eliminación según permisos.
 - Módulo de talleres con servicio HTTP, filtros avanzados, búsqueda de administrador, sistemas de vehículo, asignación de técnicos, horario semanal y acciones según permisos.
 - Módulo de tareas de mantenimiento con servicio HTTP, filtros por estado, consulta de sistemas de vehículo, búsqueda paginada de vehículos, alcance reutilizable, restricciones para advisors y acciones según permisos.
+- Módulo de planes de mantenimiento con servicio HTTP, búsqueda paginada de tareas, selección de tareas agrupadas, intervalos recomendados, detalle, filtros y acciones según permisos.
 - Archivos Docker y Docker Compose para ejecución local.
 - `.env.example` con `VITE_API_BASE_URL`.
 - Documentación README en inglés y español.
@@ -66,6 +67,7 @@ src/
   router/      Definiciones de rutas de la consola.
   stores/      Estado compartido con Pinia.
   modules/auth/  Servicio de autenticación y vista de login.
+  modules/maintenance-plans/  Servicio de planes, listado, detalle y formularios.
   modules/maintenance-tasks/  Servicio de tareas, listado, detalle y formularios.
   modules/owners/  Servicio de propietarios, listado, detalle y formularios.
   modules/users/  Servicio de usuarios, listado, detalle y formularios.

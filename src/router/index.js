@@ -3,6 +3,9 @@ import Home from '@/views/HomeView.vue'
 import ModuleDetailView from '@/views/ModuleDetailView.vue'
 import ModuleFormView from '@/views/ModuleFormView.vue'
 import ModuleListView from '@/views/ModuleListView.vue'
+import MaintenancePlanDetailView from '@/modules/maintenance-plans/views/MaintenancePlanDetailView.vue'
+import MaintenancePlanFormView from '@/modules/maintenance-plans/views/MaintenancePlanFormView.vue'
+import MaintenancePlansListView from '@/modules/maintenance-plans/views/MaintenancePlansListView.vue'
 import MaintenanceTaskDetailView from '@/modules/maintenance-tasks/views/MaintenanceTaskDetailView.vue'
 import MaintenanceTaskFormView from '@/modules/maintenance-tasks/views/MaintenanceTaskFormView.vue'
 import MaintenanceTasksListView from '@/modules/maintenance-tasks/views/MaintenanceTasksListView.vue'
@@ -324,16 +327,58 @@ const routes = [
     name: 'maintenance-tasks-edit',
     component: MaintenanceTaskFormView,
   },
-  listRoute(
-    '/maintenance/plans',
-    'Maintenance plans',
-    'Maintenance',
-    'Group maintenance tasks into reusable operational plans.',
-    {
+  {
+    meta: {
+      title: 'Maintenance plans',
+      section: 'Maintenance',
+      subtitle: 'Group maintenance tasks into reusable operational plans.',
       permissionKey: ROUTE_KEYS.MAINTENANCE_PLANS,
       resource: RESOURCES.MAINTENANCE_PLANS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
     },
-  ),
+    path: '/maintenance/plans',
+    name: 'maintenance-plans',
+    component: MaintenancePlansListView,
+  },
+  {
+    meta: {
+      title: 'Create maintenance plan',
+      section: 'Maintenance',
+      subtitle: 'Create a reusable plan from existing maintenance tasks.',
+      permissionKey: ROUTE_KEYS.MAINTENANCE_PLANS,
+      resource: RESOURCES.MAINTENANCE_PLANS,
+      resourceAction: RESOURCE_ACTIONS.CREATE,
+    },
+    path: '/maintenance/plans/new',
+    name: 'maintenance-plans-new',
+    component: MaintenancePlanFormView,
+  },
+  {
+    meta: {
+      title: 'Maintenance plan detail',
+      section: 'Maintenance',
+      subtitle: 'Review grouped tasks, recommended intervals, and availability.',
+      permissionKey: ROUTE_KEYS.MAINTENANCE_PLANS,
+      resource: RESOURCES.MAINTENANCE_PLANS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/maintenance/plans/:id',
+    name: 'maintenance-plans-detail',
+    component: MaintenancePlanDetailView,
+  },
+  {
+    meta: {
+      title: 'Edit maintenance plan',
+      section: 'Maintenance',
+      subtitle: 'Update grouped tasks, recommended intervals, and availability.',
+      permissionKey: ROUTE_KEYS.MAINTENANCE_PLANS,
+      resource: RESOURCES.MAINTENANCE_PLANS,
+      resourceAction: RESOURCE_ACTIONS.UPDATE,
+    },
+    path: '/maintenance/plans/:id/edit',
+    name: 'maintenance-plans-edit',
+    component: MaintenancePlanFormView,
+  },
   listRoute('/orders', 'Orders', 'Orders', 'Coordinate workshop service orders.', {
     permissionKey: ROUTE_KEYS.ORDERS,
     resource: RESOURCES.ORDERS,

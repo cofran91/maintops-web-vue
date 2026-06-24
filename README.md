@@ -44,6 +44,7 @@ The current bootstrap includes:
 - Vehicles module with HTTP service, advanced filters, pagination, detail view, create form, edit form, owner lookup, and policy-aware delete actions.
 - Workshops module with HTTP service, advanced filters, manager lookup, vehicle systems, technician assignment, weekly schedule, and policy-aware actions.
 - Maintenance tasks module with HTTP service, status filters, vehicle-system lookup, vehicle lookup, reusable task scope, advisor restrictions, and policy-aware actions.
+- Maintenance plans module with HTTP service, task lookup, grouped task selection, recommended intervals, detail view, filters, and policy-aware actions.
 - Docker and Docker Compose files for local execution.
 - `.env.example` with `VITE_API_BASE_URL`.
 - English and Spanish README documentation.
@@ -66,6 +67,7 @@ src/
   router/      Console route definitions.
   stores/      Shared Pinia state.
   modules/auth/  Authentication service and login view.
+  modules/maintenance-plans/  Maintenance plan service, list, detail, and form views.
   modules/maintenance-tasks/  Maintenance task service, list, detail, and form views.
   modules/owners/  Owner service, list, detail, and form views.
   modules/users/  User service, list, detail, and form views.

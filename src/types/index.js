@@ -12,6 +12,7 @@ export {
   MAINTENANCE_TASK_STATUS,
   MAINTENANCE_TASK_STATUS_LABELS,
 } from '@/types/maintenanceTask.js'
+export { EMPTY_MAINTENANCE_PLAN } from '@/types/maintenancePlan.js'
 export { EMPTY_OWNER } from '@/types/owner.js'
 export { EMPTY_USER } from '@/types/user.js'
 export { EMPTY_VEHICLE } from '@/types/vehicle.js'
