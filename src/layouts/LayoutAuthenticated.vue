@@ -1,7 +1,7 @@
 <script setup>
-import { mdiForwardburger, mdiBackburger, mdiMenu } from '@mdi/js'
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { mdiBackburger, mdiBellOutline, mdiForwardburger, mdiMenu } from '@mdi/js'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { menuAsideMain, menuAsideBottom } from '@/menuAside.js'
 import menuNavBar from '@/menuNavBar.js'
 import { useDarkModeStore } from '@/stores/darkMode.js'
@@ -15,14 +15,23 @@ const layoutAsidePadding = 'xl:pl-60'
 
 const darkModeStore = useDarkModeStore()
 
-const router = useRouter()
+const route = useRoute()
 
 const isAsideMobileExpanded = ref(false)
 const isAsideLgActive = ref(false)
+const isNotificationsOpen = ref(false)
 
-router.beforeEach(() => {
+const routeTitle = computed(() => route.meta?.title ?? 'Dashboard')
+const routeSection = computed(() => route.meta?.section ?? 'MaintOps')
+
+const closeAside = () => {
   isAsideMobileExpanded.value = false
   isAsideLgActive.value = false
+}
+
+watch(() => route.fullPath, () => {
+  closeAside()
+  isNotificationsOpen.value = false
 })
 
 const menuClick = (event, item) => {
@@ -56,19 +65,41 @@ const menuClick = (event, item) => {
         <NavBarItemPlain display="hidden lg:flex xl:hidden" @click.prevent="isAsideLgActive = true">
           <BaseIcon :path="mdiMenu" size="24" />
         </NavBarItemPlain>
-        <div
-          class="flex items-center px-3 text-sm font-semibold text-gray-700 dark:text-slate-100"
-        >
-          MaintOps Console
+        <div class="flex min-w-0 flex-1 items-center px-3">
+          <div class="min-w-0">
+            <p class="hidden text-xs font-semibold text-blue-600 md:block dark:text-blue-300">
+              {{ routeSection }}
+            </p>
+            <p class="truncate text-sm font-semibold text-gray-700 dark:text-slate-100">
+              {{ routeTitle }}
+            </p>
+          </div>
         </div>
+        <NavBarItemPlain display="flex" @click.prevent="isNotificationsOpen = !isNotificationsOpen">
+          <div class="relative">
+            <BaseIcon :path="mdiBellOutline" size="22" />
+            <span
+              class="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2
+                ring-gray-50 dark:ring-slate-800"
+            />
+          </div>
+        </NavBarItemPlain>
       </NavBar>
+      <div
+        v-if="isNotificationsOpen"
+        class="fixed right-4 top-16 z-50 w-[calc(100vw-2rem)] max-w-sm rounded-md border border-gray-100
+          bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+      >
+        <p class="font-semibold text-gray-900 dark:text-slate-100">No notifications</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-slate-400">No new activity.</p>
+      </div>
       <AsideMenu
         :is-aside-mobile-expanded="isAsideMobileExpanded"
         :is-aside-lg-active="isAsideLgActive"
         :menu="menuAsideMain"
         :menu-bottom="menuAsideBottom"
         @menu-click="menuClick"
-        @aside-lg-close-click="isAsideLgActive = false"
+        @aside-lg-close-click="closeAside"
       />
       <slot />
       <FooterBar />

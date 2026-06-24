@@ -29,8 +29,10 @@ The current bootstrap includes:
 
 - Vue 3, Vite, Tailwind CSS 4, and Pinia.
 - `MaintOps Console` metadata, favicon, title, sidebar, and header branding.
-- A cleaned dashboard base with template demo screens removed.
-- A minimal route set for the dashboard and not-found page.
+- MaintOps navigation groups for operations, maintenance, orders, and access.
+- Responsive topbar with contextual titles and a notification placeholder.
+- Dashboard, list, form, detail, and empty-state layout patterns.
+- Base UI components for pages, badges, dropdowns, responsive tables, and empty states.
 - Docker and Docker Compose files for local execution.
 - `.env.example` with `VITE_API_BASE_URL`.
 - English and Spanish README documentation.
@@ -44,6 +46,7 @@ The current structure is compact and separates reusable UI primitives, layout sh
 ```text
 src/
   components/  Reusable UI primitives and layout pieces.
+  components/ui/  MaintOps-specific page, table, badge, dropdown, and empty-state components.
   css/         Tailwind entrypoint and style variants.
   layouts/     Authenticated and guest shells.
   router/      Console route definitions.
@@ -58,6 +61,10 @@ This structure keeps the bootstrap easy to inspect: layout behavior lives in `la
 The frontend reads its API base URL from `VITE_API_BASE_URL`. That keeps the web app portable across local, Docker, and deployed environments.
 
 Authorization-sensitive behavior belongs to the backend. The frontend can improve usability by hiding unavailable routes and actions, but it does not replace backend policies or validation.
+
+### Interface Language
+
+The administrative panel was intentionally built in English to reflect the language commonly used in international software teams and enterprise applications. Spanish documentation is provided separately so the technical rationale remains accessible in both languages.
 
 ### Docker-First Execution
 

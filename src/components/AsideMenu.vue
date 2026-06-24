@@ -34,5 +34,9 @@ const asideLgCloseClick = (event) => {
     @menu-click="menuClick"
     @aside-lg-close-click="asideLgCloseClick"
   />
-  <OverlayLayer v-if="isAsideLgActive" z-index="z-30" @overlay-click="asideLgCloseClick" />
+  <OverlayLayer
+    v-if="isAsideLgActive || isAsideMobileExpanded"
+    z-index="z-30"
+    @overlay-click="asideLgCloseClick"
+  />
 </template>

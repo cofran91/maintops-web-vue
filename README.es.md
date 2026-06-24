@@ -29,8 +29,10 @@ El bootstrap actual incluye:
 
 - Vue 3, Vite, Tailwind CSS 4 y Pinia.
 - Metadata, favicon, título, sidebar y header con branding `MaintOps Console`.
-- Dashboard base limpio, sin pantallas demo del template.
-- Conjunto mínimo de rutas para dashboard y página no encontrada.
+- Grupos de navegación MaintOps para operaciones, mantenimiento, órdenes y acceso.
+- Topbar responsive con títulos contextuales y placeholder de notificaciones.
+- Patrones de layout para dashboard, listado, formulario, detalle y estado vacío.
+- Componentes UI base para páginas, badges, dropdowns, tablas responsive y estados vacíos.
 - Archivos Docker y Docker Compose para ejecución local.
 - `.env.example` con `VITE_API_BASE_URL`.
 - Documentación README en inglés y español.
@@ -44,6 +46,7 @@ La estructura actual es compacta y separa primitivas UI reutilizables, shells de
 ```text
 src/
   components/  Primitivas UI reutilizables y piezas de layout.
+  components/ui/  Componentes MaintOps para páginas, tablas, badges, dropdowns y estados vacíos.
   css/         Punto de entrada de Tailwind y variantes de estilo.
   layouts/     Shells autenticado e invitado.
   router/      Definiciones de rutas de la consola.
@@ -58,6 +61,10 @@ Esta estructura mantiene el bootstrap fácil de revisar: el comportamiento de la
 El frontend lee la URL base de API desde `VITE_API_BASE_URL`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
 
 El comportamiento sensible a autorización pertenece al backend. El frontend puede mejorar la usabilidad ocultando rutas y acciones no disponibles, pero no reemplaza políticas ni validaciones del backend.
+
+### Idioma De La Interfaz
+
+El panel administrativo se construyó intencionalmente en inglés para reflejar el idioma usado comúnmente en equipos internacionales de software y aplicaciones empresariales. La documentación en español se mantiene por separado para que el razonamiento técnico sea accesible en ambos idiomas.
 
 ### Ejecución Docker-First
 
