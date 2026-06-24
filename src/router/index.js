@@ -3,6 +3,9 @@ import Home from '@/views/HomeView.vue'
 import ModuleDetailView from '@/views/ModuleDetailView.vue'
 import ModuleFormView from '@/views/ModuleFormView.vue'
 import ModuleListView from '@/views/ModuleListView.vue'
+import OwnerDetailView from '@/modules/owners/views/OwnerDetailView.vue'
+import OwnerFormView from '@/modules/owners/views/OwnerFormView.vue'
+import OwnersListView from '@/modules/owners/views/OwnersListView.vue'
 import {
   RESOURCE_ACTIONS,
   ROUTE_KEYS,
@@ -104,16 +107,58 @@ const routes = [
     name: 'operations-users-edit',
     component: UserFormView,
   },
-  listRoute(
-    '/operations/owners',
-    'Owners',
-    'Operations',
-    'Review owner records used by vehicles and service orders.',
-    {
+  {
+    meta: {
+      title: 'Owners',
+      section: 'Operations',
+      subtitle: 'Review owner records used by vehicles and service orders.',
       permissionKey: ROUTE_KEYS.OWNERS,
       resource: RESOURCES.OWNERS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
     },
-  ),
+    path: '/operations/owners',
+    name: 'operations-owners',
+    component: OwnersListView,
+  },
+  {
+    meta: {
+      title: 'Create owner',
+      section: 'Operations',
+      subtitle: 'Create a vehicle owner contact record.',
+      permissionKey: ROUTE_KEYS.OWNERS,
+      resource: RESOURCES.OWNERS,
+      resourceAction: RESOURCE_ACTIONS.CREATE,
+    },
+    path: '/operations/owners/new',
+    name: 'operations-owners-new',
+    component: OwnerFormView,
+  },
+  {
+    meta: {
+      title: 'Owner detail',
+      section: 'Operations',
+      subtitle: 'Review owner contact details and active availability.',
+      permissionKey: ROUTE_KEYS.OWNERS,
+      resource: RESOURCES.OWNERS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/operations/owners/:id',
+    name: 'operations-owners-detail',
+    component: OwnerDetailView,
+  },
+  {
+    meta: {
+      title: 'Edit owner',
+      section: 'Operations',
+      subtitle: 'Update owner contact details and active availability.',
+      permissionKey: ROUTE_KEYS.OWNERS,
+      resource: RESOURCES.OWNERS,
+      resourceAction: RESOURCE_ACTIONS.UPDATE,
+    },
+    path: '/operations/owners/:id/edit',
+    name: 'operations-owners-edit',
+    component: OwnerFormView,
+  },
   listRoute(
     '/operations/workshops',
     'Workshops',
