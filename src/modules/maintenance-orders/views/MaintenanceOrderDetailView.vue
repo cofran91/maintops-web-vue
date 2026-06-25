@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiArrowLeft,
@@ -17,6 +17,8 @@ import {
 import { normalizeApiError } from '@/api/errors.js'
 import maintenanceOrderItemsApi from '@/modules/maintenance-orders/services/maintenanceOrderItemsService.js'
 import maintenanceOrdersApi from '@/modules/maintenance-orders/services/maintenanceOrdersService.js'
+import { useOperationalEventListener } from '@/modules/realtime/composables/useOperationalEventListener.js'
+import { maintenanceOrderIdForEvent } from '@/modules/realtime/services/operationalEventsService.js'
 import {
   ORDER_ACTION_LABELS,
   ORDER_ITEM_ACTION_LABELS,
@@ -47,6 +49,7 @@ const order = ref(null)
 const loading = ref(false)
 const updatingStatus = ref(false)
 const errorMessage = ref('')
+let realtimeRefreshTimer = null
 
 const itemColumns = [
   { key: 'task', label: 'Task' },
@@ -76,6 +79,17 @@ const fetchOrder = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const scheduleRealtimeRefresh = () => {
+  if (realtimeRefreshTimer !== null) {
+    clearTimeout(realtimeRefreshTimer)
+  }
+
+  realtimeRefreshTimer = setTimeout(() => {
+    realtimeRefreshTimer = null
+    void fetchOrder()
+  }, 200)
 }
 
 const updateOrderStatus = async (status) => {
@@ -201,6 +215,19 @@ watch(
   },
   { immediate: true },
 )
+
+useOperationalEventListener((event) => {
+  if (String(maintenanceOrderIdForEvent(event)) === orderId.value) {
+    scheduleRealtimeRefresh()
+  }
+})
+
+onBeforeUnmount(() => {
+  if (realtimeRefreshTimer !== null) {
+    clearTimeout(realtimeRefreshTimer)
+    realtimeRefreshTimer = null
+  }
+})
 </script>
 
 <template>

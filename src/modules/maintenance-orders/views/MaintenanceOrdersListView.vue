@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiCancel,
@@ -22,6 +22,7 @@ import { DEFAULT_PAGINATION_META } from '@/types/api.js'
 import { ROLES } from '@/types/auth.js'
 import { MAINTENANCE_ORDER_STATUSES } from '@/types/maintenanceOrder.js'
 import maintenanceOrdersApi from '@/modules/maintenance-orders/services/maintenanceOrdersService.js'
+import { useOperationalEventListener } from '@/modules/realtime/composables/useOperationalEventListener.js'
 import {
   ORDER_ACTION_LABELS,
   ORDER_STATUS_LABELS,
@@ -97,6 +98,7 @@ const updatingStatus = ref(false)
 const errorMessage = ref('')
 const filtersExpanded = ref(false)
 const filters = reactive({ ...EMPTY_FILTERS })
+let realtimeRefreshTimer = null
 
 const canCreateOrder = computed(() => canCreateForAnyRole(authStore.roles, RESOURCES.ORDERS))
 const hasActiveFilters = computed(() =>
@@ -258,6 +260,17 @@ const fetchOrders = async () => {
   }
 }
 
+const scheduleRealtimeRefresh = () => {
+  if (realtimeRefreshTimer !== null) {
+    clearTimeout(realtimeRefreshTimer)
+  }
+
+  realtimeRefreshTimer = setTimeout(() => {
+    realtimeRefreshTimer = null
+    void fetchOrders()
+  }, 200)
+}
+
 const applyFilters = () => {
   void router.push({
     name: 'orders',
@@ -377,6 +390,17 @@ watch(
   },
   { immediate: true },
 )
+
+useOperationalEventListener(() => {
+  scheduleRealtimeRefresh()
+})
+
+onBeforeUnmount(() => {
+  if (realtimeRefreshTimer !== null) {
+    clearTimeout(realtimeRefreshTimer)
+    realtimeRefreshTimer = null
+  }
+})
 </script>
 
 <template>

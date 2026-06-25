@@ -16,6 +16,7 @@ import { ROUTE_KEYS, canAccessAnyRoute } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
 import { MAINTENANCE_ORDER_STATUSES } from '@/types/maintenanceOrder.js'
 import dashboardApi from '@/modules/dashboard/services/dashboardService.js'
+import { useOperationalEventListener } from '@/modules/realtime/composables/useOperationalEventListener.js'
 import {
   ORDER_STATUS_LABELS,
   ORDER_ITEM_STATUS_LABELS,
@@ -40,6 +41,7 @@ const summary = ref(null)
 const loading = ref(false)
 const errorMessage = ref('')
 let dashboardAbortController = null
+let realtimeRefreshTimer = null
 
 const scheduleColumns = [
   { key: 'order', label: 'Order' },
@@ -189,6 +191,17 @@ const fetchSummary = async () => {
   }
 }
 
+const scheduleRealtimeRefresh = () => {
+  if (realtimeRefreshTimer !== null) {
+    clearTimeout(realtimeRefreshTimer)
+  }
+
+  realtimeRefreshTimer = setTimeout(() => {
+    realtimeRefreshTimer = null
+    void fetchSummary()
+  }, 200)
+}
+
 const metricValue = (key) => Number(metrics.value[key] ?? 0)
 
 const numberLabel = (value) => new Intl.NumberFormat('en').format(Number(value ?? 0))
@@ -250,7 +263,16 @@ onMounted(() => {
   void fetchSummary()
 })
 
+useOperationalEventListener(() => {
+  scheduleRealtimeRefresh()
+})
+
 onBeforeUnmount(() => {
+  if (realtimeRefreshTimer !== null) {
+    clearTimeout(realtimeRefreshTimer)
+    realtimeRefreshTimer = null
+  }
+
   dashboardAbortController?.abort()
   dashboardAbortController = null
 })

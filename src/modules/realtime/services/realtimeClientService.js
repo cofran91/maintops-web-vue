@@ -2,6 +2,13 @@ import { reactive, readonly } from 'vue'
 import { io } from 'socket.io-client'
 import { integrations } from '@/config/integrations.js'
 import { normalizeApiError } from '@/api/errors.js'
+import {
+  recordOperationalActivity,
+} from '@/modules/realtime/services/liveActivityService.js'
+import {
+  parseOperationalEvent,
+  publishOperationalEvent,
+} from '@/modules/realtime/services/operationalEventsService.js'
 import { recordPresenceUpdate } from '@/modules/realtime/services/realtimePresenceService.js'
 import realtimeTokenApi from '@/modules/realtime/services/realtimeTokenService.js'
 
@@ -21,15 +28,26 @@ const parsePresenceUpdate = (payload) => {
     return null
   }
 
-  const userId = payload.user_id
-  const workshopId = payload.workshop_id
+  const updatePayload =
+    payload.event_type === 'presence.updated' &&
+    typeof payload.payload === 'object' &&
+    payload.payload !== null
+      ? payload.payload
+      : payload
+  const userId = updatePayload.user_id
+  const workshopId = updatePayload.workshop_id
+  const status =
+    updatePayload.status ??
+    (typeof updatePayload.online === 'boolean'
+      ? (updatePayload.online ? 'online' : 'offline')
+      : null)
 
   if (
     (typeof userId !== 'string' && typeof userId !== 'number') ||
     (workshopId !== undefined &&
       typeof workshopId !== 'string' &&
       typeof workshopId !== 'number') ||
-    (payload.status !== 'online' && payload.status !== 'offline')
+    (status !== 'online' && status !== 'offline')
   ) {
     return null
   }
@@ -37,7 +55,7 @@ const parsePresenceUpdate = (payload) => {
   return {
     user_id: String(userId),
     ...(workshopId === undefined ? {} : { workshop_id: String(workshopId) }),
-    status: payload.status,
+    status,
   }
 }
 
@@ -182,6 +200,18 @@ class RealtimeClient {
 
       if (update !== null) {
         recordPresenceUpdate(update)
+      }
+    })
+
+    socket.onAny((eventName, payload) => {
+      if (!this.isCurrentSocket(socket)) {
+        return
+      }
+
+      const event = parseOperationalEvent(eventName, payload)
+
+      if (event !== null && publishOperationalEvent(event)) {
+        recordOperationalActivity(event)
       }
     })
 

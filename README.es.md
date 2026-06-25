@@ -41,6 +41,7 @@ El bootstrap actual incluye:
 - Matrices frontend de permisos para rutas, acciones CRUD, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes.
 - Dashboard operacional con métricas desde Laravel, órdenes del día, próximas órdenes, conteos por estado y secciones de carga según rol.
 - Ciclo realtime autenticado con tokens cortos emitidos por Laravel, estado Socket.IO, renovación, limpieza y presencia.
+- Eventos operativos realtime que refrescan dashboard, listados de órdenes y detalle de orden sin exponer administración de rooms en el navegador.
 - Módulo de usuarios con servicio HTTP, filtros, paginación, detalle, formularios, acciones según rol y búsqueda paginada de talleres.
 - Módulo de propietarios con servicio HTTP, filtros por búsqueda y estado, paginación, detalle, formularios y acciones de eliminación según permisos.
 - Módulo de vehículos con servicio HTTP, filtros avanzados, paginación, detalle, formularios, búsqueda paginada de propietarios y acciones de eliminación según permisos.
@@ -77,7 +78,7 @@ src/
   modules/maintenance-orders/  Servicios, reglas de estado, listado, detalle y formulario de órdenes e ítems.
   modules/maintenance-plans/  Servicio de planes, listado, detalle y formularios.
   modules/maintenance-tasks/  Servicio de tareas, listado, detalle y formularios.
-  modules/realtime/  Token realtime, ciclo Socket.IO, estado de conexión y servicios de presencia.
+  modules/realtime/  Token realtime, ciclo Socket.IO, listeners de eventos, estado y presencia.
   modules/owners/  Servicio de propietarios, listado, detalle y formularios.
   modules/users/  Servicio de usuarios, listado, detalle y formularios.
   modules/vehicles/  Servicio de vehículos, listado, detalle y formularios.
@@ -98,6 +99,8 @@ El comportamiento sensible a autorización pertenece al backend. El frontend pue
 La capa de permisos frontend refleja la intención del backend para visibilidad de rutas, acciones de crear/actualizar/eliminar, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes e ítems. Esto mantiene la consola consciente del rol sin mover la fuente de verdad fuera de la API.
 
 Realtime usa tokens cortos emitidos por Laravel a través de la API autenticada. El navegador no envía el token Sanctum a Socket.IO; solicita un token realtime dedicado y lo envía al gateway durante el handshake Socket.IO.
+
+Los payloads de eventos operativos se tratan como hechos controlados por backend. El frontend parsea eventos autorizados de órdenes e ítems, los deduplica por id de evento y refresca las vistas afectadas en vez de mutar estado complejo de dominio localmente.
 
 ### Idioma De La Interfaz
 
