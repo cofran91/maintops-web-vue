@@ -2,7 +2,7 @@
 import CardBox from '@/components/CardBox.vue'
 import AppEmptyState from '@/components/ui/AppEmptyState.vue'
 
-defineProps({
+const props = defineProps({
   columns: {
     type: Array,
     required: true,
@@ -12,7 +12,7 @@ defineProps({
     required: true,
   },
   rowKey: {
-    type: String,
+    type: [String, Function],
     default: 'id',
   },
   emptyTitle: {
@@ -24,6 +24,9 @@ defineProps({
     default: 'Records will appear here when data is available.',
   },
 })
+
+const rowIdentifier = (row) =>
+  typeof props.rowKey === 'function' ? props.rowKey(row) : row[props.rowKey]
 </script>
 
 <template>
@@ -37,7 +40,7 @@ defineProps({
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row[rowKey]">
+        <tr v-for="row in rows" :key="rowIdentifier(row)">
           <td v-for="column in columns" :key="column.key" :data-label="column.label">
             <slot :name="`cell-${column.key}`" :row="row" :value="row[column.key]">
               {{ row[column.key] }}

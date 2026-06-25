@@ -39,6 +39,7 @@ The current bootstrap includes:
 - JSDoc contracts for API responses, pagination, roles, users, and normalized errors.
 - Login, logout, `/auth/me`, Pinia session hydration, private route guards, and non-interactive role blocking.
 - Frontend permission matrices for routes, CRUD actions, assignable roles, audit access, Analytics visibility, and order status actions.
+- Operational dashboard with Laravel-backed metrics, today's orders, upcoming orders, status counts, and role-scoped workload sections.
 - Users module with HTTP service, filters, pagination, detail view, create form, edit form, role-aware actions, and searchable paginated workshop lookup.
 - Owners module with HTTP service, search and status filters, pagination, detail view, create form, edit form, and policy-aware delete actions.
 - Vehicles module with HTTP service, advanced filters, pagination, detail view, create form, edit form, owner lookup, and policy-aware delete actions.
@@ -71,6 +72,7 @@ src/
   stores/      Shared Pinia state.
   modules/auth/  Authentication service and login view.
   modules/audits/  Audit service and super-admin traceability view.
+  modules/dashboard/  Operational dashboard service.
   modules/maintenance-orders/  Order and order-item services, status rules, list, detail, and form views.
   modules/maintenance-plans/  Maintenance plan service, list, detail, and form views.
   modules/maintenance-tasks/  Maintenance task service, list, detail, and form views.
