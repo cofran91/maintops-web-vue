@@ -31,7 +31,7 @@ The current bootstrap includes:
 - Vue 3, Vite, Tailwind CSS 4, and Pinia.
 - `MaintOps Console` metadata, favicon, title, sidebar, and header branding.
 - MaintOps navigation groups for operations, maintenance, orders, and access.
-- Responsive topbar with contextual titles and a notification placeholder.
+- Responsive topbar with contextual titles, realtime status, and a notification placeholder.
 - Dashboard, list, form, detail, and empty-state layout patterns.
 - Base UI components for pages, badges, dropdowns, responsive tables, and empty states.
 - Shared Axios client with Bearer token injection and Laravel-style error normalization.
@@ -40,6 +40,7 @@ The current bootstrap includes:
 - Login, logout, `/auth/me`, Pinia session hydration, private route guards, and non-interactive role blocking.
 - Frontend permission matrices for routes, CRUD actions, assignable roles, audit access, Analytics visibility, and order status actions.
 - Operational dashboard with Laravel-backed metrics, today's orders, upcoming orders, status counts, and role-scoped workload sections.
+- Authenticated realtime lifecycle with Laravel-issued short-lived tokens, Socket.IO status, renewal, cleanup, and presence tracking.
 - Users module with HTTP service, filters, pagination, detail view, create form, edit form, role-aware actions, and searchable paginated workshop lookup.
 - Owners module with HTTP service, search and status filters, pagination, detail view, create form, edit form, and policy-aware delete actions.
 - Vehicles module with HTTP service, advanced filters, pagination, detail view, create form, edit form, owner lookup, and policy-aware delete actions.
@@ -50,7 +51,7 @@ The current bootstrap includes:
 - Order item status actions filtered by role, current state, and public endpoint availability from the order detail workflow.
 - Audit log module with HTTP service, filters, pagination, change inspection, and super-admin-only visibility.
 - Docker and Docker Compose files for local execution.
-- `.env.example` with `VITE_API_BASE_URL`.
+- `.env.example` with `VITE_API_BASE_URL` and `VITE_REALTIME_URL`.
 - English and Spanish README documentation.
 
 ## Architecture Decisions
@@ -76,6 +77,7 @@ src/
   modules/maintenance-orders/  Order and order-item services, status rules, list, detail, and form views.
   modules/maintenance-plans/  Maintenance plan service, list, detail, and form views.
   modules/maintenance-tasks/  Maintenance task service, list, detail, and form views.
+  modules/realtime/  Realtime token, Socket.IO lifecycle, connection status, and presence services.
   modules/owners/  Owner service, list, detail, and form views.
   modules/users/  User service, list, detail, and form views.
   modules/vehicles/  Vehicle service, list, detail, and form views.
@@ -89,11 +91,13 @@ This structure keeps the bootstrap easy to inspect: layout behavior lives in `la
 
 ### Integration Boundary
 
-The frontend reads its API base URL from `VITE_API_BASE_URL`. That keeps the web app portable across local, Docker, and deployed environments.
+The frontend reads service URLs from `VITE_API_BASE_URL` and `VITE_REALTIME_URL`. That keeps the web app portable across local, Docker, and deployed environments.
 
 Authorization-sensitive behavior belongs to the backend. The frontend can improve usability by hiding unavailable routes and actions, but it does not replace backend policies or validation.
 
 The frontend permission layer mirrors backend intent for route visibility, create/update/delete actions, assignable roles, audit access, Analytics visibility, and order/order-item status actions. That keeps the console role-aware while preserving the API as the source of truth.
+
+Realtime uses short-lived tokens issued by Laravel through the authenticated API. The browser does not send the Sanctum token to Socket.IO; it requests a dedicated realtime token and sends it to the gateway during the Socket.IO handshake.
 
 ### Interface Language
 
@@ -122,10 +126,11 @@ You do not need Node or npm installed on the host when using Docker.
 
 ## Environment Variables
 
-Create a local `.env` from `.env.example` and adjust the API URL if the backend uses a different port:
+Create a local `.env` from `.env.example` and adjust service URLs if the backend or realtime gateway use different ports:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_REALTIME_URL=http://localhost:3000
 ```
 
 ## Run With Docker

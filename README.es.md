@@ -31,7 +31,7 @@ El bootstrap actual incluye:
 - Vue 3, Vite, Tailwind CSS 4 y Pinia.
 - Metadata, favicon, título, sidebar y header con branding `MaintOps Console`.
 - Grupos de navegación MaintOps para operaciones, mantenimiento, órdenes y acceso.
-- Topbar responsive con títulos contextuales y placeholder de notificaciones.
+- Topbar responsive con títulos contextuales, estado realtime y placeholder de notificaciones.
 - Patrones de layout para dashboard, listado, formulario, detalle y estado vacío.
 - Componentes UI base para páginas, badges, dropdowns, tablas responsive y estados vacíos.
 - Cliente Axios compartido con inyección de token Bearer y normalización de errores estilo Laravel.
@@ -40,6 +40,7 @@ El bootstrap actual incluye:
 - Login, logout, `/auth/me`, hidratación de sesión con Pinia, guards de rutas privadas y bloqueo de roles no interactivos.
 - Matrices frontend de permisos para rutas, acciones CRUD, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes.
 - Dashboard operacional con métricas desde Laravel, órdenes del día, próximas órdenes, conteos por estado y secciones de carga según rol.
+- Ciclo realtime autenticado con tokens cortos emitidos por Laravel, estado Socket.IO, renovación, limpieza y presencia.
 - Módulo de usuarios con servicio HTTP, filtros, paginación, detalle, formularios, acciones según rol y búsqueda paginada de talleres.
 - Módulo de propietarios con servicio HTTP, filtros por búsqueda y estado, paginación, detalle, formularios y acciones de eliminación según permisos.
 - Módulo de vehículos con servicio HTTP, filtros avanzados, paginación, detalle, formularios, búsqueda paginada de propietarios y acciones de eliminación según permisos.
@@ -50,7 +51,7 @@ El bootstrap actual incluye:
 - Acciones de estado de ítems filtradas por rol, estado actual y disponibilidad de endpoints públicos desde el detalle de la orden.
 - Módulo de auditoría con servicio HTTP, filtros, paginación, inspección de cambios y visibilidad exclusiva para super admin.
 - Archivos Docker y Docker Compose para ejecución local.
-- `.env.example` con `VITE_API_BASE_URL`.
+- `.env.example` con `VITE_API_BASE_URL` y `VITE_REALTIME_URL`.
 - Documentación README en inglés y español.
 
 ## Decisiones De Arquitectura
@@ -76,6 +77,7 @@ src/
   modules/maintenance-orders/  Servicios, reglas de estado, listado, detalle y formulario de órdenes e ítems.
   modules/maintenance-plans/  Servicio de planes, listado, detalle y formularios.
   modules/maintenance-tasks/  Servicio de tareas, listado, detalle y formularios.
+  modules/realtime/  Token realtime, ciclo Socket.IO, estado de conexión y servicios de presencia.
   modules/owners/  Servicio de propietarios, listado, detalle y formularios.
   modules/users/  Servicio de usuarios, listado, detalle y formularios.
   modules/vehicles/  Servicio de vehículos, listado, detalle y formularios.
@@ -89,11 +91,13 @@ Esta estructura mantiene el bootstrap fácil de revisar: el comportamiento de la
 
 ### Frontera De Integración
 
-El frontend lee la URL base de API desde `VITE_API_BASE_URL`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
+El frontend lee URLs de servicios desde `VITE_API_BASE_URL` y `VITE_REALTIME_URL`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
 
 El comportamiento sensible a autorización pertenece al backend. El frontend puede mejorar la usabilidad ocultando rutas y acciones no disponibles, pero no reemplaza políticas ni validaciones del backend.
 
 La capa de permisos frontend refleja la intención del backend para visibilidad de rutas, acciones de crear/actualizar/eliminar, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes e ítems. Esto mantiene la consola consciente del rol sin mover la fuente de verdad fuera de la API.
+
+Realtime usa tokens cortos emitidos por Laravel a través de la API autenticada. El navegador no envía el token Sanctum a Socket.IO; solicita un token realtime dedicado y lo envía al gateway durante el handshake Socket.IO.
 
 ### Idioma De La Interfaz
 
@@ -122,10 +126,11 @@ No necesitas Node ni npm instalados en el host si usas Docker.
 
 ## Variables De Entorno
 
-Crea un `.env` local desde `.env.example` y ajusta la URL de la API si el backend usa otro puerto:
+Crea un `.env` local desde `.env.example` y ajusta las URLs de servicios si el backend o el gateway realtime usan otros puertos:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_REALTIME_URL=http://localhost:3000
 ```
 
 ## Ejecutar Con Docker

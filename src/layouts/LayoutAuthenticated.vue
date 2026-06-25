@@ -11,6 +11,7 @@ import NavBar from '@/components/NavBar.vue'
 import NavBarItemPlain from '@/components/NavBarItemPlain.vue'
 import AsideMenu from '@/components/AsideMenu.vue'
 import FooterBar from '@/components/FooterBar.vue'
+import RealtimeStatusBadge from '@/modules/realtime/components/RealtimeStatusBadge.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
 const layoutAsidePadding = 'xl:pl-60'
@@ -88,6 +89,7 @@ const menuClick = async (event, item) => {
             </p>
           </div>
         </div>
+        <RealtimeStatusBadge />
         <NavBarItemPlain display="flex" @click.prevent="isNotificationsOpen = !isNotificationsOpen">
           <div class="relative">
             <BaseIcon :path="mdiBellOutline" size="22" />
