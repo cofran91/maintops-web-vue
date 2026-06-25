@@ -47,6 +47,7 @@ El bootstrap actual incluye:
 - Módulo de planes de mantenimiento con servicio HTTP, búsqueda paginada de tareas, selección de tareas agrupadas, intervalos recomendados, detalle, filtros y acciones según permisos.
 - Módulo de órdenes de mantenimiento con servicios HTTP, filtros avanzados, detalle de asignaciones, listados paginados, visibilidad de ítems dentro de cada orden y transiciones de estado según rol.
 - Acciones de estado de ítems filtradas por rol, estado actual y disponibilidad de endpoints públicos desde el detalle de la orden.
+- Módulo de auditoría con servicio HTTP, filtros, paginación, inspección de cambios y visibilidad exclusiva para super admin.
 - Archivos Docker y Docker Compose para ejecución local.
 - `.env.example` con `VITE_API_BASE_URL`.
 - Documentación README en inglés y español.
@@ -69,6 +70,7 @@ src/
   router/      Definiciones de rutas de la consola.
   stores/      Estado compartido con Pinia.
   modules/auth/  Servicio de autenticación y vista de login.
+  modules/audits/  Servicio de auditoría y vista de trazabilidad para super admin.
   modules/maintenance-orders/  Servicios, reglas de estado, listado, detalle y formulario de órdenes e ítems.
   modules/maintenance-plans/  Servicio de planes, listado, detalle y formularios.
   modules/maintenance-tasks/  Servicio de tareas, listado, detalle y formularios.

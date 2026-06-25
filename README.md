@@ -47,6 +47,7 @@ The current bootstrap includes:
 - Maintenance plans module with HTTP service, task lookup, grouped task selection, recommended intervals, detail view, filters, and policy-aware actions.
 - Maintenance orders module with HTTP services, advanced filters, assignment detail, paginated lists, item visibility inside each order, and role-safe status transitions.
 - Order item status actions filtered by role, current state, and public endpoint availability from the order detail workflow.
+- Audit log module with HTTP service, filters, pagination, change inspection, and super-admin-only visibility.
 - Docker and Docker Compose files for local execution.
 - `.env.example` with `VITE_API_BASE_URL`.
 - English and Spanish README documentation.
@@ -69,6 +70,7 @@ src/
   router/      Console route definitions.
   stores/      Shared Pinia state.
   modules/auth/  Authentication service and login view.
+  modules/audits/  Audit service and super-admin traceability view.
   modules/maintenance-orders/  Order and order-item services, status rules, list, detail, and form views.
   modules/maintenance-plans/  Maintenance plan service, list, detail, and form views.
   modules/maintenance-tasks/  Maintenance task service, list, detail, and form views.

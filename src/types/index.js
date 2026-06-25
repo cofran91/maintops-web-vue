@@ -1,4 +1,5 @@
 export { DEFAULT_PAGINATION_META } from '@/types/api.js'
+export { AUDIT_EVENTS, EMPTY_AUDIT_LOG } from '@/types/audit.js'
 export {
   INTERACTIVE_ROLES,
   ROLE_LABELS,

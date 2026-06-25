@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Home from '@/views/HomeView.vue'
-import ModuleListView from '@/views/ModuleListView.vue'
+import AuditsListView from '@/modules/audits/views/AuditsListView.vue'
 import MaintenanceOrderDetailView from '@/modules/maintenance-orders/views/MaintenanceOrderDetailView.vue'
 import MaintenanceOrderFormView from '@/modules/maintenance-orders/views/MaintenanceOrderFormView.vue'
 import MaintenanceOrdersListView from '@/modules/maintenance-orders/views/MaintenanceOrdersListView.vue'
@@ -31,18 +31,6 @@ import WorkshopDetailView from '@/modules/workshops/views/WorkshopDetailView.vue
 import WorkshopFormView from '@/modules/workshops/views/WorkshopFormView.vue'
 import WorkshopsListView from '@/modules/workshops/views/WorkshopsListView.vue'
 import { useAuthStore } from '@/stores/auth.js'
-
-const listRoute = (path, title, section, subtitle, options = {}) => ({
-  meta: {
-    title,
-    section,
-    subtitle,
-    ...options,
-  },
-  path,
-  name: path.replace(/^\//, '').replaceAll('/', '-'),
-  component: ModuleListView,
-})
 
 const routes = [
   {
@@ -419,11 +407,19 @@ const routes = [
     name: 'orders-detail',
     component: MaintenanceOrderDetailView,
   },
-  listRoute('/access/audit', 'Audit log', 'Access', 'Review traceable operational events.', {
-    permissionKey: ROUTE_KEYS.AUDIT_LOG,
-    resource: RESOURCES.AUDIT_LOG,
-    isEmpty: true,
-  }),
+  {
+    meta: {
+      title: 'Audit log',
+      section: 'Access',
+      subtitle: 'Review traceable operational events.',
+      permissionKey: ROUTE_KEYS.AUDIT_LOG,
+      resource: RESOURCES.AUDIT_LOG,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/access/audit',
+    name: 'access-audit',
+    component: AuditsListView,
+  },
   {
     meta: {
       title: 'Not Found',
