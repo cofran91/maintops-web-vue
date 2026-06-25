@@ -73,16 +73,6 @@ export const menuAsideMain = [
         icon: mdiSquareEditOutline,
         permissionKey: ROUTE_KEYS.ORDER_CREATE,
       },
-      {
-        to: '/orders/detail',
-        label: 'Order detail',
-        permissionKey: ROUTE_KEYS.ORDER_DETAIL,
-      },
-      {
-        to: '/orders/items',
-        label: 'Order items',
-        permissionKey: ROUTE_KEYS.ORDER_ITEMS,
-      },
     ],
   },
   {

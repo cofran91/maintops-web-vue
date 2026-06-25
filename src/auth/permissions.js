@@ -11,7 +11,6 @@ export const ROUTE_KEYS = Object.freeze({
   ORDERS: 'orders',
   ORDER_CREATE: 'orders-new',
   ORDER_DETAIL: 'orders-detail',
-  ORDER_ITEMS: 'orders-items',
   AUDIT_LOG: 'access-audit',
   ANALYTICS: 'analytics',
 })
@@ -37,20 +36,34 @@ export const RESOURCE_ACTIONS = Object.freeze({
 })
 
 export const ORDER_STATUS = Object.freeze({
+  CREATED: 'created',
+  PENDING_OWNER_APPROVAL: 'pending_owner_approval',
   APPROVED: 'approved',
-  CANCELLED: 'cancelled',
-  DELIVERED: 'delivered',
+  PARTIALLY_APPROVED: 'partially_approved',
   REJECTED: 'rejected',
+  SCHEDULED: 'scheduled',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled',
 })
 
 export const ORDER_STATUS_LABELS = Object.freeze({
-  [ORDER_STATUS.APPROVED]: 'Approve',
-  [ORDER_STATUS.CANCELLED]: 'Cancel',
-  [ORDER_STATUS.DELIVERED]: 'Deliver',
-  [ORDER_STATUS.REJECTED]: 'Reject',
+  [ORDER_STATUS.CREATED]: 'Created',
+  [ORDER_STATUS.PENDING_OWNER_APPROVAL]: 'Pending owner approval',
+  [ORDER_STATUS.APPROVED]: 'Approved',
+  [ORDER_STATUS.PARTIALLY_APPROVED]: 'Partially approved',
+  [ORDER_STATUS.REJECTED]: 'Rejected',
+  [ORDER_STATUS.SCHEDULED]: 'Scheduled',
+  [ORDER_STATUS.IN_PROGRESS]: 'In progress',
+  [ORDER_STATUS.COMPLETED]: 'Completed',
+  [ORDER_STATUS.DELIVERED]: 'Delivered',
+  [ORDER_STATUS.CANCELLED]: 'Cancelled',
 })
 
 export const ORDER_ITEM_STATUS = Object.freeze({
+  PENDING_OWNER_APPROVAL: 'pending_owner_approval',
+  SCHEDULED: 'scheduled',
   IN_PROGRESS: 'in_progress',
   COMPLETED: 'completed',
   REJECTED: 'rejected',
@@ -58,10 +71,12 @@ export const ORDER_ITEM_STATUS = Object.freeze({
 })
 
 export const ORDER_ITEM_STATUS_LABELS = Object.freeze({
-  [ORDER_ITEM_STATUS.IN_PROGRESS]: 'Start',
-  [ORDER_ITEM_STATUS.COMPLETED]: 'Complete',
-  [ORDER_ITEM_STATUS.REJECTED]: 'Reject',
-  [ORDER_ITEM_STATUS.CANCELLED]: 'Cancel',
+  [ORDER_ITEM_STATUS.PENDING_OWNER_APPROVAL]: 'Pending owner approval',
+  [ORDER_ITEM_STATUS.SCHEDULED]: 'Scheduled',
+  [ORDER_ITEM_STATUS.IN_PROGRESS]: 'In progress',
+  [ORDER_ITEM_STATUS.COMPLETED]: 'Completed',
+  [ORDER_ITEM_STATUS.REJECTED]: 'Rejected',
+  [ORDER_ITEM_STATUS.CANCELLED]: 'Cancelled',
 })
 
 const ADMINISTRATIVE_RESOURCES = Object.freeze([
@@ -86,7 +101,6 @@ const SYSTEM_ADMIN_ROUTES = Object.freeze([
   ROUTE_KEYS.ORDERS,
   ROUTE_KEYS.ORDER_CREATE,
   ROUTE_KEYS.ORDER_DETAIL,
-  ROUTE_KEYS.ORDER_ITEMS,
   ROUTE_KEYS.ANALYTICS,
 ])
 
@@ -124,7 +138,6 @@ export const ROUTE_PERMISSIONS_BY_ROLE = freezeListMatrix({
     ROUTE_KEYS.VEHICLES,
     ROUTE_KEYS.ORDERS,
     ROUTE_KEYS.ORDER_DETAIL,
-    ROUTE_KEYS.ORDER_ITEMS,
   ],
   [ROLES.ADVISOR]: [
     ROUTE_KEYS.DASHBOARD,
@@ -134,13 +147,11 @@ export const ROUTE_PERMISSIONS_BY_ROLE = freezeListMatrix({
     ROUTE_KEYS.ORDERS,
     ROUTE_KEYS.ORDER_CREATE,
     ROUTE_KEYS.ORDER_DETAIL,
-    ROUTE_KEYS.ORDER_ITEMS,
   ],
   [ROLES.TECHNICIAN]: [
     ROUTE_KEYS.DASHBOARD,
     ROUTE_KEYS.ORDERS,
     ROUTE_KEYS.ORDER_DETAIL,
-    ROUTE_KEYS.ORDER_ITEMS,
   ],
 })
 

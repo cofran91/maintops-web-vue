@@ -1,8 +1,9 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Home from '@/views/HomeView.vue'
-import ModuleDetailView from '@/views/ModuleDetailView.vue'
-import ModuleFormView from '@/views/ModuleFormView.vue'
 import ModuleListView from '@/views/ModuleListView.vue'
+import MaintenanceOrderDetailView from '@/modules/maintenance-orders/views/MaintenanceOrderDetailView.vue'
+import MaintenanceOrderFormView from '@/modules/maintenance-orders/views/MaintenanceOrderFormView.vue'
+import MaintenanceOrdersListView from '@/modules/maintenance-orders/views/MaintenanceOrdersListView.vue'
 import MaintenancePlanDetailView from '@/modules/maintenance-plans/views/MaintenancePlanDetailView.vue'
 import MaintenancePlanFormView from '@/modules/maintenance-plans/views/MaintenancePlanFormView.vue'
 import MaintenancePlansListView from '@/modules/maintenance-plans/views/MaintenancePlansListView.vue'
@@ -379,41 +380,45 @@ const routes = [
     name: 'maintenance-plans-edit',
     component: MaintenancePlanFormView,
   },
-  listRoute('/orders', 'Orders', 'Orders', 'Coordinate workshop service orders.', {
-    permissionKey: ROUTE_KEYS.ORDERS,
-    resource: RESOURCES.ORDERS,
-    createTo: '/orders/new',
-    detailTo: '/orders/detail',
-  }),
   {
     meta: {
-      title: 'New order',
+      title: 'Orders',
       section: 'Orders',
-      subtitle: 'Capture vehicle, workshop, advisor, and priority context.',
+      subtitle: 'Coordinate visible maintenance orders and role-safe status actions.',
+      permissionKey: ROUTE_KEYS.ORDERS,
+      resource: RESOURCES.ORDERS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/orders',
+    name: 'orders',
+    component: MaintenanceOrdersListView,
+  },
+  {
+    meta: {
+      title: 'Create order',
+      section: 'Orders',
+      subtitle: 'Capture vehicle and advisor context accepted by the public order endpoint.',
       permissionKey: ROUTE_KEYS.ORDER_CREATE,
       resource: RESOURCES.ORDERS,
+      resourceAction: RESOURCE_ACTIONS.CREATE,
     },
     path: '/orders/new',
     name: 'orders-new',
-    component: ModuleFormView,
+    component: MaintenanceOrderFormView,
   },
   {
     meta: {
       title: 'Order detail',
       section: 'Orders',
-      subtitle: 'Review service status, assignments, and related order items.',
+      subtitle: 'Review assignments, status history, and task-level execution.',
       permissionKey: ROUTE_KEYS.ORDER_DETAIL,
       resource: RESOURCES.ORDERS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
     },
-    path: '/orders/detail',
+    path: '/orders/:id(\\d+)',
     name: 'orders-detail',
-    component: ModuleDetailView,
+    component: MaintenanceOrderDetailView,
   },
-  listRoute('/orders/items', 'Order items', 'Orders', 'Track task-level execution inside orders.', {
-    permissionKey: ROUTE_KEYS.ORDER_ITEMS,
-    resource: RESOURCES.ORDER_ITEMS,
-    detailTo: '/orders/detail',
-  }),
   listRoute('/access/audit', 'Audit log', 'Access', 'Review traceable operational events.', {
     permissionKey: ROUTE_KEYS.AUDIT_LOG,
     resource: RESOURCES.AUDIT_LOG,

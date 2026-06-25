@@ -4,7 +4,9 @@ import {
   mdiAccountMultiple,
   mdiAlertCircle,
   mdiChartTimelineVariant,
+  mdiEyeOutline,
   mdiMonitor,
+  mdiOpenInNew,
   mdiSquareEditOutline,
   mdiTable,
   mdiViewList,
@@ -128,9 +130,17 @@ const statusColor = (status) => {
           to="/orders/new"
           color="info"
           :icon="mdiSquareEditOutline"
-          label="New order"
+          title="New order"
+          aria-label="New order"
         />
-        <BaseButton v-if="canOpenOrders" to="/orders" color="whiteDark" label="Open orders" />
+        <BaseButton
+          v-if="canOpenOrders"
+          to="/orders"
+          color="whiteDark"
+          :icon="mdiViewList"
+          title="Open orders"
+          aria-label="Open orders"
+        />
       </template>
 
       <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -169,7 +179,14 @@ const statusColor = (status) => {
             {{ card.description }}
           </p>
           <div class="mt-5">
-            <BaseButton :to="card.to" color="whiteDark" label="Open" small />
+            <BaseButton
+              :to="card.to"
+              color="whiteDark"
+              :icon="mdiOpenInNew"
+              title="Open"
+              aria-label="Open"
+              small
+            />
           </div>
         </CardBox>
       </div>
@@ -179,7 +196,14 @@ const statusColor = (status) => {
           <AppBadge :label="value" :color="statusColor(value)" />
         </template>
         <template #cell-action>
-          <BaseButton to="/orders/detail" color="whiteDark" label="Review" small />
+          <BaseButton
+            to="/orders"
+            color="whiteDark"
+            :icon="mdiEyeOutline"
+            title="Review orders"
+            aria-label="Review orders"
+            small
+          />
         </template>
       </AppDataTable>
     </AppPage>

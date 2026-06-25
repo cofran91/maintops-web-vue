@@ -8,6 +8,16 @@ export {
 } from '@/types/auth.js'
 export { DEFAULT_API_ERROR_MESSAGE } from '@/types/errors.js'
 export {
+  EMPTY_MAINTENANCE_ORDER,
+  MAINTENANCE_ORDER_ACTIONS,
+  MAINTENANCE_ORDER_STATUSES,
+} from '@/types/maintenanceOrder.js'
+export {
+  EMPTY_MAINTENANCE_ORDER_ITEM,
+  MAINTENANCE_ORDER_ITEM_ACTIONS,
+  MAINTENANCE_ORDER_ITEM_STATUSES,
+} from '@/types/maintenanceOrderItem.js'
+export {
   EMPTY_MAINTENANCE_TASK,
   MAINTENANCE_TASK_STATUS,
   MAINTENANCE_TASK_STATUS_LABELS,
