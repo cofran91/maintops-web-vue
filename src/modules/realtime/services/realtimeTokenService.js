@@ -1,10 +1,10 @@
 import http, { unwrapApiData } from '@/api/http.js'
 
-const ENDPOINT = '/auth/realtime-token'
+const ENDPOINT = '/auth/service-token'
 
 export const realtimeTokenApi = {
   async issue() {
-    const response = await http.post(ENDPOINT)
+    const response = await http.post(ENDPOINT, { audience: 'realtime' })
 
     return unwrapApiData(response.data, 'The realtime token could not be issued.')
   },
