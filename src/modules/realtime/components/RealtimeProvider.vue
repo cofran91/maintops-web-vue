@@ -2,7 +2,7 @@
 import { onBeforeUnmount, watch } from 'vue'
 import { onApiUnauthorized } from '@/api/http.js'
 import OperationalEventToast from '@/modules/realtime/components/OperationalEventToast.vue'
-import { clearLiveActivity } from '@/modules/realtime/services/liveActivityService.js'
+import { setLiveActivityScope } from '@/modules/realtime/services/liveActivityService.js'
 import { clearRealtimePresence } from '@/modules/realtime/services/realtimePresenceService.js'
 import {
   startRealtime,
@@ -14,20 +14,21 @@ const authStore = useAuthStore()
 
 const removeUnauthorizedListener = onApiUnauthorized(() => {
   stopRealtime()
-  clearLiveActivity()
+  setLiveActivityScope(null)
   clearRealtimePresence()
 })
 
 const stopWatchingAuth = watch(
-  () => authStore.isAuthenticated,
-  (isAuthenticated) => {
+  () => [authStore.isAuthenticated, authStore.user?.id],
+  ([isAuthenticated, userId]) => {
     if (isAuthenticated) {
+      setLiveActivityScope(userId)
       startRealtime()
       return
     }
 
     stopRealtime()
-    clearLiveActivity()
+    setLiveActivityScope(null)
     clearRealtimePresence()
   },
   { immediate: true },
@@ -37,7 +38,7 @@ onBeforeUnmount(() => {
   stopWatchingAuth()
   removeUnauthorizedListener()
   stopRealtime()
-  clearLiveActivity()
+  setLiveActivityScope(null)
   clearRealtimePresence()
 })
 </script>

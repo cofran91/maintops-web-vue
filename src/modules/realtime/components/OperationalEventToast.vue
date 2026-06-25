@@ -4,7 +4,7 @@ import { mdiBellRingOutline, mdiClose } from '@mdi/js'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseIcon from '@/components/BaseIcon.vue'
 import {
-  dismissLiveActivity,
+  hideLiveActivityToast,
   useLiveActivity,
 } from '@/modules/realtime/services/liveActivityService.js'
 
@@ -31,7 +31,7 @@ watch(
     }
 
     dismissTimer = setTimeout(() => {
-      dismissLiveActivity(activity.id)
+      hideLiveActivityToast(activity.id)
       dismissTimer = null
     }, TOAST_VISIBLE_MS)
   },
@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
         title="Dismiss update"
         aria-label="Dismiss update"
         small
-        @click="dismissLiveActivity(latestActivity.id)"
+        @click="hideLiveActivityToast(latestActivity.id)"
       />
     </div>
   </Transition>

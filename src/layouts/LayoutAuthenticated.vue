@@ -1,5 +1,5 @@
 <script setup>
-import { mdiBackburger, mdiBellOutline, mdiForwardburger, mdiMenu } from '@mdi/js'
+import { mdiBackburger, mdiForwardburger, mdiMenu } from '@mdi/js'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { filterNavigationByPermissions } from '@/auth/permissions.js'
@@ -11,6 +11,7 @@ import NavBar from '@/components/NavBar.vue'
 import NavBarItemPlain from '@/components/NavBarItemPlain.vue'
 import AsideMenu from '@/components/AsideMenu.vue'
 import FooterBar from '@/components/FooterBar.vue'
+import RealtimeActivityTray from '@/modules/realtime/components/RealtimeActivityTray.vue'
 import RealtimeStatusBadge from '@/modules/realtime/components/RealtimeStatusBadge.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
@@ -24,7 +25,6 @@ const authStore = useAuthStore()
 
 const isAsideMobileExpanded = ref(false)
 const isAsideLgActive = ref(false)
-const isNotificationsOpen = ref(false)
 
 const routeTitle = computed(() => route.meta?.title ?? 'Dashboard')
 const routeSection = computed(() => route.meta?.section ?? 'MaintOps')
@@ -39,7 +39,6 @@ const closeAside = () => {
 
 watch(() => route.fullPath, () => {
   closeAside()
-  isNotificationsOpen.value = false
 })
 
 const menuClick = async (event, item) => {
@@ -63,7 +62,8 @@ const menuClick = async (event, item) => {
   >
     <div
       :class="[layoutAsidePadding, { 'ml-60 lg:ml-0': isAsideMobileExpanded }]"
-      class="min-h-screen w-screen bg-gray-50 pt-14 transition-(--transition-position) lg:w-auto dark:bg-slate-800 dark:text-slate-100"
+      class="min-h-screen w-screen bg-gray-50 pt-14 transition-(--transition-position)
+        lg:w-auto dark:bg-slate-800 dark:text-slate-100"
     >
       <NavBar
         :menu="menuNavBar"
@@ -90,24 +90,8 @@ const menuClick = async (event, item) => {
           </div>
         </div>
         <RealtimeStatusBadge />
-        <NavBarItemPlain display="flex" @click.prevent="isNotificationsOpen = !isNotificationsOpen">
-          <div class="relative">
-            <BaseIcon :path="mdiBellOutline" size="22" />
-            <span
-              class="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-2
-                ring-gray-50 dark:ring-slate-800"
-            />
-          </div>
-        </NavBarItemPlain>
+        <RealtimeActivityTray />
       </NavBar>
-      <div
-        v-if="isNotificationsOpen"
-        class="fixed right-4 top-16 z-50 w-[calc(100vw-2rem)] max-w-sm rounded-md border border-gray-100
-          bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900"
-      >
-        <p class="font-semibold text-gray-900 dark:text-slate-100">No notifications</p>
-        <p class="mt-1 text-sm text-gray-500 dark:text-slate-400">No new activity.</p>
-      </div>
       <AsideMenu
         :is-aside-mobile-expanded="isAsideMobileExpanded"
         :is-aside-lg-active="isAsideLgActive"

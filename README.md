@@ -31,7 +31,7 @@ The current bootstrap includes:
 - Vue 3, Vite, Tailwind CSS 4, and Pinia.
 - `MaintOps Console` metadata, favicon, title, sidebar, and header branding.
 - MaintOps navigation groups for operations, maintenance, orders, and access.
-- Responsive topbar with contextual titles, realtime status, and a notification placeholder.
+- Responsive topbar with contextual titles, realtime status, and a persistent notification center.
 - Dashboard, list, form, detail, and empty-state layout patterns.
 - Base UI components for pages, badges, dropdowns, responsive tables, and empty states.
 - Shared Axios client with Bearer token injection and Laravel-style error normalization.
@@ -42,6 +42,7 @@ The current bootstrap includes:
 - Operational dashboard with Laravel-backed metrics, today's orders, upcoming orders, status counts, and role-scoped workload sections.
 - Authenticated realtime lifecycle with Laravel-issued short-lived tokens, Socket.IO status, renewal, cleanup, and presence tracking.
 - Operational realtime events that refresh dashboard, order lists, and order details without exposing room management in the browser.
+- Persistent notification center for order and item events, with individual dismiss and mark-all-as-read actions.
 - Users module with HTTP service, filters, pagination, detail view, create form, edit form, role-aware actions, and searchable paginated workshop lookup.
 - Owners module with HTTP service, search and status filters, pagination, detail view, create form, edit form, and policy-aware delete actions.
 - Vehicles module with HTTP service, advanced filters, pagination, detail view, create form, edit form, owner lookup, and policy-aware delete actions.
@@ -78,7 +79,7 @@ src/
   modules/maintenance-orders/  Order and order-item services, status rules, list, detail, and form views.
   modules/maintenance-plans/  Maintenance plan service, list, detail, and form views.
   modules/maintenance-tasks/  Maintenance task service, list, detail, and form views.
-  modules/realtime/  Realtime token, Socket.IO lifecycle, event listeners, status, and presence services.
+  modules/realtime/  Realtime token, Socket.IO lifecycle, event listeners, notifications, status, and presence services.
   modules/owners/  Owner service, list, detail, and form views.
   modules/users/  User service, list, detail, and form views.
   modules/vehicles/  Vehicle service, list, detail, and form views.
@@ -101,6 +102,8 @@ The frontend permission layer mirrors backend intent for route visibility, creat
 Realtime uses short-lived tokens issued by Laravel through the authenticated API. The browser does not send the Sanctum token to Socket.IO; it requests a dedicated realtime token and sends it to the gateway during the Socket.IO handshake.
 
 Operational event payloads are treated as backend-owned facts. The frontend parses authorized order and order-item events, deduplicates them by event id, and refetches the affected views instead of mutating complex domain state locally.
+
+Realtime notifications are stored per authenticated user in the browser and remain visible until marked as read. Order and item events are visually differentiated, and item notifications include the task name when the backend event provides it.
 
 ### Interface Language
 

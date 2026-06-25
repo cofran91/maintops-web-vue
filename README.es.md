@@ -31,7 +31,7 @@ El bootstrap actual incluye:
 - Vue 3, Vite, Tailwind CSS 4 y Pinia.
 - Metadata, favicon, título, sidebar y header con branding `MaintOps Console`.
 - Grupos de navegación MaintOps para operaciones, mantenimiento, órdenes y acceso.
-- Topbar responsive con títulos contextuales, estado realtime y placeholder de notificaciones.
+- Topbar responsive con títulos contextuales, estado realtime y centro persistente de notificaciones.
 - Patrones de layout para dashboard, listado, formulario, detalle y estado vacío.
 - Componentes UI base para páginas, badges, dropdowns, tablas responsive y estados vacíos.
 - Cliente Axios compartido con inyección de token Bearer y normalización de errores estilo Laravel.
@@ -42,6 +42,7 @@ El bootstrap actual incluye:
 - Dashboard operacional con métricas desde Laravel, órdenes del día, próximas órdenes, conteos por estado y secciones de carga según rol.
 - Ciclo realtime autenticado con tokens cortos emitidos por Laravel, estado Socket.IO, renovación, limpieza y presencia.
 - Eventos operativos realtime que refrescan dashboard, listados de órdenes y detalle de orden sin exponer administración de rooms en el navegador.
+- Centro persistente de notificaciones para eventos de órdenes e ítems, con acciones individuales y marcar todas como leídas.
 - Módulo de usuarios con servicio HTTP, filtros, paginación, detalle, formularios, acciones según rol y búsqueda paginada de talleres.
 - Módulo de propietarios con servicio HTTP, filtros por búsqueda y estado, paginación, detalle, formularios y acciones de eliminación según permisos.
 - Módulo de vehículos con servicio HTTP, filtros avanzados, paginación, detalle, formularios, búsqueda paginada de propietarios y acciones de eliminación según permisos.
@@ -78,7 +79,7 @@ src/
   modules/maintenance-orders/  Servicios, reglas de estado, listado, detalle y formulario de órdenes e ítems.
   modules/maintenance-plans/  Servicio de planes, listado, detalle y formularios.
   modules/maintenance-tasks/  Servicio de tareas, listado, detalle y formularios.
-  modules/realtime/  Token realtime, ciclo Socket.IO, listeners de eventos, estado y presencia.
+  modules/realtime/  Token realtime, ciclo Socket.IO, listeners de eventos, notificaciones, estado y presencia.
   modules/owners/  Servicio de propietarios, listado, detalle y formularios.
   modules/users/  Servicio de usuarios, listado, detalle y formularios.
   modules/vehicles/  Servicio de vehículos, listado, detalle y formularios.
@@ -101,6 +102,8 @@ La capa de permisos frontend refleja la intención del backend para visibilidad 
 Realtime usa tokens cortos emitidos por Laravel a través de la API autenticada. El navegador no envía el token Sanctum a Socket.IO; solicita un token realtime dedicado y lo envía al gateway durante el handshake Socket.IO.
 
 Los payloads de eventos operativos se tratan como hechos controlados por backend. El frontend parsea eventos autorizados de órdenes e ítems, los deduplica por id de evento y refresca las vistas afectadas en vez de mutar estado complejo de dominio localmente.
+
+Las notificaciones realtime se almacenan por usuario autenticado en el navegador y permanecen visibles hasta marcarlas como leídas. Los eventos de órdenes e ítems se diferencian visualmente, y las notificaciones de ítems incluyen el nombre de la tarea cuando el evento backend lo entrega.
 
 ### Idioma De La Interfaz
 
