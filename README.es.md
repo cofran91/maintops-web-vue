@@ -1,144 +1,138 @@
 # Consola Web MaintOps
 
-[Inglés](README.md) | Español
+Documentación en inglés: [README.md](README.md).
 
-MaintOps Web Console es un frontend en Vue 3 para una plataforma de operaciones de mantenimiento vehicular. Está diseñado como el punto de entrada web de un ecosistema de nivel portafolio que también incluye APIs backend, comunicación realtime y servicios de analítica.
+MaintOps Web Console es la aplicación Vue 3 de navegador para la plataforma de operaciones de mantenimiento vehicular MaintOps. Entrega una consola operativa con alcance por rol para dashboard, registros de clientes y vehículos, talleres, catálogos de mantenimiento, órdenes, auditoría, actividad realtime y analítica.
 
-Este repositorio está documentado intencionalmente como pieza de portafolio de ingeniería. El foco no está solo en la UI que aparece en pantalla, sino también en las decisiones detrás del stack, la estructura de carpetas, el modelo de ejecución y las fronteras de integración.
+Este proyecto está diseñado como la pieza frontend del stack completo de portafolio MaintOps. Puede ejecutarse solo para revisar UI, pero la experiencia completa depende de:
 
-## Puntos Destacados De Portafolio
+- `maintops-api-laravel` para autenticación, autorización, datos de negocio, recuperación de contraseña y emisión de service tokens.
+- `maintops-realtime-node` para eventos operativos en vivo y presencia.
+- `maintops-analytics-fastapi` para métricas, pronósticos, alertas de riesgo y recomendaciones.
+- `maintops-stack` para el ambiente local replicable que ejecuta todos los servicios juntos.
 
-- Shell administrativo responsive construido con Vue 3, Vite, Tailwind CSS 4 y Pinia.
-- Branding propio `MaintOps Console` sobre una base visual administrativa probada.
-- Desarrollo Docker-first para ejecutar el proyecto sin Node instalado en el host.
-- Separación clara entre shell visual, rutas, estado compartido y componentes reutilizables.
-- Configuración de API mediante variables de entorno en vez de URLs de servicio fijas.
-- UX frontend diseñada alrededor de autorización controlada por backend, manteniendo Laravel como frontera de seguridad.
-- Navegación y disponibilidad de acciones según rol, alineadas con las policies backend para una UX más clara.
+## Qué Demuestra Este Proyecto
 
-## Por Qué Admin One
+- Arquitectura Vue 3 con route guards, stores compartidos, feature modules y componentes UI reutilizables.
+- Consola administrativa profesional construida desde una base UI probada y adaptada a un dominio real de mantenimiento.
+- Ejecución Docker-first sin requerir Node.js en el host.
+- Navegación y acciones por rol que reflejan la intención de las policies backend sin reemplazar la autorización real.
+- Integración autenticada con Laravel API, normalización de errores y helpers de paginación/queries.
+- Pantallas públicas de recuperación de contraseña que consumen endpoints Laravel y soportan links enviados por correo.
+- Ciclo de vida Socket.IO autenticado con tokens realtime de corta duración emitidos por Laravel.
+- Centro de notificaciones realtime que reacciona a eventos operativos sin permitir que el navegador gestione rooms.
+- Integración con Analytics usando tokens dedicados emitidos por Laravel en vez del token principal de API.
+- Interfaz de producto en inglés con documentación técnica paralela en inglés y español.
 
-Los dashboards operativos necesitan un shell confiable antes de que los flujos de dominio se sientan profesionales: navegación lateral, comportamiento de topbar, responsividad móvil, modo oscuro, cards, tablas, formularios y estados vacíos deben funcionar de forma consistente.
+## Stack Técnico
 
-Admin One Vue Tailwind se usa como base visual porque aporta esa experiencia administrativa común con Vue 3, Vite, Tailwind CSS 4, componentes reutilizables, soporte de modo oscuro y licencia MIT.
+| Herramienta | Propósito |
+| --- | --- |
+| Vue 3 | Modelo de componentes y base reactiva de UI. |
+| Vite | Servidor de desarrollo y pipeline de build. |
+| Pinia | Estado compartido de sesión, usuario y UI. |
+| Vue Router | Gestión de rutas públicas y autenticadas. |
+| Axios | Cliente HTTP para integraciones con Laravel y FastAPI. |
+| Socket.IO Client | Conexión realtime del navegador al gateway Node. |
+| Chart.js | Gráficos para dashboard y vistas de analítica. |
+| Tailwind CSS 4 | Estilos utilitarios y control responsive. |
+| Admin One Vue Tailwind | Base de shell administrativa MIT adaptada a MaintOps. |
+| ESLint y Prettier | Calidad y formato de código. |
 
-El template no se trata como arquitectura de producto. Se eliminan páginas demo, datos de ejemplo, enlaces promocionales y branding propio del template. MaintOps conserva la base UI responsive y define su propio lenguaje de producto, rutas, configuración de ejecución y modelo de integración.
+## Rol Dentro Del Ecosistema MaintOps
 
-## Alcance Actual
+El frontend es intencionalmente una capa de presentación e integración. Mejora la experiencia ocultando acciones no disponibles, agrupando flujos y refrescando datos después de eventos realtime, pero Laravel sigue siendo la fuente de verdad para autenticación, autorización, validación y decisiones de negocio.
 
-El bootstrap actual incluye:
+El navegador se comunica con tres servicios de aplicación:
 
-- Vue 3, Vite, Tailwind CSS 4 y Pinia.
-- Metadata, favicon, título, sidebar y header con branding `MaintOps Console`.
-- Grupos de navegación MaintOps para operaciones, mantenimiento, órdenes y acceso.
-- Topbar responsive con títulos contextuales, estado realtime y centro persistente de notificaciones.
-- Patrones de layout para dashboard, listado, formulario, detalle y estado vacío.
-- Componentes UI base para páginas, badges, dropdowns, tablas responsive y estados vacíos.
-- Cliente Axios compartido con inyección de token Bearer y normalización de errores estilo Laravel.
-- Helpers de consulta para filtros, búsqueda, página y payloads de paginación.
-- Contratos JSDoc para respuestas de API, paginación, roles, usuarios y errores normalizados.
-- Login, logout, recuperación de contraseña, `/auth/me`, hidratación de sesión con Pinia, guards de rutas privadas y bloqueo de roles no interactivos.
-- Matrices frontend de permisos para rutas, acciones CRUD, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes.
-- Dashboard operacional con métricas desde Laravel, órdenes del día, próximas órdenes, conteos por estado y secciones de carga según rol.
-- Ciclo realtime autenticado con tokens cortos emitidos por Laravel, estado Socket.IO, renovación, limpieza y presencia.
-- Eventos operativos realtime que refrescan dashboard, listados de órdenes y detalle de orden sin exponer administración de rooms en el navegador.
-- Centro persistente de notificaciones para eventos de órdenes e ítems, con acciones individuales y marcar todas como leídas.
-- Módulo administrativo de Analytics con tokens de servicio emitidos por Laravel, consumo de FastAPI, métricas observadas, pronósticos de carga, alertas de riesgo y recomendaciones.
-- Módulo de usuarios con servicio HTTP, filtros, paginación, detalle, formularios, acciones según rol y búsqueda paginada de talleres.
-- Módulo de propietarios con servicio HTTP, filtros por búsqueda y estado, paginación, detalle, formularios y acciones de eliminación según permisos.
-- Módulo de vehículos con servicio HTTP, filtros avanzados, paginación, detalle, formularios, búsqueda paginada de propietarios y acciones de eliminación según permisos.
-- Módulo de talleres con servicio HTTP, filtros avanzados, búsqueda de administrador, sistemas de vehículo, asignación de técnicos, horario semanal y acciones según permisos.
-- Módulo de tareas de mantenimiento con servicio HTTP, filtros por estado, consulta de sistemas de vehículo, búsqueda paginada de vehículos, alcance reutilizable, restricciones para advisors y acciones según permisos.
-- Módulo de planes de mantenimiento con servicio HTTP, búsqueda paginada de tareas, selección de tareas agrupadas, intervalos recomendados, detalle, filtros y acciones según permisos.
-- Módulo de órdenes de mantenimiento con servicios HTTP, filtros avanzados, detalle de asignaciones, listados paginados, visibilidad de ítems dentro de cada orden y transiciones de estado según rol.
-- Acciones de estado de ítems filtradas por rol, estado actual y disponibilidad de endpoints públicos desde el detalle de la orden.
-- Módulo de auditoría con servicio HTTP, filtros, paginación, inspección de cambios y visibilidad exclusiva para super admin.
-- Archivos Docker y Docker Compose para ejecución local.
-- `.env.example` con `FRONTEND_ALLOWED_HOSTS`, `VITE_API_BASE_URL`, `VITE_REALTIME_URL` y `VITE_ANALYTICS_BASE_URL`.
-- Documentación README en inglés y español.
+```text
+Laravel API      VITE_API_BASE_URL
+Realtime Gateway VITE_REALTIME_URL
+Analytics API    VITE_ANALYTICS_BASE_URL
+```
 
-## Decisiones De Arquitectura
+La ruta normal de revisión es ejecutar este proyecto mediante `maintops-stack`, donde esos servicios ya están conectados.
 
-### Estrategia De Carpetas
+## Capacidades Implementadas
 
-La estructura actual es compacta y separa primitivas UI reutilizables, shells de layout, definición de rutas, estado compartido y vistas de página.
+Shell de aplicación:
+
+- Branding MaintOps, sidebar responsive, topbar, dark mode y layout autenticado.
+- Metadata de rutas para títulos contextuales y grupos de navegación.
+- Layout guest para login, forgot password y reset password.
+
+Autenticación y permisos:
+
+- Login, logout, `/auth/me`, hidratación de sesión, guards privados y bloqueo no interactivo por rol.
+- Recuperación de contraseña con endpoints Laravel de forgot/reset.
+- Matrices frontend de permisos para rutas, CRUD, roles asignables, auditoría, analytics y acciones de estado de órdenes.
+
+Módulos operativos:
+
+- Dashboard con workload, estados de órdenes, agenda, aprobaciones pendientes y actividad activa con alcance por rol.
+- Vistas para users, owners, vehicles, workshops, maintenance tasks, maintenance plans, maintenance orders, order items, vehicle systems y audits.
+- Patrones de list, detail, create, edit, lookup, filters, pagination, empty states y acciones conscientes de policies.
+
+Realtime:
+
+- Solicitud de token realtime dedicado a Laravel.
+- Ciclo de conexión Socket.IO, reconexión, renovación de token, limpieza, status badge y presencia.
+- Centro de notificaciones para eventos de órdenes e items con dismiss individual y mark-all-as-read.
+- Refresco de datos ante eventos relevantes en vez de mutación compleja de estado de dominio local.
+
+Analytics:
+
+- Solicitud de token analytics dedicado a Laravel.
+- Cliente FastAPI para métricas observadas, pronóstico de carga, alertas de riesgo y recomendaciones.
+- Navegación y vistas Analytics solo para roles administrativos.
+
+## Estructura Del Proyecto
+
+El frontend usa una estructura compacta por feature modules:
 
 ```text
 src/
-  api/         Cliente Axios, normalización de errores, helpers de consulta y exports de API.
-  auth/        Matrices de permisos por rol y helpers de UX frontend.
-  components/  Primitivas UI reutilizables y piezas de layout.
-  components/ui/  Componentes MaintOps para páginas, tablas, badges, dropdowns y estados vacíos.
-  config/      Configuración runtime de API derivada de variables de entorno de Vite.
-  css/         Punto de entrada de Tailwind y variantes de estilo.
-  layouts/     Shells autenticado e invitado.
-  router/      Definiciones de rutas de la consola.
-  stores/      Estado compartido con Pinia.
-  modules/auth/  Servicio de autenticación, vista de login y vistas de recuperación de contraseña.
-  modules/audits/  Servicio de auditoría y vista de trazabilidad para super admin.
-  modules/analytics/  Servicio de token Analytics, cliente FastAPI y vista administrativa de analítica.
-  modules/dashboard/  Servicio del dashboard operacional.
-  modules/maintenance-orders/  Servicios, reglas de estado, listado, detalle y formulario de órdenes e ítems.
-  modules/maintenance-plans/  Servicio de planes, listado, detalle y formularios.
-  modules/maintenance-tasks/  Servicio de tareas, listado, detalle y formularios.
-  modules/realtime/  Token realtime, ciclo Socket.IO, listeners de eventos, notificaciones, estado y presencia.
-  modules/owners/  Servicio de propietarios, listado, detalle y formularios.
-  modules/users/  Servicio de usuarios, listado, detalle y formularios.
-  modules/vehicles/  Servicio de vehículos, listado, detalle y formularios.
-  modules/vehicle-systems/  Servicio de consulta de sistemas de vehículo.
-  modules/workshops/  Servicio de talleres, listado, detalle y formularios.
-  types/       Contratos JSDoc de dominio y API.
-  views/       Vistas de página.
+  api/          Cliente Axios, normalización de errores, query helpers y exports API.
+  auth/         Matrices de permisos frontend y helpers de UX.
+  components/   Primitivas UI reutilizables derivadas del template.
+  components/ui/ Componentes MaintOps para pages, tables, badges, dropdowns y empty states.
+  config/       URLs de integración desde variables Vite.
+  css/          Entrypoint Tailwind y variantes de estilos.
+  layouts/      Shells autenticado y guest.
+  modules/      Feature modules agrupados por capacidad de dominio.
+  router/       Definición de rutas, guards y metadata.
+  stores/       Estado compartido con Pinia.
+  types/        Contratos JSDoc para payloads API y de dominio.
+  views/        Vistas genéricas o top-level.
 ```
 
-Esta estructura mantiene el bootstrap fácil de revisar: el comportamiento de layout vive en `layouts`, la navegación y el mapeo de rutas viven en `router` y archivos de menú, y el contenido de pantalla permanece en `views`.
+Los feature modules siguen la misma separación de responsabilidades:
 
-### Frontera De Integración
+```text
+modules/<feature>/
+  services/     Clientes HTTP o servicios de integración.
+  views/        Pantallas a nivel de ruta.
+  components/   Componentes reutilizables específicos del feature cuando aplica.
+  composables/   Helpers reactivos específicos del feature cuando aplica.
+```
 
-El frontend lee URLs de servicios desde `VITE_API_BASE_URL`, `VITE_REALTIME_URL` y `VITE_ANALYTICS_BASE_URL`. Los hosts de desarrollo permitidos por Vite se controlan con `FRONTEND_ALLOWED_HOSTS`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
+Esto separa primitivas UI compartidas de workflows específicos de dominio y mantiene el acceso API fuera de los componentes de ruta.
 
-El comportamiento sensible a autorización pertenece al backend. El frontend puede mejorar la usabilidad ocultando rutas y acciones no disponibles, pero no reemplaza políticas ni validaciones del backend.
+## Decisiones De Arquitectura
 
-La capa de permisos frontend refleja la intención del backend para visibilidad de rutas, acciones de crear/actualizar/eliminar, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes e ítems. Esto mantiene la consola consciente del rol sin mover la fuente de verdad fuera de la API.
+El frontend refleja la intención de autorización del backend, pero no aplica seguridad real. Visibilidad de rutas, menús, botones y acciones de estado se filtran en el navegador para reducir fricción; Laravel valida cada request con policies y reglas.
 
-Realtime usa tokens cortos emitidos por Laravel a través de la API autenticada. El navegador no envía el token Sanctum a Socket.IO; solicita un token realtime dedicado y lo envía al gateway durante el handshake Socket.IO.
+El cliente API centraliza inyección del Bearer token, normalización de errores de validación Laravel, mensajes de fallos de red y serialización de queries. Los módulos consumen ese cliente a través de servicios pequeños en vez de llamar Axios directamente desde cada vista.
 
-Los payloads de eventos operativos se tratan como hechos controlados por backend. El frontend parsea eventos autorizados de órdenes e ítems, los deduplica por id de evento y refresca las vistas afectadas en vez de mutar estado complejo de dominio localmente.
+Los eventos realtime se tratan como hechos emitidos por el backend. El frontend deduplica por event id y vuelve a consultar dashboards, listas o detalles afectados. Esto evita mantener una segunda copia de la lógica de state machines de Laravel en el navegador.
 
-Las notificaciones realtime se almacenan por usuario autenticado en el navegador y permanecen visibles hasta marcarlas como leídas. Los eventos de órdenes e ítems se diferencian visualmente, y las notificaciones de ítems incluyen el nombre de la tarea cuando el evento backend lo entrega.
+Analytics se separa intencionalmente del cliente API principal. El navegador solicita a Laravel un analytics service token y luego llama FastAPI con ese token. El token principal de Laravel no se envía directamente a Analytics.
 
-Analytics usa tokens de servicio cortos emitidos por Laravel mediante la API autenticada. El navegador llama FastAPI Analytics con ese token dedicado, nunca con el token principal de sesión Laravel. La pantalla de Analytics queda disponible solo por la matriz de permisos frontend para usuarios `super_admin` y `admin`, mientras Laravel y Analytics conservan la frontera real de autorización.
-
-La recuperación de contraseña usa los endpoints públicos de autenticación de Laravel. El navegador solicita el correo mediante `/auth/forgot-password`, recibe el token de recuperación en el link enviado por correo y envía la nueva contraseña a `/auth/reset-password`. El frontend soporta tanto URLs con hash como links directos `/reset-password` generados por la API.
-
-### Idioma De La Interfaz
-
-El panel administrativo se construyó intencionalmente en inglés para reflejar el idioma usado comúnmente en equipos internacionales de software y aplicaciones empresariales. La documentación en español se mantiene por separado para que el razonamiento técnico sea accesible en ambos idiomas.
-
-### Ejecución Docker-First
-
-El repositorio incluye `Dockerfile`, `docker-compose.yml`, `.dockerignore` y `.env.example` para revisar y ejecutar la app con Docker como flujo principal. Node local queda disponible como alternativa, no como requisito.
-
-## Contexto Del Ecosistema
-
-MaintOps está organizado como un sistema multiservicio:
-
-- Consola web para la experiencia operativa.
-- API Laravel para autenticación, datos de negocio, políticas y auditoría.
-- Servicio realtime para actualizaciones operativas en vivo.
-- Servicio de analítica para métricas operativas y recomendaciones.
-
-Este repositorio se encarga de la consola web y de la superficie de integración frontend.
-
-## Requisitos
-
-- Docker Engine o Docker Desktop con Docker Compose.
-
-No necesitas Node ni npm instalados en el host si usas Docker.
+Admin One provee la base visual, pero se eliminaron páginas demo, datos de muestra, enlaces promocionales y branding propio del template. MaintOps conserva los patrones de shell y define sus propias rutas, módulos, lenguaje de dominio y modelo de integración.
 
 ## Variables De Entorno
 
-Crea un `.env` local desde `.env.example` y ajusta las URLs de servicios si el backend, el gateway realtime o Analytics usan otros puertos:
+Crea un `.env` local desde `.env.example` solo cuando necesites sobrescribir URLs de servicio u hosts permitidos:
 
 ```dotenv
 FRONTEND_ALLOWED_HOSTS=localhost,127.0.0.1
@@ -147,33 +141,21 @@ VITE_REALTIME_URL=http://localhost:3000
 VITE_ANALYTICS_BASE_URL=http://localhost:8001
 ```
 
-Para una demo pública, reemplaza las URLs locales por URLs de servicio accesibles desde internet y configura `FRONTEND_ALLOWED_HOSTS` con los hostnames que debe aceptar el servidor de desarrollo de Vite.
-
-## Notas De Demo Pública
-
-- Usa solo datos de ejemplo. Los ambientes de demo pública no deben recibir datos reales de personas, clientes, talleres o vehículos.
-- El navegador se comunica con Laravel, el gateway realtime y Analytics mediante las URLs públicas configuradas arriba.
-- Laravel sigue siendo la fuente real de autorización; los checks frontend solo mejoran la navegación y la visibilidad de acciones.
-- Las fallas de conectividad se normalizan en mensajes claros de disponibilidad de API para que quien revise la demo distinga una caída de servicio de un error de aplicación.
+Para el demo local completo, `maintops-stack` entrega estos valores.
 
 ## Ejecutar Con Docker
 
-Levanta la consola:
+Revisión standalone del frontend:
 
 ```bash
 docker compose up -d --build
+docker compose logs -f frontend
 ```
 
-Abre:
+Abrir:
 
 ```text
 http://localhost:5173
-```
-
-Ver logs:
-
-```bash
-docker compose logs -f frontend
 ```
 
 Detener:
@@ -181,6 +163,8 @@ Detener:
 ```bash
 docker compose down
 ```
+
+El frontend puede renderizar solo, pero los flujos autenticados requieren la API Laravel. Realtime y Analytics requieren sus servicios correspondientes.
 
 ## Alternativa Con Node Local
 
@@ -194,6 +178,20 @@ Build de producción:
 ```bash
 npm run build
 ```
+
+Calidad de código:
+
+```bash
+npm run lint
+npm run format
+```
+
+## Notas Para Revisar El Demo
+
+- Usa el repositorio `maintops-stack` para revisar el producto integrado.
+- Usa solo datos de muestra. Ambientes demo no deberían recibir datos reales personales, de clientes, talleres o vehículos.
+- Laravel sigue siendo la fuente de verdad de autorización; los checks frontend solo mejoran navegación y visibilidad de acciones.
+- Los fallos de conectividad se normalizan en mensajes claros para distinguir una caída de servicio de un error de validación de aplicación.
 
 ## Atribución
 
