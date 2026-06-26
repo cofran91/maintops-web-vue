@@ -37,7 +37,7 @@ El bootstrap actual incluye:
 - Cliente Axios compartido con inyección de token Bearer y normalización de errores estilo Laravel.
 - Helpers de consulta para filtros, búsqueda, página y payloads de paginación.
 - Contratos JSDoc para respuestas de API, paginación, roles, usuarios y errores normalizados.
-- Login, logout, `/auth/me`, hidratación de sesión con Pinia, guards de rutas privadas y bloqueo de roles no interactivos.
+- Login, logout, recuperación de contraseña, `/auth/me`, hidratación de sesión con Pinia, guards de rutas privadas y bloqueo de roles no interactivos.
 - Matrices frontend de permisos para rutas, acciones CRUD, roles asignables, acceso a auditoría, visibilidad de Analytics y acciones de estado de órdenes.
 - Dashboard operacional con métricas desde Laravel, órdenes del día, próximas órdenes, conteos por estado y secciones de carga según rol.
 - Ciclo realtime autenticado con tokens cortos emitidos por Laravel, estado Socket.IO, renovación, limpieza y presencia.
@@ -74,7 +74,7 @@ src/
   layouts/     Shells autenticado e invitado.
   router/      Definiciones de rutas de la consola.
   stores/      Estado compartido con Pinia.
-  modules/auth/  Servicio de autenticación y vista de login.
+  modules/auth/  Servicio de autenticación, vista de login y vistas de recuperación de contraseña.
   modules/audits/  Servicio de auditoría y vista de trazabilidad para super admin.
   modules/analytics/  Servicio de token Analytics, cliente FastAPI y vista administrativa de analítica.
   modules/dashboard/  Servicio del dashboard operacional.
@@ -108,6 +108,8 @@ Los payloads de eventos operativos se tratan como hechos controlados por backend
 Las notificaciones realtime se almacenan por usuario autenticado en el navegador y permanecen visibles hasta marcarlas como leídas. Los eventos de órdenes e ítems se diferencian visualmente, y las notificaciones de ítems incluyen el nombre de la tarea cuando el evento backend lo entrega.
 
 Analytics usa tokens de servicio cortos emitidos por Laravel mediante la API autenticada. El navegador llama FastAPI Analytics con ese token dedicado, nunca con el token principal de sesión Laravel. La pantalla de Analytics queda disponible solo por la matriz de permisos frontend para usuarios `super_admin` y `admin`, mientras Laravel y Analytics conservan la frontera real de autorización.
+
+La recuperación de contraseña usa los endpoints públicos de autenticación de Laravel. El navegador solicita el correo mediante `/auth/forgot-password`, recibe el token de recuperación en el link enviado por correo y envía la nueva contraseña a `/auth/reset-password`. El frontend soporta tanto URLs con hash como links directos `/reset-password` generados por la API.
 
 ### Idioma De La Interfaz
 

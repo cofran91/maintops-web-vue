@@ -21,7 +21,9 @@ import {
   canAccessAnyRoute,
   canUseResourceWithAnyRole,
 } from '@/auth/permissions.js'
+import ForgotPasswordView from '@/modules/auth/views/ForgotPasswordView.vue'
 import LoginView from '@/modules/auth/views/LoginView.vue'
+import ResetPasswordView from '@/modules/auth/views/ResetPasswordView.vue'
 import UserDetailView from '@/modules/users/views/UserDetailView.vue'
 import UserFormView from '@/modules/users/views/UserFormView.vue'
 import UsersListView from '@/modules/users/views/UsersListView.vue'
@@ -32,6 +34,25 @@ import WorkshopDetailView from '@/modules/workshops/views/WorkshopDetailView.vue
 import WorkshopFormView from '@/modules/workshops/views/WorkshopFormView.vue'
 import WorkshopsListView from '@/modules/workshops/views/WorkshopsListView.vue'
 import { useAuthStore } from '@/stores/auth.js'
+
+const normalizeDirectPasswordResetUrl = () => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const resetPath = '/reset-password'
+  const { hash, pathname, search } = window.location
+
+  if (hash || !pathname.endsWith(resetPath)) {
+    return
+  }
+
+  const basePath = pathname.slice(0, -resetPath.length) || '/'
+
+  window.history.replaceState(window.history.state, '', `${basePath}#${resetPath}${search}`)
+}
+
+normalizeDirectPasswordResetUrl()
 
 const routes = [
   {
@@ -47,6 +68,25 @@ const routes = [
     path: '/login',
     name: 'login',
     component: LoginView,
+  },
+  {
+    meta: {
+      title: 'Forgot password',
+      public: true,
+      guestOnly: true,
+    },
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: ForgotPasswordView,
+  },
+  {
+    meta: {
+      title: 'Reset password',
+      public: true,
+    },
+    path: '/reset-password',
+    name: 'reset-password',
+    component: ResetPasswordView,
   },
   {
     meta: {

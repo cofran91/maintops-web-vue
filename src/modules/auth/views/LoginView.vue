@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { mdiAsterisk, mdiEmailOutline } from '@mdi/js'
 import { isApiError } from '@/api/errors.js'
 import BaseButton from '@/components/BaseButton.vue'
@@ -125,6 +125,16 @@ const submit = async () => {
             required
           />
         </FormField>
+
+        <div class="mb-6 text-right text-sm">
+          <RouterLink
+            :to="{ name: 'forgot-password' }"
+            class="font-medium text-blue-700 hover:text-blue-900 dark:text-blue-300
+              dark:hover:text-blue-200"
+          >
+            Forgot your password?
+          </RouterLink>
+        </div>
 
         <template #footer>
           <BaseButtons type="justify-end">
