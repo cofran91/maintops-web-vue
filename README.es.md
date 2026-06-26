@@ -54,7 +54,7 @@ El bootstrap actual incluye:
 - Acciones de estado de ítems filtradas por rol, estado actual y disponibilidad de endpoints públicos desde el detalle de la orden.
 - Módulo de auditoría con servicio HTTP, filtros, paginación, inspección de cambios y visibilidad exclusiva para super admin.
 - Archivos Docker y Docker Compose para ejecución local.
-- `.env.example` con `VITE_API_BASE_URL`, `VITE_REALTIME_URL` y `VITE_ANALYTICS_BASE_URL`.
+- `.env.example` con `FRONTEND_ALLOWED_HOSTS`, `VITE_API_BASE_URL`, `VITE_REALTIME_URL` y `VITE_ANALYTICS_BASE_URL`.
 - Documentación README en inglés y español.
 
 ## Decisiones De Arquitectura
@@ -95,7 +95,7 @@ Esta estructura mantiene el bootstrap fácil de revisar: el comportamiento de la
 
 ### Frontera De Integración
 
-El frontend lee URLs de servicios desde `VITE_API_BASE_URL`, `VITE_REALTIME_URL` y `VITE_ANALYTICS_BASE_URL`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
+El frontend lee URLs de servicios desde `VITE_API_BASE_URL`, `VITE_REALTIME_URL` y `VITE_ANALYTICS_BASE_URL`. Los hosts de desarrollo permitidos por Vite se controlan con `FRONTEND_ALLOWED_HOSTS`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
 
 El comportamiento sensible a autorización pertenece al backend. El frontend puede mejorar la usabilidad ocultando rutas y acciones no disponibles, pero no reemplaza políticas ni validaciones del backend.
 
@@ -139,10 +139,20 @@ No necesitas Node ni npm instalados en el host si usas Docker.
 Crea un `.env` local desde `.env.example` y ajusta las URLs de servicios si el backend, el gateway realtime o Analytics usan otros puertos:
 
 ```dotenv
+FRONTEND_ALLOWED_HOSTS=localhost,127.0.0.1
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 VITE_REALTIME_URL=http://localhost:3000
 VITE_ANALYTICS_BASE_URL=http://localhost:8001
 ```
+
+Para una demo pública, reemplaza las URLs locales por URLs de servicio accesibles desde internet y configura `FRONTEND_ALLOWED_HOSTS` con los hostnames que debe aceptar el servidor de desarrollo de Vite.
+
+## Notas De Demo Pública
+
+- Usa solo datos de ejemplo. Los ambientes de demo pública no deben recibir datos reales de personas, clientes, talleres o vehículos.
+- El navegador se comunica con Laravel, el gateway realtime y Analytics mediante las URLs públicas configuradas arriba.
+- Laravel sigue siendo la fuente real de autorización; los checks frontend solo mejoran la navegación y la visibilidad de acciones.
+- Las fallas de conectividad se normalizan en mensajes claros de disponibilidad de API para que quien revise la demo distinga una caída de servicio de un error de aplicación.
 
 ## Ejecutar Con Docker
 

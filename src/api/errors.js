@@ -1,7 +1,12 @@
 import axios from 'axios'
-import { DEFAULT_API_ERROR_MESSAGE } from '@/types/errors.js'
+import {
+  API_NETWORK_ERROR_MESSAGE,
+  API_TIMEOUT_ERROR_MESSAGE,
+  DEFAULT_API_ERROR_MESSAGE,
+} from '@/types/errors.js'
 
 const isRecord = (value) => typeof value === 'object' && value !== null
+const timeoutErrorCodes = new Set(['ECONNABORTED', 'ETIMEDOUT'])
 
 const getMessage = (data) => {
   if (typeof data === 'string' && data.trim() !== '') {
@@ -56,6 +61,14 @@ const getValidationErrors = (data) => {
   return normalizeValidationErrors(data.errors)
 }
 
+const getTransportErrorMessage = (error) => {
+  if (error.response !== undefined) {
+    return undefined
+  }
+
+  return timeoutErrorCodes.has(error.code) ? API_TIMEOUT_ERROR_MESSAGE : API_NETWORK_ERROR_MESSAGE
+}
+
 export const isApiError = (error) =>
   isRecord(error) &&
   typeof error.message === 'string' &&
@@ -71,7 +84,11 @@ export const normalizeApiError = (error) => {
     const data = error.response?.data
 
     return {
-      message: getMessage(data) ?? error.message ?? DEFAULT_API_ERROR_MESSAGE,
+      message:
+        getMessage(data) ??
+        getTransportErrorMessage(error) ??
+        error.message ??
+        DEFAULT_API_ERROR_MESSAGE,
       status: error.response?.status ?? null,
       code: getCode(data) ?? error.code,
       errors: getValidationErrors(data),

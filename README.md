@@ -54,7 +54,7 @@ The current bootstrap includes:
 - Order item status actions filtered by role, current state, and public endpoint availability from the order detail workflow.
 - Audit log module with HTTP service, filters, pagination, change inspection, and super-admin-only visibility.
 - Docker and Docker Compose files for local execution.
-- `.env.example` with `VITE_API_BASE_URL`, `VITE_REALTIME_URL`, and `VITE_ANALYTICS_BASE_URL`.
+- `.env.example` with `FRONTEND_ALLOWED_HOSTS`, `VITE_API_BASE_URL`, `VITE_REALTIME_URL`, and `VITE_ANALYTICS_BASE_URL`.
 - English and Spanish README documentation.
 
 ## Architecture Decisions
@@ -95,7 +95,7 @@ This structure keeps the bootstrap easy to inspect: layout behavior lives in `la
 
 ### Integration Boundary
 
-The frontend reads service URLs from `VITE_API_BASE_URL`, `VITE_REALTIME_URL`, and `VITE_ANALYTICS_BASE_URL`. That keeps the web app portable across local, Docker, and deployed environments.
+The frontend reads service URLs from `VITE_API_BASE_URL`, `VITE_REALTIME_URL`, and `VITE_ANALYTICS_BASE_URL`. Vite development hosts are controlled through `FRONTEND_ALLOWED_HOSTS`. That keeps the web app portable across local, Docker, and deployed environments.
 
 Authorization-sensitive behavior belongs to the backend. The frontend can improve usability by hiding unavailable routes and actions, but it does not replace backend policies or validation.
 
@@ -139,10 +139,20 @@ You do not need Node or npm installed on the host when using Docker.
 Create a local `.env` from `.env.example` and adjust service URLs if the backend, realtime gateway, or Analytics service use different ports:
 
 ```dotenv
+FRONTEND_ALLOWED_HOSTS=localhost,127.0.0.1
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 VITE_REALTIME_URL=http://localhost:3000
 VITE_ANALYTICS_BASE_URL=http://localhost:8001
 ```
+
+For a public demo deployment, replace the local URLs with externally reachable service URLs and set `FRONTEND_ALLOWED_HOSTS` to the hostnames that should be accepted by the Vite dev server.
+
+## Public Demo Notes
+
+- Use sample data only. Public demo environments should not receive real personal, customer, workshop, or vehicle data.
+- The browser talks to Laravel, the realtime gateway, and Analytics through the public URLs configured above.
+- Laravel remains the authorization source of truth; frontend role checks only improve navigation and action visibility.
+- Connectivity failures are normalized into clear API availability messages so reviewers can distinguish a service outage from an application error.
 
 ## Run With Docker
 
