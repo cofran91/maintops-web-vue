@@ -1,4 +1,9 @@
 export { DEFAULT_PAGINATION_META } from '@/types/api.js'
+export {
+  ANALYTICS_CONFIDENCE_LEVELS,
+  ANALYTICS_PRIORITIES,
+  ANALYTICS_SEVERITIES,
+} from '@/types/analytics.js'
 export { AUDIT_EVENTS, EMPTY_AUDIT_LOG } from '@/types/audit.js'
 export { EMPTY_DASHBOARD_SUMMARY } from '@/types/dashboard.js'
 export { REALTIME_CONNECTION_STATUSES } from '@/types/realtime.js'

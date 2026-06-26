@@ -1,5 +1,6 @@
 import {
   mdiAccountMultiple,
+  mdiChartLine,
   mdiCogOutline,
   mdiLogout,
   mdiMonitor,
@@ -74,6 +75,12 @@ export const menuAsideMain = [
         permissionKey: ROUTE_KEYS.ORDER_CREATE,
       },
     ],
+  },
+  {
+    to: '/analytics',
+    icon: mdiChartLine,
+    label: 'Analytics',
+    permissionKey: ROUTE_KEYS.ANALYTICS,
   },
   {
     label: 'Access',

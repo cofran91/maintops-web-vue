@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Home from '@/views/HomeView.vue'
+import AnalyticsView from '@/modules/analytics/views/AnalyticsView.vue'
 import AuditsListView from '@/modules/audits/views/AuditsListView.vue'
 import MaintenanceOrderDetailView from '@/modules/maintenance-orders/views/MaintenanceOrderDetailView.vue'
 import MaintenanceOrderFormView from '@/modules/maintenance-orders/views/MaintenanceOrderFormView.vue'
@@ -419,6 +420,19 @@ const routes = [
     path: '/access/audit',
     name: 'access-audit',
     component: AuditsListView,
+  },
+  {
+    meta: {
+      title: 'Analytics',
+      section: 'Analytics',
+      subtitle: 'Review observed metrics, workload forecasts, risks, and recommendations.',
+      permissionKey: ROUTE_KEYS.ANALYTICS,
+      resource: RESOURCES.ANALYTICS,
+      resourceAction: RESOURCE_ACTIONS.VIEW,
+    },
+    path: '/analytics',
+    name: 'analytics',
+    component: AnalyticsView,
   },
   {
     meta: {

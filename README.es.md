@@ -43,6 +43,7 @@ El bootstrap actual incluye:
 - Ciclo realtime autenticado con tokens cortos emitidos por Laravel, estado Socket.IO, renovación, limpieza y presencia.
 - Eventos operativos realtime que refrescan dashboard, listados de órdenes y detalle de orden sin exponer administración de rooms en el navegador.
 - Centro persistente de notificaciones para eventos de órdenes e ítems, con acciones individuales y marcar todas como leídas.
+- Módulo administrativo de Analytics con tokens de servicio emitidos por Laravel, consumo de FastAPI, métricas observadas, pronósticos de carga, alertas de riesgo y recomendaciones.
 - Módulo de usuarios con servicio HTTP, filtros, paginación, detalle, formularios, acciones según rol y búsqueda paginada de talleres.
 - Módulo de propietarios con servicio HTTP, filtros por búsqueda y estado, paginación, detalle, formularios y acciones de eliminación según permisos.
 - Módulo de vehículos con servicio HTTP, filtros avanzados, paginación, detalle, formularios, búsqueda paginada de propietarios y acciones de eliminación según permisos.
@@ -53,7 +54,7 @@ El bootstrap actual incluye:
 - Acciones de estado de ítems filtradas por rol, estado actual y disponibilidad de endpoints públicos desde el detalle de la orden.
 - Módulo de auditoría con servicio HTTP, filtros, paginación, inspección de cambios y visibilidad exclusiva para super admin.
 - Archivos Docker y Docker Compose para ejecución local.
-- `.env.example` con `VITE_API_BASE_URL` y `VITE_REALTIME_URL`.
+- `.env.example` con `VITE_API_BASE_URL`, `VITE_REALTIME_URL` y `VITE_ANALYTICS_BASE_URL`.
 - Documentación README en inglés y español.
 
 ## Decisiones De Arquitectura
@@ -75,6 +76,7 @@ src/
   stores/      Estado compartido con Pinia.
   modules/auth/  Servicio de autenticación y vista de login.
   modules/audits/  Servicio de auditoría y vista de trazabilidad para super admin.
+  modules/analytics/  Servicio de token Analytics, cliente FastAPI y vista administrativa de analítica.
   modules/dashboard/  Servicio del dashboard operacional.
   modules/maintenance-orders/  Servicios, reglas de estado, listado, detalle y formulario de órdenes e ítems.
   modules/maintenance-plans/  Servicio de planes, listado, detalle y formularios.
@@ -93,7 +95,7 @@ Esta estructura mantiene el bootstrap fácil de revisar: el comportamiento de la
 
 ### Frontera De Integración
 
-El frontend lee URLs de servicios desde `VITE_API_BASE_URL` y `VITE_REALTIME_URL`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
+El frontend lee URLs de servicios desde `VITE_API_BASE_URL`, `VITE_REALTIME_URL` y `VITE_ANALYTICS_BASE_URL`. Eso mantiene la app web portable entre entornos locales, Docker y despliegues.
 
 El comportamiento sensible a autorización pertenece al backend. El frontend puede mejorar la usabilidad ocultando rutas y acciones no disponibles, pero no reemplaza políticas ni validaciones del backend.
 
@@ -104,6 +106,8 @@ Realtime usa tokens cortos emitidos por Laravel a través de la API autenticada.
 Los payloads de eventos operativos se tratan como hechos controlados por backend. El frontend parsea eventos autorizados de órdenes e ítems, los deduplica por id de evento y refresca las vistas afectadas en vez de mutar estado complejo de dominio localmente.
 
 Las notificaciones realtime se almacenan por usuario autenticado en el navegador y permanecen visibles hasta marcarlas como leídas. Los eventos de órdenes e ítems se diferencian visualmente, y las notificaciones de ítems incluyen el nombre de la tarea cuando el evento backend lo entrega.
+
+Analytics usa tokens de servicio cortos emitidos por Laravel mediante la API autenticada. El navegador llama FastAPI Analytics con ese token dedicado, nunca con el token principal de sesión Laravel. La pantalla de Analytics queda disponible solo por la matriz de permisos frontend para usuarios `super_admin` y `admin`, mientras Laravel y Analytics conservan la frontera real de autorización.
 
 ### Idioma De La Interfaz
 
@@ -132,11 +136,12 @@ No necesitas Node ni npm instalados en el host si usas Docker.
 
 ## Variables De Entorno
 
-Crea un `.env` local desde `.env.example` y ajusta las URLs de servicios si el backend o el gateway realtime usan otros puertos:
+Crea un `.env` local desde `.env.example` y ajusta las URLs de servicios si el backend, el gateway realtime o Analytics usan otros puertos:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 VITE_REALTIME_URL=http://localhost:3000
+VITE_ANALYTICS_BASE_URL=http://localhost:8001
 ```
 
 ## Ejecutar Con Docker

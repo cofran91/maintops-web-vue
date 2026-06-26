@@ -43,6 +43,7 @@ The current bootstrap includes:
 - Authenticated realtime lifecycle with Laravel-issued short-lived tokens, Socket.IO status, renewal, cleanup, and presence tracking.
 - Operational realtime events that refresh dashboard, order lists, and order details without exposing room management in the browser.
 - Persistent notification center for order and item events, with individual dismiss and mark-all-as-read actions.
+- Administrative Analytics module with Laravel-issued service tokens, FastAPI consumption, observed metrics, workload forecasts, risk alerts, and recommendations.
 - Users module with HTTP service, filters, pagination, detail view, create form, edit form, role-aware actions, and searchable paginated workshop lookup.
 - Owners module with HTTP service, search and status filters, pagination, detail view, create form, edit form, and policy-aware delete actions.
 - Vehicles module with HTTP service, advanced filters, pagination, detail view, create form, edit form, owner lookup, and policy-aware delete actions.
@@ -53,7 +54,7 @@ The current bootstrap includes:
 - Order item status actions filtered by role, current state, and public endpoint availability from the order detail workflow.
 - Audit log module with HTTP service, filters, pagination, change inspection, and super-admin-only visibility.
 - Docker and Docker Compose files for local execution.
-- `.env.example` with `VITE_API_BASE_URL` and `VITE_REALTIME_URL`.
+- `.env.example` with `VITE_API_BASE_URL`, `VITE_REALTIME_URL`, and `VITE_ANALYTICS_BASE_URL`.
 - English and Spanish README documentation.
 
 ## Architecture Decisions
@@ -75,6 +76,7 @@ src/
   stores/      Shared Pinia state.
   modules/auth/  Authentication service and login view.
   modules/audits/  Audit service and super-admin traceability view.
+  modules/analytics/  Analytics token service, FastAPI client, and administrative analytics view.
   modules/dashboard/  Operational dashboard service.
   modules/maintenance-orders/  Order and order-item services, status rules, list, detail, and form views.
   modules/maintenance-plans/  Maintenance plan service, list, detail, and form views.
@@ -93,7 +95,7 @@ This structure keeps the bootstrap easy to inspect: layout behavior lives in `la
 
 ### Integration Boundary
 
-The frontend reads service URLs from `VITE_API_BASE_URL` and `VITE_REALTIME_URL`. That keeps the web app portable across local, Docker, and deployed environments.
+The frontend reads service URLs from `VITE_API_BASE_URL`, `VITE_REALTIME_URL`, and `VITE_ANALYTICS_BASE_URL`. That keeps the web app portable across local, Docker, and deployed environments.
 
 Authorization-sensitive behavior belongs to the backend. The frontend can improve usability by hiding unavailable routes and actions, but it does not replace backend policies or validation.
 
@@ -104,6 +106,8 @@ Realtime uses short-lived tokens issued by Laravel through the authenticated API
 Operational event payloads are treated as backend-owned facts. The frontend parses authorized order and order-item events, deduplicates them by event id, and refetches the affected views instead of mutating complex domain state locally.
 
 Realtime notifications are stored per authenticated user in the browser and remain visible until marked as read. Order and item events are visually differentiated, and item notifications include the task name when the backend event provides it.
+
+Analytics uses short-lived service tokens issued by Laravel through the authenticated API. The browser calls FastAPI Analytics with that dedicated token, never with the main Laravel session token. The Analytics screen is available only through the frontend permission matrix for `super_admin` and `admin` users, while Laravel and Analytics still enforce the real authorization boundary.
 
 ### Interface Language
 
@@ -132,11 +136,12 @@ You do not need Node or npm installed on the host when using Docker.
 
 ## Environment Variables
 
-Create a local `.env` from `.env.example` and adjust service URLs if the backend or realtime gateway use different ports:
+Create a local `.env` from `.env.example` and adjust service URLs if the backend, realtime gateway, or Analytics service use different ports:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 VITE_REALTIME_URL=http://localhost:3000
+VITE_ANALYTICS_BASE_URL=http://localhost:8001
 ```
 
 ## Run With Docker
