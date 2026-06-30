@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAccountMultiple,
   mdiAlertCircle,
@@ -18,8 +19,6 @@ import { MAINTENANCE_ORDER_STATUSES } from '@/types/maintenanceOrder.js'
 import dashboardApi from '@/modules/dashboard/services/dashboardService.js'
 import { useOperationalEventListener } from '@/modules/realtime/composables/useOperationalEventListener.js'
 import {
-  ORDER_STATUS_LABELS,
-  ORDER_ITEM_STATUS_LABELS,
   orderItemStatusColor,
   orderStatusColor,
 } from '@/modules/maintenance-orders/statusRules.js'
@@ -36,6 +35,7 @@ import NotificationBar from '@/components/NotificationBar.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
 const authStore = useAuthStore()
+const { locale, t, te } = useI18n()
 
 const summary = ref(null)
 const loading = ref(false)
@@ -43,50 +43,50 @@ const errorMessage = ref('')
 let dashboardAbortController = null
 let realtimeRefreshTimer = null
 
-const scheduleColumns = [
-  { key: 'order', label: 'Order' },
-  { key: 'vehicle', label: 'Vehicle' },
-  { key: 'workshop', label: 'Workshop' },
-  { key: 'technician', label: 'Technician' },
-  { key: 'scheduled_at', label: 'Scheduled' },
-  { key: 'status', label: 'Status' },
+const scheduleColumns = computed(() => [
+  { key: 'order', label: t('dashboard.columns.order') },
+  { key: 'vehicle', label: t('dashboard.columns.vehicle') },
+  { key: 'workshop', label: t('dashboard.columns.workshop') },
+  { key: 'technician', label: t('dashboard.columns.technician') },
+  { key: 'scheduled_at', label: t('dashboard.columns.scheduled') },
+  { key: 'status', label: t('dashboard.columns.status') },
   { key: 'actions', label: '' },
-]
+])
 
-const orderColumns = [
-  { key: 'order', label: 'Order' },
-  { key: 'vehicle', label: 'Vehicle' },
-  { key: 'workshop', label: 'Workshop' },
-  { key: 'status', label: 'Status' },
-  { key: 'scheduled_at', label: 'Scheduled' },
+const orderColumns = computed(() => [
+  { key: 'order', label: t('dashboard.columns.order') },
+  { key: 'vehicle', label: t('dashboard.columns.vehicle') },
+  { key: 'workshop', label: t('dashboard.columns.workshop') },
+  { key: 'status', label: t('dashboard.columns.status') },
+  { key: 'scheduled_at', label: t('dashboard.columns.scheduled') },
   { key: 'actions', label: '' },
-]
+])
 
-const itemColumns = [
-  { key: 'item', label: 'Item' },
-  { key: 'vehicle', label: 'Vehicle' },
-  { key: 'workshop', label: 'Workshop' },
-  { key: 'scheduled_at', label: 'Scheduled' },
-  { key: 'duration', label: 'Duration' },
-  { key: 'status', label: 'Status' },
+const itemColumns = computed(() => [
+  { key: 'item', label: t('dashboard.columns.item') },
+  { key: 'vehicle', label: t('dashboard.columns.vehicle') },
+  { key: 'workshop', label: t('dashboard.columns.workshop') },
+  { key: 'scheduled_at', label: t('dashboard.columns.scheduled') },
+  { key: 'duration', label: t('dashboard.columns.duration') },
+  { key: 'status', label: t('dashboard.columns.status') },
   { key: 'actions', label: '' },
-]
+])
 
-const workshopColumns = [
-  { key: 'workshop', label: 'Workshop' },
-  { key: 'open_orders_count', label: 'Open orders' },
-]
+const workshopColumns = computed(() => [
+  { key: 'workshop', label: t('dashboard.columns.workshop') },
+  { key: 'open_orders_count', label: t('dashboard.columns.openOrders') },
+])
 
-const workloadColumns = [
-  { key: 'technician', label: 'Technician' },
-  { key: 'assigned_items_count', label: 'Assigned items' },
-  { key: 'planned_minutes', label: 'Planned time' },
-]
+const workloadColumns = computed(() => [
+  { key: 'technician', label: t('dashboard.columns.technician') },
+  { key: 'assigned_items_count', label: t('dashboard.columns.assignedItems') },
+  { key: 'planned_minutes', label: t('dashboard.columns.plannedTime') },
+])
 
-const technicianColumns = [
-  { key: 'technician', label: 'Technician' },
-  { key: 'email', label: 'Email' },
-]
+const technicianColumns = computed(() => [
+  { key: 'technician', label: t('dashboard.columns.technician') },
+  { key: 'email', label: t('dashboard.columns.email') },
+])
 
 const canCreateOrders = computed(() => canAccessAnyRoute(authStore.roles, ROUTE_KEYS.ORDER_CREATE))
 const canOpenOrders = computed(() => canAccessAnyRoute(authStore.roles, ROUTE_KEYS.ORDERS))
@@ -97,37 +97,37 @@ const activities = computed(() => summary.value?.activities ?? { active: 0, pend
 const metricCards = computed(() => [
   {
     key: 'open_orders',
-    label: 'Open orders',
+    label: t('dashboard.metrics.open_orders'),
     icon: mdiViewList,
     color: 'text-blue-500',
   },
   {
     key: 'awaiting_owner_approval',
-    label: 'Owner approval',
+    label: t('dashboard.metrics.awaiting_owner_approval'),
     icon: mdiAccountMultiple,
     color: 'text-yellow-500',
   },
   {
     key: 'awaiting_scheduling',
-    label: 'Awaiting schedule',
+    label: t('dashboard.metrics.awaiting_scheduling'),
     icon: mdiCalendar,
     color: 'text-sky-500',
   },
   {
     key: 'active_orders',
-    label: 'Active orders',
+    label: t('dashboard.metrics.active_orders'),
     icon: mdiWrenchOutline,
     color: 'text-amber-500',
   },
   {
     key: 'completed_today',
-    label: 'Completed today',
+    label: t('dashboard.metrics.completed_today'),
     icon: mdiCheckCircleOutline,
     color: 'text-emerald-500',
   },
   {
     key: 'overdue_activities',
-    label: 'Overdue items',
+    label: t('dashboard.metrics.overdue_activities'),
     icon: mdiAlertCircle,
     color: 'text-red-500',
   },
@@ -136,10 +136,33 @@ const metricCards = computed(() => [
 const orderStatusCards = computed(() =>
   MAINTENANCE_ORDER_STATUSES.map((status) => ({
     status,
-    label: ORDER_STATUS_LABELS[status] ?? status,
+    label: statusLabel(status),
     count: summary.value?.orders_by_status?.[status] ?? 0,
   })),
 )
+
+const advisorSections = computed(() => [
+  {
+    key: 'awaiting_owner_approval_orders',
+    title: t('dashboard.sections.awaitingOwnerApprovalTitle'),
+    description: t('dashboard.sections.awaitingOwnerApprovalDescription'),
+  },
+  {
+    key: 'partially_approved_orders',
+    title: t('dashboard.sections.partiallyApprovedTitle'),
+    description: t('dashboard.sections.partiallyApprovedDescription'),
+  },
+  {
+    key: 'rejected_orders',
+    title: t('dashboard.sections.rejectedOrdersTitle'),
+    description: t('dashboard.sections.rejectedOrdersDescription'),
+  },
+  {
+    key: 'upcoming_deliveries',
+    title: t('dashboard.sections.upcomingDeliveriesTitle'),
+    description: t('dashboard.sections.upcomingDeliveriesDescription'),
+  },
+])
 
 const todaySchedules = computed(() => summary.value?.today_schedules ?? [])
 const upcomingSchedules = computed(() => summary.value?.upcoming_schedules ?? [])
@@ -204,7 +227,7 @@ const scheduleRealtimeRefresh = () => {
 
 const metricValue = (key) => Number(metrics.value[key] ?? 0)
 
-const numberLabel = (value) => new Intl.NumberFormat('en').format(Number(value ?? 0))
+const numberLabel = (value) => new Intl.NumberFormat(locale.value).format(Number(value ?? 0))
 
 const orderNumber = (id) => `#${String(id).padStart(5, '0')}`
 
@@ -219,14 +242,15 @@ const workshopLabel = (workshop) =>
 const userLabel = (user) => user?.name ?? '-'
 
 const taskLabel = (item) =>
-  [item.task?.code, item.task?.name].filter(Boolean).join(' - ') || `Item #${item.maintenance_order_item_id}`
+  [item.task?.code, item.task?.name].filter(Boolean).join(' - ') ||
+  t('dashboard.labels.itemNumber', { id: item.maintenance_order_item_id })
 
 const formatDate = (value) => {
   if (!value) {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
@@ -241,15 +265,35 @@ const durationLabel = (minutes) => {
   const remainder = Number(minutes) % 60
 
   if (hours === 0) {
-    return `${remainder} min`
+    return t('dashboard.units.minutesShort', { count: remainder })
   }
 
-  return remainder === 0 ? `${hours} h` : `${hours} h ${remainder} min`
+  return remainder === 0
+    ? t('dashboard.units.hoursShort', { count: hours })
+    : t('dashboard.units.hoursMinutesShort', { hours, minutes: remainder })
 }
 
-const statusLabel = (status) => ORDER_STATUS_LABELS[status] ?? status
+const normalizeStatusKey = (status) =>
+  String(status ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
 
-const itemStatusLabel = (status) => ORDER_ITEM_STATUS_LABELS[status] ?? status
+const humanizeCode = (value) =>
+  String(value ?? '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+
+const translateStatus = (namespace, status) => {
+  const normalizedStatus = normalizeStatusKey(status)
+  const key = `dashboard.${namespace}.${normalizedStatus}`
+
+  return te(key) ? t(key) : humanizeCode(status)
+}
+
+const statusLabel = (status) => translateStatus('orderStatuses', status)
+
+const itemStatusLabel = (status) => translateStatus('orderItemStatuses', status)
 
 const scheduleRowId = (row) => `order-${row.maintenance_order_id}-${row.scheduled_at ?? 'none'}`
 
@@ -281,17 +325,17 @@ onBeforeUnmount(() => {
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Operational dashboard"
-      subtitle="Scoped service activity, schedules, workload, and maintenance order status."
-      eyebrow="MaintOps"
+      :title="t('dashboard.page.title')"
+      :subtitle="t('dashboard.page.subtitle')"
+      :eyebrow="t('dashboard.page.eyebrow')"
       :icon="mdiMonitor"
     >
       <template #actions>
         <BaseButton
           color="whiteDark"
           :icon="mdiRefresh"
-          :title="loading ? 'Refreshing...' : 'Refresh dashboard'"
-          :aria-label="loading ? 'Refreshing...' : 'Refresh dashboard'"
+          :title="loading ? t('dashboard.actions.refreshing') : t('dashboard.actions.refresh')"
+          :aria-label="loading ? t('dashboard.actions.refreshing') : t('dashboard.actions.refresh')"
           :disabled="loading"
           @click="fetchSummary"
         />
@@ -300,16 +344,16 @@ onBeforeUnmount(() => {
           to="/orders/new"
           color="info"
           :icon="mdiSquareEditOutline"
-          title="New order"
-          aria-label="New order"
+          :title="t('dashboard.actions.newOrder')"
+          :aria-label="t('dashboard.actions.newOrder')"
         />
         <BaseButton
           v-if="canOpenOrders"
           to="/orders"
           color="whiteDark"
           :icon="mdiViewList"
-          title="Open orders"
-          aria-label="Open orders"
+          :title="t('dashboard.actions.openOrders')"
+          :aria-label="t('dashboard.actions.openOrders')"
         />
       </template>
 
@@ -319,8 +363,8 @@ onBeforeUnmount(() => {
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('dashboard.actions.retry')"
+            :aria-label="t('dashboard.actions.retry')"
             small
             @click="fetchSummary"
           />
@@ -329,14 +373,14 @@ onBeforeUnmount(() => {
 
       <CardBox v-if="loading && !summary">
         <p class="text-sm text-gray-500 dark:text-slate-400">
-          Loading operational dashboard...
+          {{ t('dashboard.page.loading') }}
         </p>
       </CardBox>
 
       <AppEmptyState
         v-else-if="summary && isEmpty"
-        title="No operational activity"
-        description="There are no visible orders, items, or schedules in your authorized scope."
+        :title="t('dashboard.page.emptyTitle')"
+        :description="t('dashboard.page.emptyDescription')"
       />
 
       <div v-else-if="summary" class="grid grid-cols-1 gap-6">
@@ -356,10 +400,10 @@ onBeforeUnmount(() => {
             <div class="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                  Order items
+                  {{ t('dashboard.sections.orderItemsTitle') }}
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-slate-400">
-                  Pending, scheduled, and active task execution.
+                  {{ t('dashboard.sections.orderItemsDescription') }}
                 </p>
               </div>
               <BaseButton
@@ -367,20 +411,24 @@ onBeforeUnmount(() => {
                 to="/orders"
                 color="whiteDark"
                 :icon="mdiViewList"
-                title="Open orders"
-                aria-label="Open orders"
+                :title="t('dashboard.actions.openOrders')"
+                :aria-label="t('dashboard.actions.openOrders')"
                 small
               />
             </div>
             <dl class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div class="rounded-sm border border-gray-100 p-4 dark:border-slate-700">
-                <dt class="text-sm text-gray-500 dark:text-slate-400">Active</dt>
+                <dt class="text-sm text-gray-500 dark:text-slate-400">
+                  {{ t('dashboard.labels.active') }}
+                </dt>
                 <dd class="text-3xl font-semibold text-gray-900 dark:text-slate-100">
                   {{ numberLabel(activities.active) }}
                 </dd>
               </div>
               <div class="rounded-sm border border-gray-100 p-4 dark:border-slate-700">
-                <dt class="text-sm text-gray-500 dark:text-slate-400">Pending or scheduled</dt>
+                <dt class="text-sm text-gray-500 dark:text-slate-400">
+                  {{ t('dashboard.labels.pendingOrScheduled') }}
+                </dt>
                 <dd class="text-3xl font-semibold text-gray-900 dark:text-slate-100">
                   {{ numberLabel(activities.pending) }}
                 </dd>
@@ -392,17 +440,17 @@ onBeforeUnmount(() => {
             <div class="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                  Orders by status
+                  {{ t('dashboard.sections.ordersByStatusTitle') }}
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-slate-400">
-                  Consolidated counts from Laravel.
+                  {{ t('dashboard.sections.ordersByStatusDescription') }}
                 </p>
               </div>
               <span
                 v-if="loading"
                 class="text-sm font-semibold text-gray-500 dark:text-slate-400"
               >
-                Refreshing...
+                {{ t('dashboard.actions.refreshing') }}
               </span>
             </div>
             <dl class="grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -424,10 +472,10 @@ onBeforeUnmount(() => {
           <div class="mb-4 flex items-start justify-between gap-4">
             <div>
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Today's orders
+                {{ t('dashboard.sections.todayOrdersTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Orders scheduled for the current day in your authorized scope.
+                {{ t('dashboard.sections.todayOrdersDescription') }}
               </p>
             </div>
             <BaseButton
@@ -435,8 +483,8 @@ onBeforeUnmount(() => {
               to="/orders"
               color="whiteDark"
               :icon="mdiViewList"
-              title="Open orders"
-              aria-label="Open orders"
+              :title="t('dashboard.actions.openOrders')"
+              :aria-label="t('dashboard.actions.openOrders')"
               small
             />
           </div>
@@ -444,8 +492,8 @@ onBeforeUnmount(() => {
             :columns="scheduleColumns"
             :rows="todaySchedules"
             :row-key="scheduleRowId"
-            empty-title="No orders scheduled today"
-            empty-description="Today's visible maintenance schedule is empty."
+            :empty-title="t('dashboard.empty.noOrdersScheduledTodayTitle')"
+            :empty-description="t('dashboard.empty.todayScheduleEmptyDescription')"
           >
             <template #cell-order="{ row }">
               {{ orderNumber(row.maintenance_order_id) }}
@@ -471,8 +519,8 @@ onBeforeUnmount(() => {
                   :to="{ name: 'orders-detail', params: { id: row.maintenance_order_id } }"
                   color="whiteDark"
                   :icon="mdiEyeOutline"
-                  title="Open order"
-                  aria-label="Open order"
+                  :title="t('dashboard.actions.openOrder')"
+                  :aria-label="t('dashboard.actions.openOrder')"
                   small
                 />
               </BaseButtons>
@@ -484,10 +532,10 @@ onBeforeUnmount(() => {
           <div class="mb-4 flex items-start justify-between gap-4">
             <div>
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Upcoming orders
+                {{ t('dashboard.sections.upcomingOrdersTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Scheduled orders after today.
+                {{ t('dashboard.sections.upcomingOrdersDescription') }}
               </p>
             </div>
             <BaseButton
@@ -495,8 +543,8 @@ onBeforeUnmount(() => {
               to="/orders"
               color="whiteDark"
               :icon="mdiViewList"
-              title="Open orders"
-              aria-label="Open orders"
+              :title="t('dashboard.actions.openOrders')"
+              :aria-label="t('dashboard.actions.openOrders')"
               small
             />
           </div>
@@ -504,8 +552,8 @@ onBeforeUnmount(() => {
             :columns="scheduleColumns"
             :rows="upcomingSchedules"
             :row-key="scheduleRowId"
-            empty-title="No upcoming orders"
-            empty-description="There are no upcoming visible maintenance orders."
+            :empty-title="t('dashboard.empty.noUpcomingOrdersTitle')"
+            :empty-description="t('dashboard.empty.noUpcomingOrdersDescription')"
           >
             <template #cell-order="{ row }">
               {{ orderNumber(row.maintenance_order_id) }}
@@ -531,8 +579,8 @@ onBeforeUnmount(() => {
                   :to="{ name: 'orders-detail', params: { id: row.maintenance_order_id } }"
                   color="whiteDark"
                   :icon="mdiEyeOutline"
-                  title="Open order"
-                  aria-label="Open order"
+                  :title="t('dashboard.actions.openOrder')"
+                  :aria-label="t('dashboard.actions.openOrder')"
                   small
                 />
               </BaseButtons>
@@ -544,18 +592,18 @@ onBeforeUnmount(() => {
           <div>
             <div class="mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Open orders by workshop
+                {{ t('dashboard.sections.openOrdersByWorkshopTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Workshop load across visible open orders.
+                {{ t('dashboard.sections.openOrdersByWorkshopDescription') }}
               </p>
             </div>
             <AppDataTable
               :columns="workshopColumns"
               :rows="roleContext.orders_by_workshop ?? []"
               row-key="workshop_id"
-              empty-title="No workshop load"
-              empty-description="No open visible orders are assigned to workshops."
+              :empty-title="t('dashboard.empty.noWorkshopLoadTitle')"
+              :empty-description="t('dashboard.empty.noWorkshopLoadDescription')"
             >
               <template #cell-workshop="{ row }">
                 {{ workshopLabel(row.workshop) }}
@@ -569,18 +617,18 @@ onBeforeUnmount(() => {
           <div>
             <div class="mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Technician workload today
+                {{ t('dashboard.sections.technicianWorkloadTodayTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Assigned order items and planned time for today.
+                {{ t('dashboard.sections.technicianWorkloadTodayDescription') }}
               </p>
             </div>
             <AppDataTable
               :columns="workloadColumns"
               :rows="roleContext.technician_workload_today ?? []"
               row-key="technician_id"
-              empty-title="No technician workload"
-              empty-description="No scheduled or active items are assigned today."
+              :empty-title="t('dashboard.empty.noTechnicianWorkloadTitle')"
+              :empty-description="t('dashboard.empty.noScheduledActiveItemsAssignedTodayDescription')"
             >
               <template #cell-technician="{ row }">
                 {{ userLabel(row.technician) }}
@@ -597,18 +645,18 @@ onBeforeUnmount(() => {
           <div class="xl:col-span-2">
             <div class="mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Awaiting scheduling
+                {{ t('dashboard.sections.awaitingSchedulingTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Approved or partially approved orders ready for scheduling.
+                {{ t('dashboard.sections.awaitingSchedulingDescription') }}
               </p>
             </div>
             <AppDataTable
               :columns="orderColumns"
               :rows="contextOrders('awaiting_scheduling_orders')"
               row-key="maintenance_order_id"
-              empty-title="No orders awaiting scheduling"
-              empty-description="There are no approved orders waiting for schedule assignment."
+              :empty-title="t('dashboard.empty.noOrdersAwaitingSchedulingTitle')"
+              :empty-description="t('dashboard.empty.noOrdersAwaitingSchedulingDescription')"
             >
               <template #cell-order="{ row }">
                 {{ orderNumber(row.maintenance_order_id) }}
@@ -630,8 +678,8 @@ onBeforeUnmount(() => {
                   :to="{ name: 'orders-detail', params: { id: row.maintenance_order_id } }"
                   color="whiteDark"
                   :icon="mdiEyeOutline"
-                  title="Open order"
-                  aria-label="Open order"
+                  :title="t('dashboard.actions.openOrder')"
+                  :aria-label="t('dashboard.actions.openOrder')"
                   small
                 />
               </template>
@@ -641,28 +689,7 @@ onBeforeUnmount(() => {
 
         <section v-if="roleContext.type === 'advisor'" class="grid grid-cols-1 gap-6">
           <div
-            v-for="section in [
-              {
-                key: 'awaiting_owner_approval_orders',
-                title: 'Awaiting owner approval',
-                description: 'Orders waiting for owner decision.',
-              },
-              {
-                key: 'partially_approved_orders',
-                title: 'Partially approved',
-                description: 'Orders approved with rejected items.',
-              },
-              {
-                key: 'rejected_orders',
-                title: 'Rejected orders',
-                description: 'Orders rejected during approval.',
-              },
-              {
-                key: 'upcoming_deliveries',
-                title: 'Upcoming deliveries',
-                description: 'Completed orders ready for delivery follow-up.',
-              },
-            ]"
+            v-for="section in advisorSections"
             :key="section.key"
           >
             <div class="mb-4">
@@ -677,8 +704,8 @@ onBeforeUnmount(() => {
               :columns="orderColumns"
               :rows="contextOrders(section.key)"
               row-key="maintenance_order_id"
-              empty-title="No orders found"
-              empty-description="There are no visible orders in this workflow."
+              :empty-title="t('dashboard.empty.noOrdersFoundTitle')"
+              :empty-description="t('dashboard.empty.noVisibleOrdersWorkflowDescription')"
             >
               <template #cell-order="{ row }">
                 {{ orderNumber(row.maintenance_order_id) }}
@@ -700,8 +727,8 @@ onBeforeUnmount(() => {
                   :to="{ name: 'orders-detail', params: { id: row.maintenance_order_id } }"
                   color="whiteDark"
                   :icon="mdiEyeOutline"
-                  title="Open order"
-                  aria-label="Open order"
+                  :title="t('dashboard.actions.openOrder')"
+                  :aria-label="t('dashboard.actions.openOrder')"
                   small
                 />
               </template>
@@ -713,18 +740,18 @@ onBeforeUnmount(() => {
           <div>
             <div class="mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Technician workload today
+                {{ t('dashboard.sections.technicianWorkloadTodayTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Scheduled and active items in managed workshops.
+                {{ t('dashboard.sections.technicianWorkloadManagedDescription') }}
               </p>
             </div>
             <AppDataTable
               :columns="workloadColumns"
               :rows="roleContext.technician_workload_today ?? []"
               row-key="technician_id"
-              empty-title="No technician workload"
-              empty-description="There are no assigned items for today."
+              :empty-title="t('dashboard.empty.noTechnicianWorkloadTitle')"
+              :empty-description="t('dashboard.empty.noAssignedItemsTodayDescription')"
             >
               <template #cell-technician="{ row }">
                 {{ userLabel(row.technician) }}
@@ -741,18 +768,18 @@ onBeforeUnmount(() => {
           <div>
             <div class="mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Available technicians today
+                {{ t('dashboard.sections.availableTechniciansTodayTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Active technicians without scheduled assignments today.
+                {{ t('dashboard.sections.availableTechniciansTodayDescription') }}
               </p>
             </div>
             <AppDataTable
               :columns="technicianColumns"
               :rows="roleContext.technicians_without_assignments_today ?? []"
               row-key="id"
-              empty-title="No available technicians"
-              empty-description="All visible technicians have assignments or no workshop is managed."
+              :empty-title="t('dashboard.empty.noAvailableTechniciansTitle')"
+              :empty-description="t('dashboard.empty.noAvailableTechniciansDescription')"
             >
               <template #cell-technician="{ row }">
                 {{ row.name }}
@@ -766,18 +793,18 @@ onBeforeUnmount(() => {
           <div class="xl:col-span-2">
             <div class="mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Active items
+                {{ t('dashboard.sections.activeItemsTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                In-progress order items in managed workshops.
+                {{ t('dashboard.sections.activeItemsDescription') }}
               </p>
             </div>
             <AppDataTable
               :columns="itemColumns"
               :rows="contextItems('active_items')"
               :row-key="itemRowId"
-              empty-title="No active items"
-              empty-description="No visible order items are currently in progress."
+              :empty-title="t('dashboard.empty.noActiveItemsTitle')"
+              :empty-description="t('dashboard.empty.noActiveItemsDescription')"
             >
               <template #cell-item="{ row }">
                 {{ taskLabel(row) }}
@@ -802,8 +829,8 @@ onBeforeUnmount(() => {
                   :to="{ name: 'orders-detail', params: { id: row.maintenance_order_id } }"
                   color="whiteDark"
                   :icon="mdiEyeOutline"
-                  title="Open order"
-                  aria-label="Open order"
+                  :title="t('dashboard.actions.openOrder')"
+                  :aria-label="t('dashboard.actions.openOrder')"
                   small
                 />
               </template>
@@ -815,7 +842,7 @@ onBeforeUnmount(() => {
           <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
             <CardBox>
               <h2 class="mb-4 text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Current item
+                {{ t('dashboard.sections.currentItemTitle') }}
               </h2>
               <template v-if="roleContext.current_item">
                 <p class="font-semibold text-gray-900 dark:text-slate-100">
@@ -836,20 +863,20 @@ onBeforeUnmount(() => {
                     }"
                     color="whiteDark"
                     :icon="mdiEyeOutline"
-                    title="Open order"
-                    aria-label="Open order"
+                    :title="t('dashboard.actions.openOrder')"
+                    :aria-label="t('dashboard.actions.openOrder')"
                     small
                   />
                 </div>
               </template>
               <p v-else class="text-sm text-gray-500 dark:text-slate-400">
-                There is no item currently in progress.
+                {{ t('dashboard.empty.noCurrentItemDescription') }}
               </p>
             </CardBox>
 
             <CardBox>
               <h2 class="mb-4 text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Next item
+                {{ t('dashboard.sections.nextItemTitle') }}
               </h2>
               <template v-if="roleContext.next_item">
                 <p class="font-semibold text-gray-900 dark:text-slate-100">
@@ -870,26 +897,26 @@ onBeforeUnmount(() => {
                     }"
                     color="whiteDark"
                     :icon="mdiEyeOutline"
-                    title="Open order"
-                    aria-label="Open order"
+                    :title="t('dashboard.actions.openOrder')"
+                    :aria-label="t('dashboard.actions.openOrder')"
                     small
                   />
                 </div>
               </template>
               <p v-else class="text-sm text-gray-500 dark:text-slate-400">
-                There is no upcoming scheduled item.
+                {{ t('dashboard.empty.noNextItemDescription') }}
               </p>
             </CardBox>
 
             <CardBox>
               <h2 class="mb-4 text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Completed today
+                {{ t('dashboard.sections.completedTodayTitle') }}
               </h2>
               <p class="text-3xl font-semibold text-gray-900 dark:text-slate-100">
                 {{ numberLabel(roleContext.completed_today_count ?? 0) }}
               </p>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Items completed in the current day.
+                {{ t('dashboard.sections.completedTodayDescription') }}
               </p>
             </CardBox>
           </div>
@@ -897,18 +924,18 @@ onBeforeUnmount(() => {
           <div>
             <div class="mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                Today's queue
+                {{ t('dashboard.sections.todaysQueueTitle') }}
               </h2>
               <p class="text-sm text-gray-500 dark:text-slate-400">
-                Scheduled and active items assigned today.
+                {{ t('dashboard.sections.todaysQueueDescription') }}
               </p>
             </div>
             <AppDataTable
               :columns="itemColumns"
               :rows="contextItems('today_queue')"
               :row-key="itemRowId"
-              empty-title="No items in today's queue"
-              empty-description="There are no scheduled or active visible items for today."
+              :empty-title="t('dashboard.empty.noItemsTodayQueueTitle')"
+              :empty-description="t('dashboard.empty.noItemsTodayQueueDescription')"
             >
               <template #cell-item="{ row }">
                 {{ taskLabel(row) }}
@@ -933,8 +960,8 @@ onBeforeUnmount(() => {
                   :to="{ name: 'orders-detail', params: { id: row.maintenance_order_id } }"
                   color="whiteDark"
                   :icon="mdiEyeOutline"
-                  title="Open order"
-                  aria-label="Open order"
+                  :title="t('dashboard.actions.openOrder')"
+                  :aria-label="t('dashboard.actions.openOrder')"
                   small
                 />
               </template>

@@ -23,6 +23,7 @@
  * @property {string | null} [address]
  * @property {number | null} [workshop_id]
  * @property {UserWorkshopSummary | null} [workshop]
+ * @property {'en' | 'es' | string | null} [preferred_locale]
  * @property {string | null} [email_verified_at]
  * @property {string | null} [created_at]
  * @property {string | null} [updated_at]

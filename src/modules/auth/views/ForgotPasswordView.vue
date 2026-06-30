@@ -9,6 +9,9 @@ import CardBox from '@/components/CardBox.vue'
 import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutGuest from '@/layouts/LayoutGuest.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const form = reactive({
   email: '',
@@ -30,7 +33,7 @@ const validateForm = () => {
 
   if (!form.email.trim()) {
     validationErrors.value = {
-      email: ['Email is required.'],
+      email: [t('auth.errors.emailRequired')],
     }
   }
 
@@ -69,14 +72,13 @@ const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
       <CardBox class="w-full max-w-md shadow-2xl" is-form @submit.prevent="submit">
         <div class="mb-6">
           <p class="text-sm font-semibold uppercase text-blue-600 dark:text-blue-300">
-            MaintOps Console
+            {{ t('common.brand') }}
           </p>
           <h1 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-slate-100">
-            Reset your password
+            {{ t('auth.forgotPassword.title') }}
           </h1>
           <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">
-            Enter your account email and MaintOps will send a reset link when the account is
-            eligible.
+            {{ t('auth.forgotPassword.description') }}
           </p>
         </div>
 
@@ -98,7 +100,7 @@ const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
           {{ formError }}
         </div>
 
-        <FormField label="Email" label-for="email" :error="fieldError('email')">
+        <FormField :label="t('auth.fields.email')" label-for="email" :error="fieldError('email')">
           <FormControl
             id="email"
             v-model="form.email"
@@ -117,13 +119,13 @@ const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
               :to="{ name: 'login' }"
               color="whiteDark"
               :icon="mdiArrowLeft"
-              label="Back to sign in"
+              :label="t('common.actions.backToSignIn')"
             />
             <BaseButton
               type="submit"
               color="info"
               :icon="mdiSendOutline"
-              :label="submitting ? 'Sending...' : 'Send link'"
+              :label="submitting ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.sendLink')"
               :disabled="submitting"
             />
           </BaseButtons>

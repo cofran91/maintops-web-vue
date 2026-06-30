@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
   mdiClose,
@@ -25,6 +26,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const form = reactive({
   vehicle_id: '',
@@ -86,17 +88,17 @@ const validateForm = () => {
   const errors = {}
 
   if (!hasPositiveInteger(form.vehicle_id)) {
-    errors.vehicle_id = ['Select a vehicle.']
+    errors.vehicle_id = [t('orders.validation.selectVehicle')]
   }
 
   if (isSystemAdmin.value && !hasPositiveInteger(form.advisor_id)) {
-    errors.advisor_id = ['Select an advisor.']
+    errors.advisor_id = [t('orders.validation.selectAdvisor')]
   }
 
   validationErrors.value = errors
 
   if (Object.keys(errors).length > 0) {
-    formError.value = 'Review the highlighted fields before saving.'
+    formError.value = t('orders.validation.reviewHighlighted')
     return false
   }
 
@@ -141,9 +143,9 @@ watch(
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Create order"
-      subtitle="Capture vehicle and advisor context accepted by the public order endpoint."
-      eyebrow="Orders"
+      :title="t('orders.form.createTitle')"
+      :subtitle="t('orders.form.subtitle')"
+      :eyebrow="t('orders.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -151,13 +153,13 @@ watch(
           :to="backRoute"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back"
-          aria-label="Back"
+          :title="t('orders.actions.back')"
+          :aria-label="t('orders.actions.back')"
         />
       </template>
 
       <NotificationBar v-if="!canSubmit" color="danger">
-        Your role cannot perform this order action.
+        {{ t('orders.form.forbidden') }}
       </NotificationBar>
 
       <CardBox
@@ -170,18 +172,18 @@ watch(
         </NotificationBar>
 
         <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
-          <FormField label="Vehicle" label-for="vehicle_id" :error="fieldError('vehicle_id')">
+          <FormField :label="t('orders.fields.vehicle')" label-for="vehicle_id" :error="fieldError('vehicle_id')">
             <VehicleCombobox
               v-model="form.vehicle_id"
               input-id="vehicle_id"
               name="vehicle_id"
-              placeholder="Search by plate, brand, or model"
+              :placeholder="t('orders.filters.vehiclePlaceholder')"
             />
           </FormField>
 
           <FormField
             v-if="isSystemAdmin"
-            label="Advisor"
+            :label="t('orders.fields.advisor')"
             label-for="advisor_id"
             :error="fieldError('advisor_id')"
           >
@@ -189,7 +191,7 @@ watch(
               v-model="form.advisor_id"
               input-id="advisor_id"
               name="advisor_id"
-              placeholder="Search advisors"
+              :placeholder="t('orders.filters.advisorPlaceholder')"
               :role="ROLES.ADVISOR"
             />
           </FormField>
@@ -201,14 +203,14 @@ watch(
               :to="backRoute"
               color="whiteDark"
               :icon="mdiClose"
-              title="Cancel"
-              aria-label="Cancel"
+              :title="t('orders.actions.cancel')"
+              :aria-label="t('orders.actions.cancel')"
             />
             <BaseButton
               color="info"
               :icon="mdiPlus"
-              :title="saving ? 'Saving...' : 'Create order'"
-              :aria-label="saving ? 'Saving...' : 'Create order'"
+              :title="saving ? t('orders.actions.saving') : t('orders.actions.createOrder')"
+              :aria-label="saving ? t('orders.actions.saving') : t('orders.actions.createOrder')"
               type="submit"
               :disabled="saving"
             />

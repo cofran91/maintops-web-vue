@@ -22,7 +22,7 @@ Este proyecto está diseñado como la pieza frontend del stack completo de porta
 - Ciclo de vida Socket.IO autenticado con tokens realtime de corta duración emitidos por Laravel.
 - Centro de notificaciones realtime que reacciona a eventos operativos sin permitir que el navegador gestione rooms.
 - Integración con Analytics usando tokens dedicados emitidos por Laravel en vez del token principal de API.
-- Interfaz de producto en inglés con documentación técnica paralela en inglés y español.
+- Interfaz de producto bilingüe en inglés y español con preferencia de idioma persistida por usuario y documentación técnica paralela.
 
 ## Stack Técnico
 
@@ -58,6 +58,7 @@ La ruta normal de revisión es ejecutar este proyecto mediante `maintops-stack`,
 Shell de aplicación:
 
 - Branding MaintOps, sidebar responsive, topbar, dark mode y layout autenticado.
+- Selector de idioma inglés/español que resuelve defaults del navegador, local storage y la preferencia persistida del usuario autenticado.
 - Metadata de rutas para títulos contextuales y grupos de navegación.
 - Layout guest para login, forgot password y reset password.
 
@@ -122,11 +123,13 @@ Esto separa primitivas UI compartidas de workflows específicos de dominio y man
 
 El frontend refleja la intención de autorización del backend, pero no aplica seguridad real. Visibilidad de rutas, menús, botones y acciones de estado se filtran en el navegador para reducir fricción; Laravel valida cada request con policies y reglas.
 
-El cliente API centraliza inyección del Bearer token, normalización de errores de validación Laravel, mensajes de fallos de red y serialización de queries. Los módulos consumen ese cliente a través de servicios pequeños en vez de llamar Axios directamente desde cada vista.
+El cliente API centraliza inyección del Bearer token, headers de locale, normalización de errores de validación Laravel, mensajes de fallos de red y serialización de queries. Los módulos consumen ese cliente a través de servicios pequeños en vez de llamar Axios directamente desde cada vista.
 
 Los eventos realtime se tratan como hechos emitidos por el backend. El frontend deduplica por event id y vuelve a consultar dashboards, listas o detalles afectados. Esto evita mantener una segunda copia de la lógica de state machines de Laravel en el navegador.
 
 Analytics se separa intencionalmente del cliente API principal. El navegador solicita a Laravel un analytics service token y luego llama FastAPI con ese token. El token principal de Laravel no se envía directamente a Analytics.
+
+La localización se maneja con diccionarios Vue I18n para rutas, navegación, formularios, tablas, dashboard, auditoría, realtime, órdenes, analítica y mensajes fallback de API. Las peticiones envían `Accept-Language` y `X-Locale` para mantener respuestas Laravel y mensajes basados en códigos de Analytics alineados con el idioma seleccionado.
 
 Admin One provee la base visual, pero se eliminaron páginas demo, datos de muestra, enlaces promocionales y branding propio del template. MaintOps conserva los patrones de shell y define sus propias rutas, módulos, lenguaje de dominio y modelo de integración.
 

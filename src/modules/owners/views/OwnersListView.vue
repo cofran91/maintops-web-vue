@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccountMultiple,
@@ -39,21 +40,22 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const EMPTY_FILTERS = Object.freeze({
   search: '',
   is_active: '',
 })
 
-const columns = [
-  { key: 'owner', label: 'Owner' },
-  { key: 'phone', label: 'Phone' },
-  { key: 'document_number', label: 'Document' },
-  { key: 'address', label: 'Address' },
-  { key: 'is_active', label: 'Status' },
-  { key: 'updated_at', label: 'Updated' },
+const columns = computed(() => [
+  { key: 'owner', label: t('owners.columns.owner') },
+  { key: 'phone', label: t('owners.columns.phone') },
+  { key: 'document_number', label: t('owners.columns.document') },
+  { key: 'address', label: t('owners.columns.address') },
+  { key: 'is_active', label: t('owners.columns.status') },
+  { key: 'updated_at', label: t('owners.columns.updated') },
   { key: 'actions', label: '' },
-]
+])
 
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
@@ -83,7 +85,7 @@ const deleteMessage = computed(() => {
     return ''
   }
 
-  return `This action will delete ${ownerToDelete.value.name}.`
+  return t('owners.delete.confirmMessage', { name: ownerToDelete.value.name })
 })
 
 const getStringQuery = (value) => {
@@ -242,14 +244,15 @@ const formatValue = (value) =>
   value === null || value === undefined || value === '' ? '-' : value
 
 const statusColor = (isActive) => (isActive ? 'success' : 'danger')
-const statusLabel = (isActive) => (isActive ? 'Active' : 'Inactive')
+const statusLabel = (isActive) =>
+  isActive ? t('owners.status.active') : t('owners.status.inactive')
 
 const formatDate = (value) => {
   if (!value) {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
   }).format(new Date(value))
 }
@@ -267,9 +270,9 @@ watch(
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Owners"
-      subtitle="Manage vehicle owner contacts used across fleet and service workflows."
-      eyebrow="Operations"
+      :title="t('owners.list.title')"
+      :subtitle="t('owners.list.subtitle')"
+      :eyebrow="t('owners.page.eyebrow')"
       :icon="mdiAccountMultiple"
     >
       <template #actions>
@@ -278,8 +281,8 @@ watch(
           :to="{ name: 'operations-owners-new' }"
           color="info"
           :icon="mdiPlus"
-          title="New owner"
-          aria-label="New owner"
+          :title="t('owners.actions.newOwner')"
+          :aria-label="t('owners.actions.newOwner')"
         />
       </template>
 
@@ -290,18 +293,18 @@ watch(
         @focusout="applyFiltersOnFocusOut"
       >
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <FormField label="Search">
+          <FormField :label="t('owners.filters.search')">
             <FormControl
               v-model="filters.search"
               name="search"
-              placeholder="Name, email, phone, or document"
+              :placeholder="t('owners.filters.searchPlaceholder')"
             />
           </FormField>
-          <FormField label="Status">
+          <FormField :label="t('owners.filters.status')">
             <select v-model="filters.is_active" name="is_active" :class="inputClass">
-              <option value="">All statuses</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
+              <option value="">{{ t('owners.filters.allStatuses') }}</option>
+              <option value="true">{{ t('owners.status.active') }}</option>
+              <option value="false">{{ t('owners.status.inactive') }}</option>
             </select>
           </FormField>
         </div>
@@ -310,16 +313,16 @@ watch(
           <BaseButton
             color="whiteDark"
             :icon="mdiClose"
-            title="Clear filters"
-            aria-label="Clear filters"
+            :title="t('owners.actions.clearFilters')"
+            :aria-label="t('owners.actions.clearFilters')"
             :disabled="!hasActiveFilters"
             @click="clearFilters"
           />
           <BaseButton
             color="info"
             :icon="mdiCheck"
-            title="Apply filters"
-            aria-label="Apply filters"
+            :title="t('owners.actions.applyFilters')"
+            :aria-label="t('owners.actions.applyFilters')"
             type="submit"
           />
         </div>
@@ -331,8 +334,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('owners.actions.retry')"
+            :aria-label="t('owners.actions.retry')"
             small
             @click="fetchOwners"
           />
@@ -340,7 +343,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading owners...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('owners.list.loading') }}
+        </p>
       </CardBox>
 
       <template v-else-if="!errorMessage">
@@ -348,8 +353,8 @@ watch(
           v-if="owners.length"
           :columns="columns"
           :rows="owners"
-          empty-title="No owners found"
-          empty-description="Adjust the filters or create a new owner."
+          :empty-title="t('owners.list.emptyTitle')"
+          :empty-description="t('owners.list.emptyDescription')"
         >
           <template #cell-owner="{ row }">
             <div class="min-w-0">
@@ -378,8 +383,8 @@ watch(
                 :to="{ name: 'operations-owners-detail', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiEyeOutline"
-                title="Open owner"
-                aria-label="Open owner"
+                :title="t('owners.actions.openOwner')"
+                :aria-label="t('owners.actions.openOwner')"
                 small
               />
               <BaseButton
@@ -387,16 +392,16 @@ watch(
                 :to="{ name: 'operations-owners-edit', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiPencil"
-                title="Edit owner"
-                aria-label="Edit owner"
+                :title="t('owners.actions.editOwner')"
+                :aria-label="t('owners.actions.editOwner')"
                 small
               />
               <BaseButton
                 v-if="canDeleteOwner"
                 color="danger"
                 :icon="mdiTrashCanOutline"
-                title="Delete owner"
-                aria-label="Delete owner"
+                :title="t('owners.actions.deleteOwner')"
+                :aria-label="t('owners.actions.deleteOwner')"
                 small
                 @click="askDelete(row)"
               />
@@ -406,23 +411,29 @@ watch(
 
         <AppEmptyState
           v-else
-          title="No owners found"
-          description="Adjust the filters or create a new owner."
+          :title="t('owners.list.emptyTitle')"
+          :description="t('owners.list.emptyDescription')"
         >
           <BaseButton
             v-if="canCreateOwner"
             :to="{ name: 'operations-owners-new' }"
             color="info"
             :icon="mdiPlus"
-            title="New owner"
-            aria-label="New owner"
+            :title="t('owners.actions.newOwner')"
+            :aria-label="t('owners.actions.newOwner')"
           />
         </AppEmptyState>
 
         <CardBox v-if="pagination.total > 0" class="mt-6">
           <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p class="text-sm text-gray-500 dark:text-slate-400">
-              Showing {{ pagination.from ?? 0 }}-{{ pagination.to ?? 0 }} of {{ pagination.total }}
+              {{
+                t('owners.pagination.showing', {
+                  from: pagination.from ?? 0,
+                  to: pagination.to ?? 0,
+                  total: pagination.total,
+                })
+              }}
             </p>
             <div class="flex flex-wrap items-center gap-2">
               <select
@@ -438,20 +449,25 @@ watch(
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronLeft"
-                title="Previous page"
-                aria-label="Previous page"
+                :title="t('owners.pagination.previousPage')"
+                :aria-label="t('owners.pagination.previousPage')"
                 small
                 :disabled="!canGoPrevious"
                 @click="canGoPrevious ? updatePage(pagination.current_page - 1) : null"
               />
               <span class="px-2 text-sm font-semibold text-gray-700 dark:text-slate-200">
-                Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                {{
+                  t('owners.pagination.pageOf', {
+                    page: pagination.current_page,
+                    pages: pagination.last_page,
+                  })
+                }}
               </span>
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronRight"
-                title="Next page"
-                aria-label="Next page"
+                :title="t('owners.pagination.nextPage')"
+                :aria-label="t('owners.pagination.nextPage')"
                 small
                 :disabled="!canGoNext"
                 @click="canGoNext ? updatePage(pagination.current_page + 1) : null"
@@ -464,9 +480,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete owner"
+      :title="t('owners.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('owners.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -474,9 +490,6 @@ watch(
       @confirm="deleteOwner"
     >
       <p>{{ deleteMessage }}</p>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        Owner deletion is limited to system administrators by backend policies.
-      </p>
     </CardBoxModal>
   </LayoutAuthenticated>
 </template>

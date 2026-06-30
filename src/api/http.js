@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '@/config/api.js'
 import { normalizeApiError } from '@/api/errors.js'
+import { currentLocale, t } from '@/i18n/index.js'
 
 export const API_UNAUTHORIZED_EVENT = 'maintops-api:unauthorized'
 export const AUTH_TOKEN_STORAGE_KEY = 'maintops.auth.token'
@@ -44,17 +45,19 @@ export const clearStoredAuth = () => {
   window.localStorage.removeItem(AUTH_USER_STORAGE_KEY)
 }
 
-const setAuthorizationHeader = (headers, value) => {
+const setHeader = (headers, name, value) => {
   if (typeof headers?.set === 'function') {
-    headers.set('Authorization', value)
+    headers.set(name, value)
     return headers
   }
 
   return {
     ...headers,
-    Authorization: value,
+    [name]: value,
   }
 }
+
+const setAuthorizationHeader = (headers, value) => setHeader(headers, 'Authorization', value)
 
 const emitUnauthorized = (error) => {
   if (!isBrowser()) {
@@ -94,7 +97,7 @@ export const http = axios.create({
 
 export const unwrapApiData = (
   response,
-  fallbackMessage = 'The API response does not contain data.',
+  fallbackMessage = t('api.errors.missingData'),
 ) => {
   const payload =
     response &&
@@ -113,6 +116,10 @@ export const unwrapApiData = (
 
 http.interceptors.request.use((config) => {
   const token = getStoredToken()
+  const locale = currentLocale()
+
+  config.headers = setHeader(config.headers, 'Accept-Language', locale)
+  config.headers = setHeader(config.headers, 'X-Locale', locale)
 
   if (token) {
     config.headers = setAuthorizationHeader(config.headers, `${getStoredTokenType()} ${token}`)

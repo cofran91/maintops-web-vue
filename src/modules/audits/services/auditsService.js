@@ -1,5 +1,6 @@
 import http, { unwrapApiData } from '@/api/http.js'
 import { buildIndexParams, normalizePaginatedData } from '@/api/query.js'
+import { t } from '@/i18n/index.js'
 
 const ENDPOINT = '/audits'
 
@@ -10,7 +11,7 @@ export const auditsApi = {
     })
 
     return normalizePaginatedData(
-      unwrapApiData(response.data, 'Audit records could not be loaded.'),
+      unwrapApiData(response.data, t('audits.errors.load')),
     )
   },
 }

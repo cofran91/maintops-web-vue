@@ -1,5 +1,6 @@
 import http, { unwrapApiData } from '@/api/http.js'
 import { buildIndexParams, normalizePaginatedData } from '@/api/query.js'
+import { t } from '@/i18n/index.js'
 
 const ENDPOINT = '/maintenance-tasks'
 
@@ -10,26 +11,26 @@ export const maintenanceTasksApi = {
     })
 
     return normalizePaginatedData(
-      unwrapApiData(response.data, 'Maintenance tasks could not be loaded.'),
+      unwrapApiData(response.data, t('maintenanceTasks.errors.load')),
     )
   },
 
   async show(id) {
     const response = await http.get(`${ENDPOINT}/${id}`)
 
-    return unwrapApiData(response.data, 'The selected maintenance task could not be loaded.')
+    return unwrapApiData(response.data, t('maintenanceTasks.errors.show'))
   },
 
   async create(payload) {
     const response = await http.post(ENDPOINT, payload)
 
-    return unwrapApiData(response.data, 'The maintenance task could not be created.')
+    return unwrapApiData(response.data, t('maintenanceTasks.errors.create'))
   },
 
   async update(id, payload) {
     const response = await http.patch(`${ENDPOINT}/${id}`, payload)
 
-    return unwrapApiData(response.data, 'The maintenance task could not be updated.')
+    return unwrapApiData(response.data, t('maintenanceTasks.errors.update'))
   },
 
   async remove(id) {

@@ -12,12 +12,13 @@ import {
   fetchCurrentUser,
   login as loginRequest,
   logout as logoutRequest,
+  updateLanguage as updateLanguageRequest,
 } from '@/modules/auth/services/authService.js'
 import { hasInteractiveRole, normalizeRole } from '@/types/auth.js'
 import { useMainStore } from '@/stores/main.js'
+import { normalizeLocale, setLocale, t } from '@/i18n/index.js'
 
 const DEFAULT_TOKEN_TYPE = 'Bearer'
-const NON_INTERACTIVE_ROLE_MESSAGE = 'This account cannot access the administrative console.'
 
 let unsubscribeUnauthorized = null
 
@@ -33,9 +34,11 @@ const normalizeUser = (user) => {
   const roles = Array.isArray(user?.roles)
     ? user.roles.map(normalizeRole).filter((role) => role !== null)
     : []
+  const preferredLocale = normalizeLocale(user?.preferred_locale)
 
   return {
     ...user,
+    ...(preferredLocale === null ? {} : { preferred_locale: preferredLocale }),
     roles,
   }
 }
@@ -73,6 +76,14 @@ const syncMainUser = (user) => {
     name: user.name,
     email: user.email,
   })
+}
+
+const syncLocaleFromUser = (user) => {
+  const locale = normalizeLocale(user?.preferred_locale)
+
+  if (locale !== null) {
+    setLocale(locale)
+  }
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -132,6 +143,7 @@ export const useAuthStore = defineStore('auth', {
       this.initialized = true
       this.error = null
 
+      syncLocaleFromUser(user)
       syncMainUser(user)
     },
 
@@ -149,7 +161,7 @@ export const useAuthStore = defineStore('auth', {
         const user = normalizeUser(data.user)
 
         if (!data.token || !canUseAuthenticatedUser(user)) {
-          throw new Error(NON_INTERACTIVE_ROLE_MESSAGE)
+          throw new Error(t('auth.errors.nonInteractiveRole'))
         }
 
         const tokenType = data.token_type || DEFAULT_TOKEN_TYPE
@@ -160,6 +172,7 @@ export const useAuthStore = defineStore('auth', {
         this.initialized = true
 
         this.persistSession(data.token, tokenType, user)
+        syncLocaleFromUser(user)
         syncMainUser(user)
 
         return user
@@ -186,11 +199,12 @@ export const useAuthStore = defineStore('auth', {
 
         if (!canUseAuthenticatedUser(user)) {
           this.clearSession()
-          throw new Error(NON_INTERACTIVE_ROLE_MESSAGE)
+          throw new Error(t('auth.errors.nonInteractiveRole'))
         }
 
         this.user = user
         this.persistSession(this.token, this.tokenType || DEFAULT_TOKEN_TYPE, user)
+        syncLocaleFromUser(user)
         syncMainUser(user)
 
         return user
@@ -219,6 +233,34 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.clearSession()
         this.loading = false
+      }
+    },
+
+    async updateLanguage(locale) {
+      const normalizedLocale = setLocale(locale)
+
+      if (!this.isAuthenticated) {
+        return normalizedLocale
+      }
+
+      try {
+        const data = await updateLanguageRequest(normalizedLocale)
+        const persistedLocale = normalizeLocale(data.locale) ?? normalizedLocale
+        const user = normalizeUser({
+          ...this.user,
+          preferred_locale: persistedLocale,
+        })
+
+        this.user = user
+        persistUser(user)
+        setLocale(persistedLocale)
+
+        return persistedLocale
+      } catch (error) {
+        const apiError = normalizeApiError(error)
+
+        this.error = apiError
+        throw apiError
       }
     },
 

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiCancel,
   mdiCheck,
@@ -24,8 +25,6 @@ import { MAINTENANCE_ORDER_STATUSES } from '@/types/maintenanceOrder.js'
 import maintenanceOrdersApi from '@/modules/maintenance-orders/services/maintenanceOrdersService.js'
 import { useOperationalEventListener } from '@/modules/realtime/composables/useOperationalEventListener.js'
 import {
-  ORDER_ACTION_LABELS,
-  ORDER_STATUS_LABELS,
   orderStatusActions,
   orderStatusColor,
 } from '@/modules/maintenance-orders/statusRules.js'
@@ -49,6 +48,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const EMPTY_FILTERS = Object.freeze({
   search: '',
@@ -74,18 +74,18 @@ const EMPTY_FILTERS = Object.freeze({
   created_to: '',
 })
 
-const columns = [
-  { key: 'order', label: 'Order' },
-  { key: 'vehicle', label: 'Vehicle' },
-  { key: 'owner', label: 'Owner' },
-  { key: 'advisor', label: 'Advisor' },
-  { key: 'workshop', label: 'Workshop' },
-  { key: 'technician', label: 'Technician' },
-  { key: 'status', label: 'Status' },
-  { key: 'items', label: 'Items' },
-  { key: 'updated_at', label: 'Updated' },
+const columns = computed(() => [
+  { key: 'order', label: t('orders.columns.order') },
+  { key: 'vehicle', label: t('orders.columns.vehicle') },
+  { key: 'owner', label: t('orders.columns.owner') },
+  { key: 'advisor', label: t('orders.columns.advisor') },
+  { key: 'workshop', label: t('orders.columns.workshop') },
+  { key: 'technician', label: t('orders.columns.technician') },
+  { key: 'status', label: t('orders.columns.status') },
+  { key: 'items', label: t('orders.columns.items') },
+  { key: 'updated_at', label: t('orders.columns.updated') },
   { key: 'actions', label: '' },
-]
+])
 
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
@@ -107,6 +107,11 @@ const hasActiveFilters = computed(() =>
 const canGoPrevious = computed(() => pagination.value.current_page > 1)
 const canGoNext = computed(
   () => pagination.value.current_page < pagination.value.last_page,
+)
+const advancedFiltersLabel = computed(() =>
+  filtersExpanded.value
+    ? t('orders.actions.hideAdvancedFilters')
+    : t('orders.actions.showAdvancedFilters'),
 )
 
 const getStringQuery = (value) => {
@@ -362,22 +367,31 @@ const actionIcon = (status) => {
 const actionColor = (status) =>
   status === 'approved' || status === 'delivered' ? 'success' : 'danger'
 
-const orderNumber = (order) => `#${String(order.id).padStart(5, '0')}`
+const orderNumber = (order) => t('orders.labels.orderNumber', {
+  id: String(order.id).padStart(5, '0'),
+})
 const vehicleLabel = (order) =>
   [order.vehicle?.license_plate, order.vehicle?.brand, order.vehicle?.model]
     .filter(Boolean)
-    .join(' ') || `Vehicle #${order.vehicle_id}`
+    .join(' ') || t('orders.labels.vehicleNumber', { id: order.vehicle_id })
 const userLabel = (user) => user?.name ?? '-'
 const workshopLabel = (workshop) =>
-  workshop ? [workshop.code, workshop.name].filter(Boolean).join(' - ') : 'Unassigned'
-const itemCountLabel = (items = []) => `${items.length} ${items.length === 1 ? 'item' : 'items'}`
+  workshop
+    ? [workshop.code, workshop.name].filter(Boolean).join(' - ')
+    : t('orders.labels.unassigned')
+const itemCountLabel = (items = []) =>
+  items.length === 1
+    ? t('orders.labels.itemCountOne', { count: items.length })
+    : t('orders.labels.itemCountMany', { count: items.length })
+const orderStatusLabel = (status) => t(`orders.status.${status}`)
+const orderActionLabel = (status) => t(`orders.orderActions.${status}`)
 
 const formatDate = (value) => {
   if (!value) {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
   }).format(new Date(value))
 }
@@ -406,9 +420,9 @@ onBeforeUnmount(() => {
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Orders"
-      subtitle="Coordinate visible maintenance orders and role-safe status actions."
-      eyebrow="Orders"
+      :title="t('orders.list.title')"
+      :subtitle="t('orders.list.subtitle')"
+      :eyebrow="t('orders.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -417,8 +431,8 @@ onBeforeUnmount(() => {
           :to="{ name: 'orders-new' }"
           color="info"
           :icon="mdiPlus"
-          title="New order"
-          aria-label="New order"
+          :title="t('orders.actions.newOrder')"
+          :aria-label="t('orders.actions.newOrder')"
         />
       </template>
 
@@ -429,59 +443,59 @@ onBeforeUnmount(() => {
         @focusout="applyFiltersOnFocusOut"
       >
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          <FormField label="Search">
+          <FormField :label="t('orders.filters.search')">
             <FormControl
               v-model="filters.search"
               name="search"
-              placeholder="Plate, owner, advisor, workshop, or technician"
+              :placeholder="t('orders.filters.searchPlaceholder')"
             />
           </FormField>
-          <FormField label="Status">
+          <FormField :label="t('orders.filters.status')">
             <select v-model="filters.status" name="status" :class="inputClass">
-              <option value="">All statuses</option>
+              <option value="">{{ t('orders.filters.allStatuses') }}</option>
               <option v-for="status in MAINTENANCE_ORDER_STATUSES" :key="status" :value="status">
-                {{ ORDER_STATUS_LABELS[status] }}
+                {{ orderStatusLabel(status) }}
               </option>
             </select>
           </FormField>
-          <FormField label="Vehicle">
+          <FormField :label="t('orders.filters.vehicle')">
             <VehicleCombobox
               v-model="filters.vehicle_id"
               name="vehicle_id"
-              placeholder="Search by plate, brand, or model"
+              :placeholder="t('orders.filters.vehiclePlaceholder')"
             />
           </FormField>
-          <FormField label="Advisor">
+          <FormField :label="t('orders.filters.advisor')">
             <UserCombobox
               v-model="filters.advisor_id"
               name="advisor_id"
-              placeholder="Search advisors"
+              :placeholder="t('orders.filters.advisorPlaceholder')"
               :role="ROLES.ADVISOR"
             />
           </FormField>
         </div>
 
         <div v-if="filtersExpanded" class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          <FormField label="Owner">
+          <FormField :label="t('orders.filters.owner')">
             <OwnerCombobox
               v-model="filters.owner_id"
               name="owner_id"
-              placeholder="Search owners"
+              :placeholder="t('orders.filters.ownerPlaceholder')"
             />
           </FormField>
-          <FormField label="Workshop">
+          <FormField :label="t('orders.filters.workshop')">
             <WorkshopCombobox
               v-model="filters.workshop_id"
               name="workshop_id"
-              placeholder="Search workshops"
+              :placeholder="t('orders.filters.workshopPlaceholder')"
               :disabled="filters.without_workshop"
             />
           </FormField>
-          <FormField label="Technician">
+          <FormField :label="t('orders.filters.technician')">
             <UserCombobox
               v-model="filters.technician_id"
               name="technician_id"
-              placeholder="Search technicians"
+              :placeholder="t('orders.filters.technicianPlaceholder')"
               :role="ROLES.TECHNICIAN"
               :disabled="filters.without_technician"
             />
@@ -493,7 +507,7 @@ onBeforeUnmount(() => {
               name="without_workshop"
               @change="handleWithoutWorkshopChange"
             >
-            Without workshop
+            {{ t('orders.filters.withoutWorkshop') }}
           </label>
           <label class="flex min-h-12 items-center gap-2 font-semibold">
             <input
@@ -502,42 +516,42 @@ onBeforeUnmount(() => {
               name="without_technician"
               @change="handleWithoutTechnicianChange"
             >
-            Without technician
+            {{ t('orders.filters.withoutTechnician') }}
           </label>
-          <FormField label="Scheduled from">
+          <FormField :label="t('orders.filters.scheduledFrom')">
             <FormControl v-model="filters.scheduled_from" name="scheduled_from" type="date" />
           </FormField>
-          <FormField label="Scheduled to">
+          <FormField :label="t('orders.filters.scheduledTo')">
             <FormControl v-model="filters.scheduled_to" name="scheduled_to" type="date" />
           </FormField>
-          <FormField label="Started from">
+          <FormField :label="t('orders.filters.startedFrom')">
             <FormControl v-model="filters.started_from" name="started_from" type="date" />
           </FormField>
-          <FormField label="Started to">
+          <FormField :label="t('orders.filters.startedTo')">
             <FormControl v-model="filters.started_to" name="started_to" type="date" />
           </FormField>
-          <FormField label="Finished from">
+          <FormField :label="t('orders.filters.finishedFrom')">
             <FormControl v-model="filters.finished_from" name="finished_from" type="date" />
           </FormField>
-          <FormField label="Finished to">
+          <FormField :label="t('orders.filters.finishedTo')">
             <FormControl v-model="filters.finished_to" name="finished_to" type="date" />
           </FormField>
-          <FormField label="Delivered from">
+          <FormField :label="t('orders.filters.deliveredFrom')">
             <FormControl v-model="filters.delivered_from" name="delivered_from" type="date" />
           </FormField>
-          <FormField label="Delivered to">
+          <FormField :label="t('orders.filters.deliveredTo')">
             <FormControl v-model="filters.delivered_to" name="delivered_to" type="date" />
           </FormField>
-          <FormField label="Cancelled from">
+          <FormField :label="t('orders.filters.cancelledFrom')">
             <FormControl v-model="filters.cancelled_from" name="cancelled_from" type="date" />
           </FormField>
-          <FormField label="Cancelled to">
+          <FormField :label="t('orders.filters.cancelledTo')">
             <FormControl v-model="filters.cancelled_to" name="cancelled_to" type="date" />
           </FormField>
-          <FormField label="Created from">
+          <FormField :label="t('orders.filters.createdFrom')">
             <FormControl v-model="filters.created_from" name="created_from" type="date" />
           </FormField>
-          <FormField label="Created to">
+          <FormField :label="t('orders.filters.createdTo')">
             <FormControl v-model="filters.created_to" name="created_to" type="date" />
           </FormField>
         </div>
@@ -546,23 +560,23 @@ onBeforeUnmount(() => {
           <BaseButton
             color="whiteDark"
             :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown"
-            :title="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
-            :aria-label="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
+            :title="advancedFiltersLabel"
+            :aria-label="advancedFiltersLabel"
             @click="filtersExpanded = !filtersExpanded"
           />
           <BaseButton
             color="whiteDark"
             :icon="mdiClose"
-            title="Clear filters"
-            aria-label="Clear filters"
+            :title="t('orders.actions.clearFilters')"
+            :aria-label="t('orders.actions.clearFilters')"
             :disabled="!hasActiveFilters"
             @click="clearFilters"
           />
           <BaseButton
             color="info"
             :icon="mdiCheck"
-            title="Apply filters"
-            aria-label="Apply filters"
+            :title="t('orders.actions.applyFilters')"
+            :aria-label="t('orders.actions.applyFilters')"
             type="submit"
           />
         </div>
@@ -574,8 +588,8 @@ onBeforeUnmount(() => {
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('orders.actions.retry')"
+            :aria-label="t('orders.actions.retry')"
             small
             @click="fetchOrders"
           />
@@ -583,7 +597,9 @@ onBeforeUnmount(() => {
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading orders...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('orders.list.loading') }}
+        </p>
       </CardBox>
 
       <template v-else-if="!errorMessage">
@@ -591,8 +607,8 @@ onBeforeUnmount(() => {
           v-if="orders.length"
           :columns="columns"
           :rows="orders"
-          empty-title="No orders found"
-          empty-description="Adjust the filters or create a new order."
+          :empty-title="t('orders.list.emptyTitle')"
+          :empty-description="t('orders.list.emptyDescription')"
         >
           <template #cell-order="{ row }">
             <div class="min-w-0">
@@ -621,7 +637,7 @@ onBeforeUnmount(() => {
           </template>
           <template #cell-status="{ value }">
             <AppBadge
-              :label="ORDER_STATUS_LABELS[value] ?? value"
+              :label="orderStatusLabel(value)"
               :color="orderStatusColor(value)"
             />
           </template>
@@ -637,8 +653,8 @@ onBeforeUnmount(() => {
                 :to="{ name: 'orders-detail', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiEyeOutline"
-                title="Open order"
-                aria-label="Open order"
+                :title="t('orders.actions.openOrder')"
+                :aria-label="t('orders.actions.openOrder')"
                 small
               />
               <BaseButton
@@ -646,8 +662,8 @@ onBeforeUnmount(() => {
                 :key="status"
                 :color="actionColor(status)"
                 :icon="actionIcon(status)"
-                :title="ORDER_ACTION_LABELS[status]"
-                :aria-label="ORDER_ACTION_LABELS[status]"
+                :title="orderActionLabel(status)"
+                :aria-label="orderActionLabel(status)"
                 :disabled="updatingStatus"
                 small
                 @click="updateOrderStatus(row, status)"
@@ -658,23 +674,27 @@ onBeforeUnmount(() => {
 
         <AppEmptyState
           v-else
-          title="No orders found"
-          description="Adjust the filters or create a new order."
+          :title="t('orders.list.emptyTitle')"
+          :description="t('orders.list.emptyDescription')"
         >
           <BaseButton
             v-if="canCreateOrder"
             :to="{ name: 'orders-new' }"
             color="info"
             :icon="mdiPlus"
-            title="New order"
-            aria-label="New order"
+            :title="t('orders.actions.newOrder')"
+            :aria-label="t('orders.actions.newOrder')"
           />
         </AppEmptyState>
 
         <CardBox v-if="pagination.total > 0" class="mt-6">
           <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p class="text-sm text-gray-500 dark:text-slate-400">
-              Showing {{ pagination.from ?? 0 }}-{{ pagination.to ?? 0 }} of {{ pagination.total }}
+              {{ t('orders.pagination.showing', {
+                from: pagination.from ?? 0,
+                to: pagination.to ?? 0,
+                total: pagination.total,
+              }) }}
             </p>
             <div class="flex flex-wrap items-center gap-2">
               <select
@@ -690,20 +710,23 @@ onBeforeUnmount(() => {
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronLeft"
-                title="Previous page"
-                aria-label="Previous page"
+                :title="t('orders.pagination.previousPage')"
+                :aria-label="t('orders.pagination.previousPage')"
                 small
                 :disabled="!canGoPrevious"
                 @click="canGoPrevious ? updatePage(pagination.current_page - 1) : null"
               />
               <span class="px-2 text-sm font-semibold text-gray-700 dark:text-slate-200">
-                Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                {{ t('orders.pagination.pageOf', {
+                  page: pagination.current_page,
+                  pages: pagination.last_page,
+                }) }}
               </span>
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronRight"
-                title="Next page"
-                aria-label="Next page"
+                :title="t('orders.pagination.nextPage')"
+                :aria-label="t('orders.pagination.nextPage')"
                 small
                 :disabled="!canGoNext"
                 @click="canGoNext ? updatePage(pagination.current_page + 1) : null"

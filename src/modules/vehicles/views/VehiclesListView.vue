@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiCar,
   mdiCheck,
@@ -41,6 +42,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const EMPTY_FILTERS = Object.freeze({
   search: '',
@@ -54,15 +56,15 @@ const EMPTY_FILTERS = Object.freeze({
   created_to: '',
 })
 
-const columns = [
-  { key: 'vehicle', label: 'Vehicle' },
-  { key: 'owner', label: 'Owner' },
-  { key: 'year', label: 'Year' },
-  { key: 'color', label: 'Color' },
-  { key: 'odometer_km', label: 'Odometer' },
-  { key: 'updated_at', label: 'Updated' },
+const columns = computed(() => [
+  { key: 'vehicle', label: t('vehicles.columns.vehicle') },
+  { key: 'owner', label: t('vehicles.columns.owner') },
+  { key: 'year', label: t('vehicles.columns.year') },
+  { key: 'color', label: t('vehicles.columns.color') },
+  { key: 'odometer_km', label: t('vehicles.columns.odometer') },
+  { key: 'updated_at', label: t('vehicles.columns.updated') },
   { key: 'actions', label: '' },
-]
+])
 
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
@@ -93,8 +95,13 @@ const deleteMessage = computed(() => {
     return ''
   }
 
-  return `This action will delete vehicle ${vehicleToDelete.value.license_plate}.`
+  return t('vehicles.delete.confirmMessage', { plate: vehicleToDelete.value.license_plate })
 })
+const advancedFiltersLabel = computed(() =>
+  filtersExpanded.value
+    ? t('vehicles.actions.hideAdvancedFilters')
+    : t('vehicles.actions.showAdvancedFilters'),
+)
 
 const getStringQuery = (value) => {
   if (Array.isArray(value)) {
@@ -286,7 +293,9 @@ const deleteVehicle = async () => {
 const formatValue = (value) =>
   value === null || value === undefined || value === '' ? '-' : value
 
-const ownerName = (vehicle) => vehicle.owner?.name ?? `Owner #${vehicle.owner_id}`
+const ownerName = (vehicle) => vehicle.owner?.name ?? t('vehicles.labels.ownerNumber', {
+  id: vehicle.owner_id,
+})
 const vehicleDescription = (vehicle) =>
   [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || '-'
 
@@ -295,7 +304,9 @@ const formatKilometers = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} km`
+  return t('vehicles.units.kilometers', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const formatDate = (value) => {
@@ -303,7 +314,7 @@ const formatDate = (value) => {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
   }).format(new Date(value))
 }
@@ -321,9 +332,9 @@ watch(
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Vehicles"
-      subtitle="Track vehicle records, owners, identity data, and operational mileage."
-      eyebrow="Operations"
+      :title="t('vehicles.list.title')"
+      :subtitle="t('vehicles.list.subtitle')"
+      :eyebrow="t('vehicles.page.eyebrow')"
       :icon="mdiCar"
     >
       <template #actions>
@@ -332,8 +343,8 @@ watch(
           :to="{ name: 'operations-vehicles-new' }"
           color="info"
           :icon="mdiPlus"
-          title="New vehicle"
-          aria-label="New vehicle"
+          :title="t('vehicles.actions.newVehicle')"
+          :aria-label="t('vehicles.actions.newVehicle')"
         />
       </template>
 
@@ -344,37 +355,37 @@ watch(
         @focusout="applyFiltersOnFocusOut"
       >
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          <FormField label="Search">
+          <FormField :label="t('vehicles.filters.search')">
             <FormControl
               v-model="filters.search"
               name="search"
-              placeholder="Plate, brand, model, color, or owner"
+              :placeholder="t('vehicles.filters.searchPlaceholder')"
             />
           </FormField>
-          <FormField label="License plate">
+          <FormField :label="t('vehicles.filters.licensePlate')">
             <FormControl
               v-model="filters.license_plate"
               name="license_plate"
-              placeholder="ABC123"
+              :placeholder="t('vehicles.filters.licensePlatePlaceholder')"
             />
           </FormField>
-          <FormField label="Brand">
+          <FormField :label="t('vehicles.filters.brand')">
             <FormControl v-model="filters.brand" name="brand" />
           </FormField>
-          <FormField label="Owner">
+          <FormField :label="t('vehicles.filters.owner')">
             <OwnerCombobox
               v-model="filters.owner_id"
               name="owner_id"
-              placeholder="Search by owner name, email, or document"
+              :placeholder="t('vehicles.filters.ownerPlaceholder')"
             />
           </FormField>
         </div>
 
         <div v-if="filtersExpanded" class="grid grid-cols-1 gap-4 lg:grid-cols-5">
-          <FormField label="Model">
+          <FormField :label="t('vehicles.filters.model')">
             <FormControl v-model="filters.model" name="model" />
           </FormField>
-          <FormField label="Year">
+          <FormField :label="t('vehicles.filters.year')">
             <input
               v-model="filters.year"
               type="number"
@@ -383,13 +394,13 @@ watch(
               :class="inputClass"
             >
           </FormField>
-          <FormField label="Color">
+          <FormField :label="t('vehicles.filters.color')">
             <FormControl v-model="filters.color" name="color" />
           </FormField>
-          <FormField label="Created from">
+          <FormField :label="t('vehicles.filters.createdFrom')">
             <FormControl v-model="filters.created_from" name="created_from" type="date" />
           </FormField>
-          <FormField label="Created to">
+          <FormField :label="t('vehicles.filters.createdTo')">
             <FormControl v-model="filters.created_to" name="created_to" type="date" />
           </FormField>
         </div>
@@ -398,23 +409,23 @@ watch(
           <BaseButton
             color="whiteDark"
             :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown"
-            :title="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
-            :aria-label="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
+            :title="advancedFiltersLabel"
+            :aria-label="advancedFiltersLabel"
             @click="filtersExpanded = !filtersExpanded"
           />
           <BaseButton
             color="whiteDark"
             :icon="mdiClose"
-            title="Clear filters"
-            aria-label="Clear filters"
+            :title="t('vehicles.actions.clearFilters')"
+            :aria-label="t('vehicles.actions.clearFilters')"
             :disabled="!hasActiveFilters"
             @click="clearFilters"
           />
           <BaseButton
             color="info"
             :icon="mdiCheck"
-            title="Apply filters"
-            aria-label="Apply filters"
+            :title="t('vehicles.actions.applyFilters')"
+            :aria-label="t('vehicles.actions.applyFilters')"
             type="submit"
           />
         </div>
@@ -426,8 +437,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('vehicles.actions.retry')"
+            :aria-label="t('vehicles.actions.retry')"
             small
             @click="fetchVehicles"
           />
@@ -435,7 +446,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading vehicles...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('vehicles.list.loading') }}
+        </p>
       </CardBox>
 
       <template v-else-if="!errorMessage">
@@ -443,8 +456,8 @@ watch(
           v-if="vehicles.length"
           :columns="columns"
           :rows="vehicles"
-          empty-title="No vehicles found"
-          empty-description="Adjust the filters or create a new vehicle."
+          :empty-title="t('vehicles.list.emptyTitle')"
+          :empty-description="t('vehicles.list.emptyDescription')"
         >
           <template #cell-vehicle="{ row }">
             <div class="min-w-0">
@@ -484,8 +497,8 @@ watch(
                 :to="{ name: 'operations-vehicles-detail', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiEyeOutline"
-                title="Open vehicle"
-                aria-label="Open vehicle"
+                :title="t('vehicles.actions.openVehicle')"
+                :aria-label="t('vehicles.actions.openVehicle')"
                 small
               />
               <BaseButton
@@ -493,16 +506,16 @@ watch(
                 :to="{ name: 'operations-vehicles-edit', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiPencil"
-                title="Edit vehicle"
-                aria-label="Edit vehicle"
+                :title="t('vehicles.actions.editVehicle')"
+                :aria-label="t('vehicles.actions.editVehicle')"
                 small
               />
               <BaseButton
                 v-if="canDeleteVehicle"
                 color="danger"
                 :icon="mdiTrashCanOutline"
-                title="Delete vehicle"
-                aria-label="Delete vehicle"
+                :title="t('vehicles.actions.deleteVehicle')"
+                :aria-label="t('vehicles.actions.deleteVehicle')"
                 small
                 @click="askDelete(row)"
               />
@@ -512,23 +525,27 @@ watch(
 
         <AppEmptyState
           v-else
-          title="No vehicles found"
-          description="Adjust the filters or create a new vehicle."
+          :title="t('vehicles.list.emptyTitle')"
+          :description="t('vehicles.list.emptyDescription')"
         >
           <BaseButton
             v-if="canCreateVehicle"
             :to="{ name: 'operations-vehicles-new' }"
             color="info"
             :icon="mdiPlus"
-            title="New vehicle"
-            aria-label="New vehicle"
+            :title="t('vehicles.actions.newVehicle')"
+            :aria-label="t('vehicles.actions.newVehicle')"
           />
         </AppEmptyState>
 
         <CardBox v-if="pagination.total > 0" class="mt-6">
           <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p class="text-sm text-gray-500 dark:text-slate-400">
-              Showing {{ pagination.from ?? 0 }}-{{ pagination.to ?? 0 }} of {{ pagination.total }}
+              {{ t('vehicles.pagination.showing', {
+                from: pagination.from ?? 0,
+                to: pagination.to ?? 0,
+                total: pagination.total,
+              }) }}
             </p>
             <div class="flex flex-wrap items-center gap-2">
               <select
@@ -544,20 +561,23 @@ watch(
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronLeft"
-                title="Previous page"
-                aria-label="Previous page"
+                :title="t('vehicles.pagination.previousPage')"
+                :aria-label="t('vehicles.pagination.previousPage')"
                 small
                 :disabled="!canGoPrevious"
                 @click="canGoPrevious ? updatePage(pagination.current_page - 1) : null"
               />
               <span class="px-2 text-sm font-semibold text-gray-700 dark:text-slate-200">
-                Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                {{ t('vehicles.pagination.pageOf', {
+                  page: pagination.current_page,
+                  pages: pagination.last_page,
+                }) }}
               </span>
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronRight"
-                title="Next page"
-                aria-label="Next page"
+                :title="t('vehicles.pagination.nextPage')"
+                :aria-label="t('vehicles.pagination.nextPage')"
                 small
                 :disabled="!canGoNext"
                 @click="canGoNext ? updatePage(pagination.current_page + 1) : null"
@@ -570,9 +590,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete vehicle"
+      :title="t('vehicles.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('vehicles.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -580,9 +600,6 @@ watch(
       @confirm="deleteVehicle"
     >
       <p>{{ deleteMessage }}</p>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        Vehicle deletion is limited to system administrators by backend policies.
-      </p>
     </CardBoxModal>
   </LayoutAuthenticated>
 </template>

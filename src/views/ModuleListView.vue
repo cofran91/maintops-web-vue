@@ -13,6 +13,11 @@ import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 import { useAuthStore } from '@/stores/auth.js'
+import {
+  localizedRouteSection,
+  localizedRouteSubtitle,
+  localizedRouteTitle,
+} from '@/i18n/routeLabels.js'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -20,9 +25,9 @@ const authStore = useAuthStore()
 const search = ref('')
 const status = ref('All')
 
-const title = computed(() => route.meta.title ?? 'Records')
-const subtitle = computed(() => route.meta.subtitle ?? 'Review operational records.')
-const section = computed(() => route.meta.section ?? 'MaintOps')
+const title = computed(() => localizedRouteTitle(route))
+const subtitle = computed(() => localizedRouteSubtitle(route))
+const section = computed(() => localizedRouteSection(route))
 const isEmpty = computed(() => route.meta.isEmpty === true)
 const createTo = computed(() => route.meta.createTo)
 const detailTo = computed(() => route.meta.detailTo)

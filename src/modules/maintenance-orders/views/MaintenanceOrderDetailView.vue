@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
   mdiCalendar,
@@ -20,10 +21,6 @@ import maintenanceOrdersApi from '@/modules/maintenance-orders/services/maintena
 import { useOperationalEventListener } from '@/modules/realtime/composables/useOperationalEventListener.js'
 import { maintenanceOrderIdForEvent } from '@/modules/realtime/services/operationalEventsService.js'
 import {
-  ORDER_ACTION_LABELS,
-  ORDER_ITEM_ACTION_LABELS,
-  ORDER_ITEM_STATUS_LABELS,
-  ORDER_STATUS_LABELS,
   orderItemStatusActions,
   orderItemStatusColor,
   orderStatusActions,
@@ -42,8 +39,8 @@ import NotificationBar from '@/components/NotificationBar.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
 const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const order = ref(null)
 const loading = ref(false)
@@ -51,20 +48,22 @@ const updatingStatus = ref(false)
 const errorMessage = ref('')
 let realtimeRefreshTimer = null
 
-const itemColumns = [
-  { key: 'task', label: 'Task' },
-  { key: 'plan', label: 'Plan' },
-  { key: 'system', label: 'System' },
-  { key: 'status', label: 'Status' },
-  { key: 'duration', label: 'Duration' },
-  { key: 'scheduled_at', label: 'Scheduled' },
+const itemColumns = computed(() => [
+  { key: 'task', label: t('orders.itemColumns.task') },
+  { key: 'plan', label: t('orders.itemColumns.plan') },
+  { key: 'system', label: t('orders.itemColumns.system') },
+  { key: 'status', label: t('orders.itemColumns.status') },
+  { key: 'duration', label: t('orders.itemColumns.duration') },
+  { key: 'scheduled_at', label: t('orders.itemColumns.scheduled') },
   { key: 'actions', label: '' },
-]
+])
 
 const orderId = computed(() => String(route.params.id ?? ''))
 const items = computed(() => order.value?.items ?? [])
 const title = computed(() =>
-  order.value ? `Order #${String(order.value.id).padStart(5, '0')}` : 'Order detail',
+  order.value
+    ? t('orders.labels.orderNumber', { id: String(order.value.id).padStart(5, '0') })
+    : t('orders.detail.titleFallback'),
 )
 
 const fetchOrder = async () => {
@@ -150,15 +149,12 @@ const actionColor = (status) =>
     ? 'success'
     : 'danger'
 
-const formatValue = (value) =>
-  value === null || value === undefined || value === '' ? '-' : value
-
 const formatDate = (value) => {
   if (!value) {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
@@ -169,7 +165,19 @@ const durationLabel = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} min`
+  return t('orders.units.minutes', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
+}
+
+const kilometersLabel = (value) => {
+  if (value === null || value === undefined) {
+    return '-'
+  }
+
+  return t('orders.units.kilometers', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const vehicleLabel = (vehicle) =>
@@ -178,15 +186,25 @@ const vehicleLabel = (vehicle) =>
     : '-'
 const userLabel = (user) => user?.name ?? '-'
 const workshopLabel = (workshop) =>
-  workshop ? [workshop.code, workshop.name].filter(Boolean).join(' - ') : 'Unassigned'
+  workshop
+    ? [workshop.code, workshop.name].filter(Boolean).join(' - ')
+    : t('orders.labels.unassigned')
 const taskLabel = (item) =>
   [item.maintenance_task?.code, item.maintenance_task?.name].filter(Boolean).join(' - ') ||
-  `Task #${item.maintenance_task_id}`
+  t('orders.labels.taskNumber', { id: item.maintenance_task_id })
 const planLabel = (item) =>
   item.maintenance_plan
     ? [item.maintenance_plan.code, item.maintenance_plan.name].filter(Boolean).join(' - ')
     : '-'
 const systemLabel = (item) => item.maintenance_task?.vehicle_system?.name ?? '-'
+const orderStatusLabel = (status) => t(`orders.status.${status}`)
+const orderActionLabel = (status) => t(`orders.orderActions.${status}`)
+const itemStatusLabel = (status) => t(`orders.itemStatus.${status}`)
+const itemActionLabel = (status) => t(`orders.itemActions.${status}`)
+const itemCountLabel = (count) =>
+  count === 1
+    ? t('orders.labels.itemCountOne', { count })
+    : t('orders.labels.itemCountMany', { count })
 
 const orderItems = computed(() => {
   if (!order.value) {
@@ -194,17 +212,17 @@ const orderItems = computed(() => {
   }
 
   return [
-    { icon: mdiCar, label: 'Vehicle', value: vehicleLabel(order.value.vehicle) },
-    { icon: mdiCar, label: 'Owner', value: userLabel(order.value.owner) },
-    { icon: mdiWrenchOutline, label: 'Advisor', value: userLabel(order.value.advisor) },
-    { icon: mdiWrenchOutline, label: 'Workshop', value: workshopLabel(order.value.workshop) },
-    { icon: mdiWrenchOutline, label: 'Technician', value: userLabel(order.value.technician) },
-    { icon: mdiCalendar, label: 'Created', value: formatDate(order.value.created_at) },
-    { icon: mdiCalendar, label: 'Scheduled', value: formatDate(order.value.scheduled_at) },
-    { icon: mdiCalendar, label: 'Started', value: formatDate(order.value.started_at) },
-    { icon: mdiCalendar, label: 'Finished', value: formatDate(order.value.finished_at) },
-    { icon: mdiCalendar, label: 'Delivered', value: formatDate(order.value.delivered_at) },
-    { icon: mdiCalendar, label: 'Cancelled', value: formatDate(order.value.cancelled_at) },
+    { icon: mdiCar, label: t('orders.fields.vehicle'), value: vehicleLabel(order.value.vehicle) },
+    { icon: mdiCar, label: t('orders.fields.owner'), value: userLabel(order.value.owner) },
+    { icon: mdiWrenchOutline, label: t('orders.fields.advisor'), value: userLabel(order.value.advisor) },
+    { icon: mdiWrenchOutline, label: t('orders.fields.workshop'), value: workshopLabel(order.value.workshop) },
+    { icon: mdiWrenchOutline, label: t('orders.fields.technician'), value: userLabel(order.value.technician) },
+    { icon: mdiCalendar, label: t('orders.fields.created'), value: formatDate(order.value.created_at) },
+    { icon: mdiCalendar, label: t('orders.fields.scheduled'), value: formatDate(order.value.scheduled_at) },
+    { icon: mdiCalendar, label: t('orders.fields.started'), value: formatDate(order.value.started_at) },
+    { icon: mdiCalendar, label: t('orders.fields.finished'), value: formatDate(order.value.finished_at) },
+    { icon: mdiCalendar, label: t('orders.fields.delivered'), value: formatDate(order.value.delivered_at) },
+    { icon: mdiCalendar, label: t('orders.fields.cancelled'), value: formatDate(order.value.cancelled_at) },
   ]
 })
 
@@ -234,8 +252,8 @@ onBeforeUnmount(() => {
   <LayoutAuthenticated>
     <AppPage
       :title="title"
-      subtitle="Review assignments, status history, and task-level execution."
-      eyebrow="Orders"
+      :subtitle="t('orders.detail.subtitle')"
+      :eyebrow="t('orders.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -243,16 +261,16 @@ onBeforeUnmount(() => {
           :to="{ name: 'orders' }"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back to orders"
-          aria-label="Back to orders"
+          :title="t('orders.actions.backToOrders')"
+          :aria-label="t('orders.actions.backToOrders')"
         />
         <BaseButton
           v-for="status in availableOrderActions"
           :key="status"
           :color="actionColor(status)"
           :icon="actionIcon(status)"
-          :title="ORDER_ACTION_LABELS[status]"
-          :aria-label="ORDER_ACTION_LABELS[status]"
+          :title="orderActionLabel(status)"
+          :aria-label="orderActionLabel(status)"
           :disabled="updatingStatus"
           @click="updateOrderStatus(status)"
         />
@@ -264,8 +282,8 @@ onBeforeUnmount(() => {
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('orders.actions.retry')"
+            :aria-label="t('orders.actions.retry')"
             small
             @click="fetchOrder"
           />
@@ -273,23 +291,25 @@ onBeforeUnmount(() => {
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading order...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('orders.detail.loading') }}
+        </p>
       </CardBox>
 
       <AppEmptyState
         v-else-if="!order && !errorMessage"
-        title="Order unavailable"
-        description="There is no order data to display."
+        :title="t('orders.detail.unavailableTitle')"
+        :description="t('orders.detail.unavailableDescription')"
       />
 
       <div v-else-if="order" class="grid grid-cols-1 gap-6">
         <CardBox>
           <div class="mb-5 flex flex-wrap gap-2">
             <AppBadge
-              :label="ORDER_STATUS_LABELS[order.status] ?? order.status"
+              :label="orderStatusLabel(order.status)"
               :color="orderStatusColor(order.status)"
             />
-            <AppBadge :label="`${items.length} items`" color="info" />
+            <AppBadge :label="itemCountLabel(items.length)" color="info" />
           </div>
 
           <dl class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -313,8 +333,8 @@ onBeforeUnmount(() => {
             v-if="items.length"
             :columns="itemColumns"
             :rows="items"
-            empty-title="No order items"
-            empty-description="Items are generated by maintenance plan workflows."
+            :empty-title="t('orders.items.emptyTitle')"
+            :empty-description="t('orders.items.emptyDescription')"
           >
             <template #cell-task="{ row }">
               <div class="min-w-0">
@@ -322,7 +342,7 @@ onBeforeUnmount(() => {
                   {{ taskLabel(row) }}
                 </p>
                 <p class="truncate text-sm text-gray-500 dark:text-slate-400">
-                  {{ formatValue(row.odometer_km) }} km
+                  {{ kilometersLabel(row.odometer_km) }}
                 </p>
               </div>
             </template>
@@ -334,7 +354,7 @@ onBeforeUnmount(() => {
             </template>
             <template #cell-status="{ value }">
               <AppBadge
-                :label="ORDER_ITEM_STATUS_LABELS[value] ?? value"
+                :label="itemStatusLabel(value)"
                 :color="orderItemStatusColor(value)"
               />
             </template>
@@ -356,8 +376,8 @@ onBeforeUnmount(() => {
                   :key="status"
                   :color="actionColor(status)"
                   :icon="actionIcon(status)"
-                  :title="ORDER_ITEM_ACTION_LABELS[status]"
-                  :aria-label="ORDER_ITEM_ACTION_LABELS[status]"
+                  :title="itemActionLabel(status)"
+                  :aria-label="itemActionLabel(status)"
                   :disabled="updatingStatus"
                   small
                   @click="updateItemStatus(row, status)"
@@ -368,8 +388,8 @@ onBeforeUnmount(() => {
 
           <AppEmptyState
             v-else
-            title="No order items"
-            description="Items are generated by maintenance plan workflows."
+            :title="t('orders.items.emptyTitle')"
+            :description="t('orders.items.emptyDescription')"
           />
         </CardBox>
       </div>

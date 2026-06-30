@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { mdiChevronDown, mdiClose } from '@mdi/js'
 import { normalizeApiError } from '@/api/errors.js'
 import BaseIcon from '@/components/BaseIcon.vue'
@@ -19,7 +20,7 @@ const props = defineProps({
   name: String,
   placeholder: {
     type: String,
-    default: 'Search maintenance plans',
+    default: null,
   },
   perPage: {
     type: Number,
@@ -28,6 +29,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'select'])
+const { locale, t } = useI18n()
 
 const search = ref('')
 const options = ref([])
@@ -44,6 +46,9 @@ let requestId = 0
 const normalizedModelValue = computed(() =>
   props.modelValue === null || props.modelValue === undefined ? '' : String(props.modelValue),
 )
+const resolvedPlaceholder = computed(() =>
+  props.placeholder ?? t('maintenancePlans.combobox.placeholder'),
+)
 const hasMorePages = computed(() => page.value < lastPage.value)
 
 const planLabel = (plan) => {
@@ -56,9 +61,17 @@ const planLabel = (plan) => {
 
 const planMeta = (plan) =>
   [
-    plan.recommended_interval_days ? `${plan.recommended_interval_days} days` : null,
-    plan.recommended_interval_km ? `${plan.recommended_interval_km} km` : null,
-  ].filter(Boolean).join(' / ') || 'No interval'
+    plan.recommended_interval_days
+      ? t('maintenancePlans.units.days', {
+          value: new Intl.NumberFormat(locale.value).format(plan.recommended_interval_days),
+        })
+      : null,
+    plan.recommended_interval_km
+      ? t('maintenancePlans.units.kilometers', {
+          value: new Intl.NumberFormat(locale.value).format(plan.recommended_interval_km),
+        })
+      : null,
+  ].filter(Boolean).join(' / ') || t('maintenancePlans.combobox.noInterval')
 
 const mergePlans = (plans) => {
   const planMap = new Map()
@@ -262,7 +275,7 @@ onBeforeUnmount(() => {
       role="combobox"
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
-      :placeholder="placeholder"
+      :placeholder="resolvedPlaceholder"
       :disabled="disabled"
       class="h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 pr-20
         disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800"
@@ -276,8 +289,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Clear plan"
-        aria-label="Clear plan"
+        :title="t('maintenancePlans.combobox.clear')"
+        :aria-label="t('maintenancePlans.combobox.clear')"
         @click="clearSelection(true)"
       >
         <BaseIcon :path="mdiClose" size="18" />
@@ -287,8 +300,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Show plans"
-        aria-label="Show plans"
+        :title="t('maintenancePlans.combobox.show')"
+        :aria-label="t('maintenancePlans.combobox.show')"
         @click="toggleOptions"
       >
         <BaseIcon :path="mdiChevronDown" size="18" />
@@ -324,16 +337,16 @@ onBeforeUnmount(() => {
       </button>
 
       <p v-if="loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading plans...
+        {{ t('maintenancePlans.combobox.loading') }}
       </p>
       <p v-else-if="!loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        No plans found.
+        {{ t('maintenancePlans.combobox.empty') }}
       </p>
       <p v-if="errorMessage" class="px-3 py-3 text-sm text-red-600 dark:text-red-400">
         {{ errorMessage }}
       </p>
       <p v-if="loading && options.length > 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading more...
+        {{ t('maintenancePlans.combobox.loadingMore') }}
       </p>
     </div>
   </div>

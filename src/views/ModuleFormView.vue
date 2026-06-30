@@ -10,11 +10,12 @@ import CardBox from '@/components/CardBox.vue'
 import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
+import { localizedRouteSubtitle, localizedRouteTitle } from '@/i18n/routeLabels.js'
 
 const route = useRoute()
 
-const title = computed(() => route.meta.title ?? 'New record')
-const subtitle = computed(() => route.meta.subtitle ?? 'Capture operational context.')
+const title = computed(() => localizedRouteTitle(route))
+const subtitle = computed(() => localizedRouteSubtitle(route))
 
 const form = reactive({
   vehicle: 'Fleet truck AX-204',

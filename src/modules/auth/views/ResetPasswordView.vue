@@ -11,9 +11,11 @@ import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutGuest from '@/layouts/LayoutGuest.vue'
 import { useAuthStore } from '@/stores/auth.js'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const form = reactive({
   token: '',
@@ -29,7 +31,7 @@ const submitting = ref(false)
 
 const hasRequiredLinkData = computed(() => Boolean(form.token && form.email))
 const linkError = computed(() =>
-  hasRequiredLinkData.value ? '' : 'The password reset link is incomplete. Request a new link.',
+  hasRequiredLinkData.value ? '' : t('auth.errors.incompleteResetLink'),
 )
 
 const fillFromQuery = () => {
@@ -51,23 +53,23 @@ const validateForm = () => {
   const errors = {}
 
   if (!form.token) {
-    errors.token = ['The password reset link is incomplete. Request a new link.']
+    errors.token = [t('auth.errors.incompleteResetLink')]
   }
 
   if (!form.email.trim()) {
-    errors.email = ['Email is required.']
+    errors.email = [t('auth.errors.emailRequired')]
   }
 
   if (!form.password) {
-    errors.password = ['Password is required.']
+    errors.password = [t('auth.errors.passwordRequired')]
   }
 
   if (!form.password_confirmation) {
-    errors.password_confirmation = ['Password confirmation is required.']
+    errors.password_confirmation = [t('auth.errors.passwordConfirmationRequired')]
   }
 
   if (form.password && form.password_confirmation && form.password !== form.password_confirmation) {
-    errors.password_confirmation = ['Password confirmation does not match.']
+    errors.password_confirmation = [t('auth.errors.passwordConfirmationMismatch')]
   }
 
   validationErrors.value = errors
@@ -123,13 +125,13 @@ watch(
       <CardBox class="w-full max-w-md shadow-2xl" is-form @submit.prevent="submit">
         <div class="mb-6">
           <p class="text-sm font-semibold uppercase text-blue-600 dark:text-blue-300">
-            MaintOps Console
+            {{ t('common.brand') }}
           </p>
           <h1 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-slate-100">
-            Set a new password
+            {{ t('auth.resetPassword.title') }}
           </h1>
           <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">
-            Use the email link to choose a new password for your account.
+            {{ t('auth.resetPassword.description') }}
           </p>
         </div>
 
@@ -153,7 +155,7 @@ watch(
 
         <input v-model="form.token" type="hidden" name="token" />
 
-        <FormField label="Email" label-for="email" :error="fieldError('email')">
+        <FormField :label="t('auth.fields.email')" label-for="email" :error="fieldError('email')">
           <FormControl
             id="email"
             v-model="form.email"
@@ -166,7 +168,11 @@ watch(
           />
         </FormField>
 
-        <FormField label="New password" label-for="password" :error="fieldError('password')">
+        <FormField
+          :label="t('auth.fields.newPassword')"
+          label-for="password"
+          :error="fieldError('password')"
+        >
           <FormControl
             id="password"
             v-model="form.password"
@@ -179,7 +185,7 @@ watch(
         </FormField>
 
         <FormField
-          label="Confirm password"
+          :label="t('auth.fields.confirmPassword')"
           label-for="password_confirmation"
           :error="fieldError('password_confirmation')"
         >
@@ -200,13 +206,13 @@ watch(
               :to="{ name: 'login' }"
               color="whiteDark"
               :icon="mdiArrowLeft"
-              label="Back to sign in"
+              :label="t('common.actions.backToSignIn')"
             />
             <BaseButton
               type="submit"
               color="info"
               :icon="mdiLockReset"
-              :label="submitting ? 'Updating...' : 'Update password'"
+              :label="submitting ? t('auth.resetPassword.updating') : t('auth.resetPassword.updatePassword')"
               :disabled="submitting || !hasRequiredLinkData"
             />
           </BaseButtons>

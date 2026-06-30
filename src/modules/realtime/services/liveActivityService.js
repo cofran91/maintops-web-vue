@@ -1,31 +1,32 @@
 import { computed, readonly, ref } from 'vue'
 import { maintenanceOrderIdForEvent } from '@/modules/realtime/services/operationalEventsService.js'
+import { t } from '@/i18n/index.js'
 
 const MAX_ACTIVITY_ITEMS = 50
 const STORAGE_KEY_PREFIX = 'maintops.live-activity'
-const ORDER_ACTION_LABELS = Object.freeze({
-  created: 'created',
-  updated: 'updated',
-  pending_owner_approval: 'sent for owner approval',
-  approved: 'approved',
-  partially_approved: 'partially approved',
-  rejected: 'rejected',
-  scheduled: 'scheduled',
-  in_progress: 'started',
-  completed: 'completed',
-  delivered: 'delivered',
-  cancelled: 'cancelled',
-})
-const ITEM_ACTION_LABELS = Object.freeze({
-  created: 'created',
-  updated: 'updated',
-  pending_owner_approval: 'sent for owner approval',
-  scheduled: 'scheduled',
-  in_progress: 'started',
-  completed: 'completed',
-  rejected: 'rejected',
-  cancelled: 'cancelled',
-})
+const ORDER_ACTIONS = Object.freeze([
+  'created',
+  'updated',
+  'pending_owner_approval',
+  'approved',
+  'partially_approved',
+  'rejected',
+  'scheduled',
+  'in_progress',
+  'completed',
+  'delivered',
+  'cancelled',
+])
+const ITEM_ACTIONS = Object.freeze([
+  'created',
+  'updated',
+  'pending_owner_approval',
+  'scheduled',
+  'in_progress',
+  'completed',
+  'rejected',
+  'cancelled',
+])
 
 const activities = ref([])
 const latestActivityId = ref(null)
@@ -76,12 +77,18 @@ export const operationalEventMessage = (event) => {
   const action = actionFromEvent(event)
 
   if (event.aggregate.type === 'maintenance_order') {
-    const label = ORDER_ACTION_LABELS[action]
+    const label = ORDER_ACTIONS.includes(action)
+      ? t(`realtime.liveActivityActions.${action}`)
+      : undefined
 
-    return label === undefined ? null : `Order #${orderId} was ${label}.`
+    return label === undefined
+      ? null
+      : t('realtime.liveActivity.orderMessage', { action: label, orderId })
   }
 
-  const label = ITEM_ACTION_LABELS[action]
+  const label = ITEM_ACTIONS.includes(action)
+    ? t(`realtime.liveActivityActions.${action}`)
+    : undefined
 
   if (label === undefined) {
     return null
@@ -90,10 +97,14 @@ export const operationalEventMessage = (event) => {
   const activityName =
     event.data.maintenance_task_name?.trim() ||
     (event.data.maintenance_task_id === null
-      ? 'An order item'
-      : `Task #${event.data.maintenance_task_id}`)
+      ? t('realtime.liveActivity.orderItem')
+      : t('realtime.liveActivity.task', { id: event.data.maintenance_task_id }))
 
-  return `${activityName} on order #${orderId} was ${label}.`
+  return t('realtime.liveActivity.itemMessage', {
+    action: label,
+    name: activityName,
+    orderId,
+  })
 }
 
 export const recordOperationalActivity = (event) => {

@@ -14,6 +14,8 @@ import FooterBar from '@/components/FooterBar.vue'
 import RealtimeActivityTray from '@/modules/realtime/components/RealtimeActivityTray.vue'
 import RealtimeStatusBadge from '@/modules/realtime/components/RealtimeStatusBadge.vue'
 import { useAuthStore } from '@/stores/auth.js'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import { localizedRouteSection, localizedRouteTitle } from '@/i18n/routeLabels.js'
 
 const layoutAsidePadding = 'xl:pl-60'
 
@@ -26,8 +28,8 @@ const authStore = useAuthStore()
 const isAsideMobileExpanded = ref(false)
 const isAsideLgActive = ref(false)
 
-const routeTitle = computed(() => route.meta?.title ?? 'Dashboard')
-const routeSection = computed(() => route.meta?.section ?? 'MaintOps')
+const routeTitle = computed(() => localizedRouteTitle(route))
+const routeSection = computed(() => localizedRouteSection(route))
 const filteredMenuAsideMain = computed(() =>
   filterNavigationByPermissions(menuAsideMain, authStore.roles),
 )
@@ -88,6 +90,9 @@ const menuClick = async (event, item) => {
               {{ routeTitle }}
             </p>
           </div>
+        </div>
+        <div class="flex items-center px-2">
+          <LanguageSwitcher compact />
         </div>
         <RealtimeStatusBadge />
         <RealtimeActivityTray />

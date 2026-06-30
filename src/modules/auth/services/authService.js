@@ -1,4 +1,5 @@
 import http, { unwrapApiData } from '@/api/http.js'
+import { t } from '@/i18n/index.js'
 
 const unwrapApiMessage = (response, fallbackMessage) => response?.data?.message || fallbackMessage
 
@@ -11,13 +12,13 @@ export const login = async (credentials) => {
 export const requestPasswordReset = async (payload) => {
   const response = await http.post('/auth/forgot-password', payload)
 
-  return unwrapApiMessage(response, 'If the email exists, a password reset link will be sent.')
+  return unwrapApiMessage(response, t('auth.forgotPassword.successFallback'))
 }
 
 export const resetPassword = async (payload) => {
   const response = await http.post('/auth/reset-password', payload)
 
-  return unwrapApiMessage(response, 'Password updated successfully.')
+  return unwrapApiMessage(response, t('auth.resetPassword.successFallback'))
 }
 
 export const fetchCurrentUser = async () => {
@@ -28,4 +29,10 @@ export const fetchCurrentUser = async () => {
 
 export const logout = async () => {
   await http.post('/auth/logout')
+}
+
+export const updateLanguage = async (locale) => {
+  const response = await http.patch('/auth/language', { locale })
+
+  return unwrapApiData(response)
 }

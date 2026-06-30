@@ -2,6 +2,7 @@ import axios from 'axios'
 import { normalizeApiError } from '@/api/errors.js'
 import { integrations } from '@/config/integrations.js'
 import analyticsTokenApi from '@/modules/analytics/services/analyticsTokenService.js'
+import { currentLocale, t } from '@/i18n/index.js'
 
 const observedParams = (filters = {}) => ({
   ...(filters.start_date ? { start_date: filters.start_date } : {}),
@@ -19,7 +20,7 @@ const analyticsRequest = async (analyticsToken, endpoint, params = {}) => {
   const baseUrl = integrations.analyticsBaseUrl
 
   if (baseUrl === null) {
-    throw new Error('Analytics is not configured for this environment.')
+    throw new Error(t('analytics.errors.notConfigured'))
   }
 
   try {
@@ -27,7 +28,9 @@ const analyticsRequest = async (analyticsToken, endpoint, params = {}) => {
       params,
       headers: {
         Accept: 'application/json',
+        'Accept-Language': currentLocale(),
         Authorization: `${analyticsToken.token_type ?? 'Bearer'} ${analyticsToken.token}`,
+        'X-Locale': currentLocale(),
       },
     })
 

@@ -4,6 +4,7 @@ export default [
   {
     icon: mdiThemeLightDark,
     label: 'Theme',
+    labelKey: 'nav.theme',
     isDesktopNoLabel: true,
     isToggleLightDark: true,
   },

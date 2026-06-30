@@ -4,6 +4,9 @@ import CardBox from '@/components/CardBox.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import LayoutGuest from '@/layouts/LayoutGuest.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -11,13 +14,13 @@ import LayoutGuest from '@/layouts/LayoutGuest.vue'
     <SectionFullScreen v-slot="{ cardClass }" bg="dark">
       <CardBox :class="cardClass">
         <div class="space-y-3">
-          <h1 class="text-2xl">Page not found</h1>
-          <p>MaintOps Console does not have a view for this address.</p>
+          <h1 class="text-2xl">{{ t('errorPage.title') }}</h1>
+          <p>{{ t('errorPage.description') }}</p>
         </div>
 
         <template #footer>
           <BaseButtons>
-            <BaseButton label="Back to dashboard" to="/dashboard" color="info" />
+            <BaseButton :label="t('common.actions.backToDashboard')" to="/dashboard" color="info" />
           </BaseButtons>
         </template>
       </CardBox>

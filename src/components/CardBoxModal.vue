@@ -7,6 +7,7 @@ import OverlayLayer from '@/components/OverlayLayer.vue'
 import CardBoxComponentFooter from '@/components/CardBoxComponentFooter.vue'
 import CardBoxModalHeader from '@/components/CardBoxModalHeader.vue'
 import CardBoxModalBody from '@/components/CardBoxModalBody.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   title: {
@@ -19,13 +20,13 @@ const props = defineProps({
   },
   buttonLabel: {
     type: String,
-    default: 'Done',
+    default: null,
   },
   buttonIcon: String,
   cancelIcon: String,
   cancelLabel: {
     type: String,
-    default: 'Cancel',
+    default: null,
   },
   hasCustomLayout: Boolean,
   hasCancel: Boolean,
@@ -35,6 +36,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'cancel', 'confirm'])
+const { t } = useI18n()
 
 const value = computed({
   get: () => props.modelValue,
@@ -52,6 +54,8 @@ const confirmCancel = (mode) => {
 const confirm = () => confirmCancel('confirm')
 
 const cancel = () => confirmCancel('cancel')
+const confirmLabel = computed(() => props.buttonLabel ?? t('common.actions.done'))
+const resolvedCancelLabel = computed(() => props.cancelLabel ?? t('common.actions.cancel'))
 
 const closeWithEscapeEvent = (e) => {
   if (e.key === 'Escape' && value.value) {
@@ -89,11 +93,11 @@ onUnmounted(() => {
         <CardBoxComponentFooter>
           <BaseButtons>
             <BaseButton
-              :label="buttonIcon ? null : buttonLabel"
+              :label="buttonIcon ? null : confirmLabel"
               :icon="buttonIcon"
               :color="button"
-              :title="buttonLabel"
-              :aria-label="buttonLabel"
+              :title="confirmLabel"
+              :aria-label="confirmLabel"
               @click="isForm ? null : confirm()"
               :type="isForm ? 'submit' : 'button'"
               :disabled="isProcessing"
@@ -101,11 +105,11 @@ onUnmounted(() => {
             />
             <BaseButton
               v-if="hasCancel"
-              :label="cancelIcon ? null : cancelLabel"
+              :label="cancelIcon ? null : resolvedCancelLabel"
               :icon="cancelIcon"
               :color="button"
-              :title="cancelLabel"
-              :aria-label="cancelLabel"
+              :title="resolvedCancelLabel"
+              :aria-label="resolvedCancelLabel"
               outline
               @click="cancel"
             />

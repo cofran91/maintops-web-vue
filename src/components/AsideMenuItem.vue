@@ -5,6 +5,7 @@ import { mdiMinus, mdiPlus } from '@mdi/js'
 import { getButtonColor } from '@/colors.js'
 import BaseIcon from '@/components/BaseIcon.vue'
 import AsideMenuList from '@/components/AsideMenuList.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   item: {
@@ -15,6 +16,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['menu-click'])
+const { t } = useI18n()
 
 const hasColor = computed(() => props.item && props.item.color)
 
@@ -32,6 +34,7 @@ const componentClass = computed(() => [
 ])
 
 const hasDropdown = computed(() => !!props.item.menu)
+const itemLabel = computed(() => (props.item.labelKey ? t(props.item.labelKey) : props.item.label))
 
 const menuClick = (event) => {
   emit('menu-click', event, props.item)
@@ -68,7 +71,7 @@ const menuClick = (event) => {
           { 'pr-6': !hasDropdown },
           vSlot && vSlot.isExactActive ? asideMenuItemActiveStyle : '',
         ]"
-        >{{ item.label }}</span
+        >{{ itemLabel }}</span
       >
       <BaseIcon
         v-if="hasDropdown"

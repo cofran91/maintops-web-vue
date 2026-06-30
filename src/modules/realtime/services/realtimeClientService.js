@@ -11,6 +11,7 @@ import {
 } from '@/modules/realtime/services/operationalEventsService.js'
 import { recordPresenceUpdate } from '@/modules/realtime/services/realtimePresenceService.js'
 import realtimeTokenApi from '@/modules/realtime/services/realtimeTokenService.js'
+import { t } from '@/i18n/index.js'
 
 const MINIMUM_RENEWAL_LEAD_MS = 5 * 1000
 const MAXIMUM_RENEWAL_LEAD_MS = 30 * 1000
@@ -62,7 +63,7 @@ const parsePresenceUpdate = (payload) => {
 const errorMessage = (error) => {
   const apiError = normalizeApiError(error)
 
-  return apiError.message || 'Realtime connection could not be established.'
+  return apiError.message || t('realtime.errors.connectionFailed')
 }
 
 class RealtimeClient {
@@ -149,7 +150,7 @@ class RealtimeClient {
     const realtimeUrl = integrations.realtimeUrl
 
     if (realtimeUrl === null) {
-      throw new Error('Realtime is not configured.')
+      throw new Error(t('realtime.errors.notConfigured'))
     }
 
     const socket = io(realtimeUrl, {
@@ -188,7 +189,7 @@ class RealtimeClient {
         return
       }
 
-      this.handleFailure(new Error(`Realtime disconnected (${reason}).`), this.sessionId)
+      this.handleFailure(new Error(t('realtime.errors.disconnected', { reason })), this.sessionId)
     })
 
     socket.on('presence.updated', (payload) => {
@@ -227,7 +228,7 @@ class RealtimeClient {
       : Number(realtimeToken.expires_in ?? 0) * 1000
 
     if (remaining <= 0) {
-      this.handleFailure(new Error('Realtime token does not include a valid expiration.'), sessionId)
+      this.handleFailure(new Error(t('realtime.errors.tokenInvalidExpiration')), sessionId)
       return
     }
 

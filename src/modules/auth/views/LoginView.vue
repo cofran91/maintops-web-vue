@@ -10,10 +10,12 @@ import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutGuest from '@/layouts/LayoutGuest.vue'
 import { useAuthStore } from '@/stores/auth.js'
+import { useI18n } from 'vue-i18n'
 
 const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const form = reactive({
   email: '',
@@ -43,11 +45,11 @@ const validateForm = () => {
   clearErrors()
 
   if (!form.email) {
-    fieldErrors.email = 'Email is required.'
+    fieldErrors.email = t('auth.errors.emailRequired')
   }
 
   if (!form.password) {
-    fieldErrors.password = 'Password is required.'
+    fieldErrors.password = t('auth.errors.passwordRequired')
   }
 
   return !fieldErrors.email && !fieldErrors.password
@@ -62,7 +64,7 @@ const getErrorMessage = (error) => {
     return error.message
   }
 
-  return 'Unable to sign in.'
+  return t('auth.errors.signInFailed')
 }
 
 const submit = async () => {
@@ -85,10 +87,10 @@ const submit = async () => {
       <CardBox class="w-full max-w-md shadow-2xl" is-form @submit.prevent="submit">
         <div class="mb-6">
           <p class="text-sm font-semibold uppercase text-blue-600 dark:text-blue-300">
-            MaintOps Console
+            {{ t('common.brand') }}
           </p>
           <h1 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-slate-100">
-            Sign in
+            {{ t('auth.login.title') }}
           </h1>
         </div>
 
@@ -101,7 +103,7 @@ const submit = async () => {
           {{ formError }}
         </div>
 
-        <FormField label="Email" label-for="email" :error="fieldErrors.email">
+        <FormField :label="t('auth.fields.email')" label-for="email" :error="fieldErrors.email">
           <FormControl
             id="email"
             v-model="form.email"
@@ -114,7 +116,7 @@ const submit = async () => {
           />
         </FormField>
 
-        <FormField label="Password" label-for="password" :error="fieldErrors.password">
+        <FormField :label="t('auth.fields.password')" label-for="password" :error="fieldErrors.password">
           <FormControl
             id="password"
             v-model="form.password"
@@ -132,7 +134,7 @@ const submit = async () => {
             class="font-medium text-blue-700 hover:text-blue-900 dark:text-blue-300
               dark:hover:text-blue-200"
           >
-            Forgot your password?
+            {{ t('auth.login.forgotPassword') }}
           </RouterLink>
         </div>
 
@@ -141,7 +143,7 @@ const submit = async () => {
             <BaseButton
               type="submit"
               color="info"
-              :label="authStore.loading ? 'Signing in...' : 'Sign in'"
+              :label="authStore.loading ? t('auth.login.signingIn') : t('auth.login.signIn')"
               :disabled="authStore.loading"
             />
           </BaseButtons>

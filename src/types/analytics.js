@@ -91,6 +91,7 @@
  * @property {AnalyticsConfidenceLevel} level
  * @property {boolean} data_sufficient
  * @property {number} unknown_duration_activities
+ * @property {string[]} reason_codes
  * @property {string[]} reasons
  */
 
@@ -103,6 +104,7 @@
  * @property {Object} capacity
  * @property {Object} forecast
  * @property {AnalyticsForecastConfidence} confidence
+ * @property {string[]} assumption_codes
  * @property {string[]} assumptions
  * @property {string} algorithm_version
  */
@@ -122,7 +124,9 @@
  * @property {number} workshop_id
  * @property {Object} facts
  * @property {string} explanation
+ * @property {string} explanation_code
  * @property {AnalyticsHorizon} horizon
+ * @property {string[]} assumption_codes
  * @property {AnalyticsForecastConfidence} confidence
  */
 
@@ -141,9 +145,11 @@
  * @property {AnalyticsRecommendationPriority} priority
  * @property {number} workshop_id
  * @property {string} suggested_review
+ * @property {string} suggested_review_code
  * @property {Object} facts
  * @property {boolean} automatic_action
  * @property {AnalyticsHorizon} horizon
+ * @property {string[]} assumption_codes
  * @property {AnalyticsForecastConfidence} confidence
  */
 

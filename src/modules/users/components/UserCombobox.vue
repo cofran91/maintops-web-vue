@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { mdiChevronDown, mdiClose } from '@mdi/js'
 import { normalizeApiError } from '@/api/errors.js'
 import BaseIcon from '@/components/BaseIcon.vue'
@@ -15,7 +16,7 @@ const props = defineProps({
   name: String,
   placeholder: {
     type: String,
-    default: 'Search users',
+    default: null,
   },
   role: {
     type: String,
@@ -33,6 +34,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'select'])
+const { t } = useI18n()
 
 const search = ref('')
 const options = ref([])
@@ -50,6 +52,7 @@ const normalizedModelValue = computed(() =>
   props.modelValue === null || props.modelValue === undefined ? '' : String(props.modelValue),
 )
 const hasMorePages = computed(() => page.value < lastPage.value)
+const resolvedPlaceholder = computed(() => props.placeholder ?? t('users.combobox.placeholder'))
 
 const userLabel = (user) => {
   if (!user) {
@@ -275,7 +278,7 @@ onBeforeUnmount(() => {
       role="combobox"
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
-      :placeholder="placeholder"
+      :placeholder="resolvedPlaceholder"
       :disabled="disabled"
       class="h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 pr-20
         disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800"
@@ -289,8 +292,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Clear user"
-        aria-label="Clear user"
+        :title="t('users.combobox.clear')"
+        :aria-label="t('users.combobox.clear')"
         @click="clearSelection(true)"
       >
         <BaseIcon :path="mdiClose" size="18" />
@@ -300,8 +303,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Show users"
-        aria-label="Show users"
+        :title="t('users.combobox.show')"
+        :aria-label="t('users.combobox.show')"
         @click="toggleOptions"
       >
         <BaseIcon :path="mdiChevronDown" size="18" />
@@ -332,21 +335,21 @@ onBeforeUnmount(() => {
           {{ user.name }}
         </span>
         <span class="block text-xs text-gray-500 dark:text-slate-400">
-          {{ user.email || user.document_number || 'No contact data' }}
+          {{ user.email || user.document_number || t('users.combobox.noContactData') }}
         </span>
       </button>
 
       <p v-if="loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading users...
+        {{ t('users.combobox.loading') }}
       </p>
       <p v-else-if="!loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        No users found.
+        {{ t('users.combobox.empty') }}
       </p>
       <p v-if="errorMessage" class="px-3 py-3 text-sm text-red-600 dark:text-red-400">
         {{ errorMessage }}
       </p>
       <p v-if="loading && options.length > 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading more...
+        {{ t('users.combobox.loadingMore') }}
       </p>
     </div>
   </div>

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccount,
@@ -32,16 +33,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-
-const DAY_LABELS = Object.freeze({
-  monday: 'Monday',
-  tuesday: 'Tuesday',
-  wednesday: 'Wednesday',
-  thursday: 'Thursday',
-  friday: 'Friday',
-  saturday: 'Saturday',
-  sunday: 'Sunday',
-})
+const { locale, t } = useI18n()
 
 const workshop = ref(null)
 const loading = ref(false)
@@ -52,7 +44,7 @@ const deleteModalOpen = ref(false)
 const workshopId = computed(() => String(route.params.id ?? ''))
 const canUpdateWorkshop = computed(() => canUpdateForAnyRole(authStore.roles, RESOURCES.WORKSHOPS))
 const canDeleteWorkshop = computed(() => canDeleteForAnyRole(authStore.roles, RESOURCES.WORKSHOPS))
-const title = computed(() => workshop.value?.name ?? 'Workshop detail')
+const title = computed(() => workshop.value?.name ?? t('workshops.detail.titleFallback'))
 const systems = computed(() => workshop.value?.vehicle_systems ?? [])
 const technicians = computed(() => workshop.value?.technicians ?? [])
 const deleteMessage = computed(() => {
@@ -60,7 +52,7 @@ const deleteMessage = computed(() => {
     return ''
   }
 
-  return `This action will delete workshop ${workshop.value.name}.`
+  return t('workshops.delete.confirmMessage', { name: workshop.value.name })
 })
 
 const fetchWorkshop = async () => {
@@ -104,20 +96,28 @@ const formatDate = (value) => {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
 }
 
+const dayLabel = (day) => t(`workshops.days.${day}`)
+
+const statusLabel = (isActive) =>
+  isActive ? t('workshops.status.active') : t('workshops.status.inactive')
+
 const scheduleLabel = (day) => {
   const hours = workshop.value?.weekly_schedule?.[day]
 
   if (!hours) {
-    return 'Closed'
+    return t('workshops.schedule.closed')
   }
 
-  return `${hours.opens_at} to ${hours.closes_at}`
+  return t('workshops.schedule.timeRange', {
+    opens: hours.opens_at,
+    closes: hours.closes_at,
+  })
 }
 
 const detailItems = computed(() => {
@@ -126,18 +126,24 @@ const detailItems = computed(() => {
   }
 
   return [
-    { icon: mdiWrenchOutline, label: 'Code', value: workshop.value.code },
-    { icon: mdiWrenchOutline, label: 'Name', value: workshop.value.name },
+    { icon: mdiWrenchOutline, label: t('workshops.fields.code'), value: workshop.value.code },
+    { icon: mdiWrenchOutline, label: t('workshops.fields.name'), value: workshop.value.name },
     {
       icon: mdiAccount,
-      label: 'Manager',
-      value: workshop.value.manager?.name ?? `User #${workshop.value.manager_user_id}`,
+      label: t('workshops.fields.manager'),
+      value:
+        workshop.value.manager?.name ??
+        t('workshops.labels.userNumber', { id: workshop.value.manager_user_id }),
     },
-    { icon: mdiMapMarkerOutline, label: 'City', value: formatValue(workshop.value.city) },
-    { icon: mdiMapMarkerOutline, label: 'Address', value: formatValue(workshop.value.address) },
-    { icon: mdiPhoneOutline, label: 'Phone', value: formatValue(workshop.value.phone) },
-    { icon: mdiEmailOutline, label: 'Email', value: formatValue(workshop.value.email) },
-    { icon: mdiCalendar, label: 'Updated', value: formatDate(workshop.value.updated_at) },
+    { icon: mdiMapMarkerOutline, label: t('workshops.fields.city'), value: formatValue(workshop.value.city) },
+    {
+      icon: mdiMapMarkerOutline,
+      label: t('workshops.fields.address'),
+      value: formatValue(workshop.value.address),
+    },
+    { icon: mdiPhoneOutline, label: t('workshops.fields.phone'), value: formatValue(workshop.value.phone) },
+    { icon: mdiEmailOutline, label: t('workshops.fields.email'), value: formatValue(workshop.value.email) },
+    { icon: mdiCalendar, label: t('workshops.fields.updated'), value: formatDate(workshop.value.updated_at) },
   ]
 })
 
@@ -154,8 +160,8 @@ watch(
   <LayoutAuthenticated>
     <AppPage
       :title="title"
-      subtitle="Review workshop manager, served systems, technicians, and schedule."
-      eyebrow="Operations"
+      :subtitle="t('workshops.detail.subtitle')"
+      :eyebrow="t('workshops.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -163,23 +169,23 @@ watch(
           :to="{ name: 'operations-workshops' }"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back to workshops"
-          aria-label="Back to workshops"
+          :title="t('workshops.actions.backToWorkshops')"
+          :aria-label="t('workshops.actions.backToWorkshops')"
         />
         <BaseButton
           v-if="workshop && canUpdateWorkshop"
           :to="{ name: 'operations-workshops-edit', params: { id: workshop.id } }"
           color="info"
           :icon="mdiPencil"
-          title="Edit workshop"
-          aria-label="Edit workshop"
+          :title="t('workshops.actions.editWorkshop')"
+          :aria-label="t('workshops.actions.editWorkshop')"
         />
         <BaseButton
           v-if="workshop && canDeleteWorkshop"
           color="danger"
           :icon="mdiTrashCanOutline"
-          title="Delete workshop"
-          aria-label="Delete workshop"
+          :title="t('workshops.actions.deleteWorkshop')"
+          :aria-label="t('workshops.actions.deleteWorkshop')"
           @click="deleteModalOpen = true"
         />
       </template>
@@ -190,8 +196,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('workshops.actions.retry')"
+            :aria-label="t('workshops.actions.retry')"
             small
             @click="fetchWorkshop"
           />
@@ -199,13 +205,15 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading workshop...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('workshops.detail.loading') }}
+        </p>
       </CardBox>
 
       <AppEmptyState
         v-else-if="!workshop && !errorMessage"
-        title="Workshop unavailable"
-        description="There is no workshop data to display."
+        :title="t('workshops.detail.unavailableTitle')"
+        :description="t('workshops.detail.unavailableDescription')"
       />
 
       <div v-else-if="workshop" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]">
@@ -229,7 +237,7 @@ watch(
 
           <CardBox>
             <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">
-              Weekly schedule
+              {{ t('workshops.sections.weeklySchedule') }}
             </h2>
             <div class="grid gap-3 md:grid-cols-2">
               <div
@@ -239,7 +247,7 @@ watch(
                   dark:border-slate-700"
               >
                 <span class="font-semibold text-gray-900 dark:text-slate-100">
-                  {{ DAY_LABELS[day] }}
+                  {{ dayLabel(day) }}
                 </span>
                 <span class="text-sm text-gray-500 dark:text-slate-400">
                   {{ scheduleLabel(day) }}
@@ -253,15 +261,17 @@ watch(
           <CardBox>
             <div class="space-y-5">
               <div>
-                <p class="mb-2 text-sm font-semibold text-gray-500 dark:text-slate-400">Status</p>
+                <p class="mb-2 text-sm font-semibold text-gray-500 dark:text-slate-400">
+                  {{ t('workshops.fields.status') }}
+                </p>
                 <AppBadge
-                  :label="workshop.is_active ? 'Active' : 'Inactive'"
+                  :label="statusLabel(workshop.is_active)"
                   :color="workshop.is_active ? 'success' : 'danger'"
                 />
               </div>
               <div>
                 <p class="mb-2 text-sm font-semibold text-gray-500 dark:text-slate-400">
-                  Manager email
+                  {{ t('workshops.fields.managerEmail') }}
                 </p>
                 <p class="break-words text-sm text-gray-700 dark:text-slate-200">
                   {{ workshop.manager?.email ?? '-' }}
@@ -269,7 +279,7 @@ watch(
               </div>
               <div>
                 <p class="mb-2 text-sm font-semibold text-gray-500 dark:text-slate-400">
-                  Created
+                  {{ t('workshops.fields.created') }}
                 </p>
                 <p class="text-sm text-gray-700 dark:text-slate-200">
                   {{ formatDate(workshop.created_at) }}
@@ -280,7 +290,7 @@ watch(
 
           <CardBox>
             <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">
-              Vehicle systems
+              {{ t('workshops.sections.vehicleSystems') }}
             </h2>
             <div v-if="systems.length" class="flex flex-wrap gap-2">
               <AppBadge
@@ -291,13 +301,13 @@ watch(
               />
             </div>
             <p v-else class="text-sm text-gray-500 dark:text-slate-400">
-              No systems assigned.
+              {{ t('workshops.detail.noSystemsAssigned') }}
             </p>
           </CardBox>
 
           <CardBox>
             <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">
-              Technicians
+              {{ t('workshops.sections.technicians') }}
             </h2>
             <div v-if="technicians.length" class="space-y-3">
               <div v-for="technician in technicians" :key="technician.id">
@@ -310,7 +320,7 @@ watch(
               </div>
             </div>
             <p v-else class="text-sm text-gray-500 dark:text-slate-400">
-              No technicians assigned.
+              {{ t('workshops.detail.noTechniciansAssigned') }}
             </p>
           </CardBox>
         </div>
@@ -319,9 +329,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete workshop"
+      :title="t('workshops.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('workshops.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -329,9 +339,6 @@ watch(
       @confirm="deleteWorkshop"
     >
       <p>{{ deleteMessage }}</p>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        Workshop deletion is limited to system administrators by backend policies.
-      </p>
     </CardBoxModal>
   </LayoutAuthenticated>
 </template>

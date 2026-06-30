@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccountMultiple,
@@ -21,7 +22,7 @@ import {
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
 import { DEFAULT_PAGINATION_META } from '@/types/api.js'
-import { ROLE_LABELS, ROLES } from '@/types/auth.js'
+import { ROLES } from '@/types/auth.js'
 import usersApi from '@/modules/users/services/usersService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppDataTable from '@/components/ui/AppDataTable.vue'
@@ -41,6 +42,7 @@ import WorkshopCombobox from '@/modules/users/components/WorkshopCombobox.vue'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t, te } = useI18n()
 
 const EMPTY_FILTERS = Object.freeze({
   search: '',
@@ -50,14 +52,14 @@ const EMPTY_FILTERS = Object.freeze({
   without_workshop: false,
 })
 
-const columns = [
-  { key: 'identity', label: 'User' },
-  { key: 'role', label: 'Role' },
-  { key: 'workshop', label: 'Workshop' },
-  { key: 'is_active', label: 'Status' },
-  { key: 'updated_at', label: 'Updated' },
+const columns = computed(() => [
+  { key: 'identity', label: t('users.columns.user') },
+  { key: 'role', label: t('users.columns.role') },
+  { key: 'workshop', label: t('users.columns.workshop') },
+  { key: 'is_active', label: t('users.columns.status') },
+  { key: 'updated_at', label: t('users.columns.updated') },
   { key: 'actions', label: '' },
-]
+])
 
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
@@ -110,7 +112,7 @@ const deleteMessage = computed(() => {
     return ''
   }
 
-  return `This action will delete ${userToDelete.value.name}.`
+  return t('users.delete.confirmMessage', { name: userToDelete.value.name })
 })
 
 const getStringQuery = (value) => {
@@ -302,9 +304,19 @@ const deleteUser = async () => {
 }
 
 const primaryRole = (user) => user.roles?.[0] ?? null
-const roleLabel = (role) => (role ? ROLE_LABELS[role] ?? role : '-')
+const humanizeRole = (role) => String(role ?? '').replace(/_/g, ' ')
+const roleLabel = (role) => {
+  if (!role) {
+    return '-'
+  }
+
+  const key = `users.roles.${role}`
+
+  return te(key) ? t(key) : humanizeRole(role)
+}
 const statusColor = (isActive) => (isActive ? 'success' : 'danger')
-const statusLabel = (isActive) => (isActive ? 'Active' : 'Inactive')
+const statusLabel = (isActive) =>
+  isActive ? t('users.status.active') : t('users.status.inactive')
 const workshopLabel = (user) => user.workshop?.name ?? user.workshop?.code ?? '-'
 
 const formatDate = (value) => {
@@ -312,7 +324,7 @@ const formatDate = (value) => {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
   }).format(new Date(value))
 }
@@ -330,9 +342,9 @@ watch(
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Users"
-      subtitle="Manage console access, operational roles, and technician workshop assignments."
-      eyebrow="Operations"
+      :title="t('users.list.title')"
+      :subtitle="t('users.list.subtitle')"
+      :eyebrow="t('users.page.eyebrow')"
       :icon="mdiAccountMultiple"
     >
       <template #actions>
@@ -341,8 +353,8 @@ watch(
           :to="{ name: 'operations-users-new' }"
           color="info"
           :icon="mdiPlus"
-          title="New user"
-          aria-label="New user"
+          :title="t('users.actions.newUser')"
+          :aria-label="t('users.actions.newUser')"
         />
       </template>
 
@@ -353,33 +365,33 @@ watch(
         @focusout="applyFiltersOnFocusOut"
       >
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          <FormField label="Search">
+          <FormField :label="t('users.filters.search')">
             <FormControl
               v-model="filters.search"
               name="search"
-              placeholder="Name, email, phone, or document"
+              :placeholder="t('users.filters.searchPlaceholder')"
             />
           </FormField>
-          <FormField label="Role">
+          <FormField :label="t('users.filters.role')">
             <select v-model="filters.role" name="role" :class="inputClass">
-              <option value="">All roles</option>
+              <option value="">{{ t('users.filters.allRoles') }}</option>
               <option v-for="role in roleFilterOptions" :key="role" :value="role">
                 {{ roleLabel(role) }}
               </option>
             </select>
           </FormField>
-          <FormField label="Status">
+          <FormField :label="t('users.filters.status')">
             <select v-model="filters.is_active" name="is_active" :class="inputClass">
-              <option value="">All statuses</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
+              <option value="">{{ t('users.filters.allStatuses') }}</option>
+              <option value="true">{{ t('users.status.active') }}</option>
+              <option value="false">{{ t('users.status.inactive') }}</option>
             </select>
           </FormField>
-          <FormField v-if="showWorkshopFilters" label="Workshop">
+          <FormField v-if="showWorkshopFilters" :label="t('users.filters.workshop')">
             <WorkshopCombobox
               v-model="filters.workshop_id"
               name="workshop_id"
-              placeholder="Search by code, name, or city"
+              :placeholder="t('users.filters.workshopPlaceholder')"
               :disabled="filters.without_workshop"
             />
           </FormField>
@@ -396,22 +408,22 @@ watch(
               class="rounded border-gray-700"
               @change="handleWithoutWorkshopChange"
             >
-            Without assigned workshop
+            {{ t('users.filters.withoutAssignedWorkshop') }}
           </label>
           <div class="flex flex-wrap gap-2 md:ml-auto">
             <BaseButton
               color="whiteDark"
               :icon="mdiClose"
-              title="Clear filters"
-              aria-label="Clear filters"
+              :title="t('users.actions.clearFilters')"
+              :aria-label="t('users.actions.clearFilters')"
               :disabled="!hasActiveFilters"
               @click="clearFilters"
             />
             <BaseButton
               color="info"
               :icon="mdiCheck"
-              title="Apply filters"
-              aria-label="Apply filters"
+              :title="t('users.actions.applyFilters')"
+              :aria-label="t('users.actions.applyFilters')"
               type="submit"
             />
           </div>
@@ -424,8 +436,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('users.actions.retry')"
+            :aria-label="t('users.actions.retry')"
             small
             @click="fetchUsers"
           />
@@ -433,7 +445,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading users...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('users.list.loading') }}
+        </p>
       </CardBox>
 
       <template v-else-if="!errorMessage">
@@ -441,8 +455,8 @@ watch(
           v-if="users.length"
           :columns="columns"
           :rows="users"
-          empty-title="No users found"
-          empty-description="Adjust the filters or create a new user."
+          :empty-title="t('users.list.emptyTitle')"
+          :empty-description="t('users.list.emptyDescription')"
         >
           <template #cell-identity="{ row }">
             <div class="min-w-0">
@@ -468,8 +482,8 @@ watch(
                 :to="{ name: 'operations-users-detail', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiEyeOutline"
-                title="Open user"
-                aria-label="Open user"
+                :title="t('users.actions.openUser')"
+                :aria-label="t('users.actions.openUser')"
                 small
               />
               <BaseButton
@@ -477,16 +491,16 @@ watch(
                 :to="{ name: 'operations-users-edit', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiPencil"
-                title="Edit user"
-                aria-label="Edit user"
+                :title="t('users.actions.editUser')"
+                :aria-label="t('users.actions.editUser')"
                 small
               />
               <BaseButton
                 v-if="canDeleteUser"
                 color="danger"
                 :icon="mdiTrashCanOutline"
-                title="Delete user"
-                aria-label="Delete user"
+                :title="t('users.actions.deleteUser')"
+                :aria-label="t('users.actions.deleteUser')"
                 small
                 @click="askDelete(row)"
               />
@@ -496,23 +510,29 @@ watch(
 
         <AppEmptyState
           v-else
-          title="No users found"
-          description="Adjust the filters or create a new user."
+          :title="t('users.list.emptyTitle')"
+          :description="t('users.list.emptyDescription')"
         >
           <BaseButton
             v-if="canCreateUser"
             :to="{ name: 'operations-users-new' }"
             color="info"
             :icon="mdiPlus"
-            title="New user"
-            aria-label="New user"
+            :title="t('users.actions.newUser')"
+            :aria-label="t('users.actions.newUser')"
           />
         </AppEmptyState>
 
         <CardBox v-if="pagination.total > 0" class="mt-6">
           <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p class="text-sm text-gray-500 dark:text-slate-400">
-              Showing {{ pagination.from ?? 0 }}-{{ pagination.to ?? 0 }} of {{ pagination.total }}
+              {{
+                t('users.pagination.showing', {
+                  from: pagination.from ?? 0,
+                  to: pagination.to ?? 0,
+                  total: pagination.total,
+                })
+              }}
             </p>
             <div class="flex flex-wrap items-center gap-2">
               <select
@@ -528,20 +548,25 @@ watch(
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronLeft"
-                title="Previous page"
-                aria-label="Previous page"
+                :title="t('users.pagination.previousPage')"
+                :aria-label="t('users.pagination.previousPage')"
                 small
                 :disabled="!canGoPrevious"
                 @click="canGoPrevious ? updatePage(pagination.current_page - 1) : null"
               />
               <span class="px-2 text-sm font-semibold text-gray-700 dark:text-slate-200">
-                Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                {{
+                  t('users.pagination.pageOf', {
+                    page: pagination.current_page,
+                    pages: pagination.last_page,
+                  })
+                }}
               </span>
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronRight"
-                title="Next page"
-                aria-label="Next page"
+                :title="t('users.pagination.nextPage')"
+                :aria-label="t('users.pagination.nextPage')"
                 small
                 :disabled="!canGoNext"
                 @click="canGoNext ? updatePage(pagination.current_page + 1) : null"
@@ -554,9 +579,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete user"
+      :title="t('users.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('users.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -564,9 +589,6 @@ watch(
       @confirm="deleteUser"
     >
       <p>{{ deleteMessage }}</p>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        The backend keeps authorization as the source of truth for this operation.
-      </p>
     </CardBoxModal>
   </LayoutAuthenticated>
 </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiCheck,
   mdiChevronDown,
@@ -23,10 +24,7 @@ import {
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
 import { DEFAULT_PAGINATION_META } from '@/types/api.js'
-import {
-  MAINTENANCE_TASK_STATUS,
-  MAINTENANCE_TASK_STATUS_LABELS,
-} from '@/types/maintenanceTask.js'
+import { MAINTENANCE_TASK_STATUS } from '@/types/maintenanceTask.js'
 import maintenanceTasksApi from '@/modules/maintenance-tasks/services/maintenanceTasksService.js'
 import vehicleSystemsApi from '@/modules/vehicle-systems/services/vehicleSystemsService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
@@ -47,6 +45,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const EMPTY_FILTERS = Object.freeze({
   search: '',
@@ -63,16 +62,16 @@ const EMPTY_FILTERS = Object.freeze({
   created_to: '',
 })
 
-const columns = [
-  { key: 'task', label: 'Task' },
-  { key: 'vehicle_system', label: 'System' },
-  { key: 'vehicle', label: 'Vehicle' },
-  { key: 'estimated_duration_minutes', label: 'Duration' },
-  { key: 'status', label: 'Status' },
-  { key: 'is_active', label: 'Active' },
-  { key: 'updated_at', label: 'Updated' },
+const columns = computed(() => [
+  { key: 'task', label: t('maintenanceTasks.columns.task') },
+  { key: 'vehicle_system', label: t('maintenanceTasks.columns.system') },
+  { key: 'vehicle', label: t('maintenanceTasks.columns.vehicle') },
+  { key: 'estimated_duration_minutes', label: t('maintenanceTasks.columns.duration') },
+  { key: 'status', label: t('maintenanceTasks.columns.status') },
+  { key: 'is_active', label: t('maintenanceTasks.columns.active') },
+  { key: 'updated_at', label: t('maintenanceTasks.columns.updated') },
   { key: 'actions', label: '' },
-]
+])
 
 const perPageOptions = [10, 15, 25, 50]
 const statusOptions = Object.values(MAINTENANCE_TASK_STATUS)
@@ -112,8 +111,13 @@ const deleteMessage = computed(() => {
     return ''
   }
 
-  return `This action will delete task ${taskToDelete.value.name}.`
+  return t('maintenanceTasks.delete.confirmMessage', { name: taskToDelete.value.name })
 })
+const advancedFiltersLabel = computed(() =>
+  filtersExpanded.value
+    ? t('maintenanceTasks.actions.hideAdvancedFilters')
+    : t('maintenanceTasks.actions.showAdvancedFilters'),
+)
 
 const getStringQuery = (value) => {
   if (Array.isArray(value)) {
@@ -382,23 +386,29 @@ const durationLabel = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} min`
+  return t('maintenanceTasks.units.minutes', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const vehicleLabel = (vehicle) => {
   if (!vehicle) {
-    return 'Reusable'
+    return t('maintenanceTasks.labels.reusable')
   }
 
   return [vehicle.license_plate, vehicle.brand, vehicle.model].filter(Boolean).join(' ')
 }
+
+const statusLabel = (status) => t(`maintenanceTasks.status.${status}`)
+const activeLabel = (isActive) =>
+  isActive ? t('maintenanceTasks.labels.active') : t('maintenanceTasks.labels.inactive')
 
 const formatDate = (value) => {
   if (!value) {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
   }).format(new Date(value))
 }
@@ -418,9 +428,9 @@ watch(
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Maintenance tasks"
-      subtitle="Standardize reusable and vehicle-specific service tasks."
-      eyebrow="Maintenance"
+      :title="t('maintenanceTasks.list.title')"
+      :subtitle="t('maintenanceTasks.list.subtitle')"
+      :eyebrow="t('maintenanceTasks.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -429,8 +439,8 @@ watch(
           :to="{ name: 'maintenance-tasks-new' }"
           color="info"
           :icon="mdiPlus"
-          title="New task"
-          aria-label="New task"
+          :title="t('maintenanceTasks.actions.newTask')"
+          :aria-label="t('maintenanceTasks.actions.newTask')"
         />
       </template>
 
@@ -441,23 +451,27 @@ watch(
         @focusout="applyFiltersOnFocusOut"
       >
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <FormField label="Search">
+          <FormField :label="t('maintenanceTasks.filters.search')">
             <FormControl
               v-model="filters.search"
               name="search"
-              placeholder="Name, code, description, plate, or system"
+              :placeholder="t('maintenanceTasks.filters.searchPlaceholder')"
             />
           </FormField>
-          <FormField label="Code">
-            <FormControl v-model="filters.code" name="code" placeholder="OIL-CHANGE" />
+          <FormField :label="t('maintenanceTasks.filters.code')">
+            <FormControl
+              v-model="filters.code"
+              name="code"
+              :placeholder="t('maintenanceTasks.filters.codePlaceholder')"
+            />
           </FormField>
-          <FormField label="Vehicle system">
+          <FormField :label="t('maintenanceTasks.filters.vehicleSystem')">
             <select
               v-model="filters.vehicle_system_id"
               name="vehicle_system_id"
               :class="inputClass"
             >
-              <option value="">All systems</option>
+              <option value="">{{ t('maintenanceTasks.filters.allSystems') }}</option>
               <option v-for="system in vehicleSystems" :key="system.id" :value="String(system.id)">
                 {{ system.name }}
               </option>
@@ -466,56 +480,56 @@ watch(
         </div>
 
         <div v-if="filtersExpanded" class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          <FormField label="Name">
+          <FormField :label="t('maintenanceTasks.filters.name')">
             <FormControl v-model="filters.name" name="name" />
           </FormField>
-          <FormField label="Status">
+          <FormField :label="t('maintenanceTasks.filters.status')">
             <select v-model="filters.status" name="status" :class="inputClass">
-              <option value="">All statuses</option>
+              <option value="">{{ t('maintenanceTasks.filters.allStatuses') }}</option>
               <option v-for="status in statusOptions" :key="status" :value="status">
-                {{ MAINTENANCE_TASK_STATUS_LABELS[status] }}
+                {{ statusLabel(status) }}
               </option>
             </select>
           </FormField>
-          <FormField label="Active">
+          <FormField :label="t('maintenanceTasks.filters.active')">
             <select v-model="filters.is_active" name="is_active" :class="inputClass">
-              <option value="">All</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
+              <option value="">{{ t('maintenanceTasks.filters.all') }}</option>
+              <option value="true">{{ t('maintenanceTasks.labels.active') }}</option>
+              <option value="false">{{ t('maintenanceTasks.labels.inactive') }}</option>
             </select>
           </FormField>
-          <FormField label="Duration from">
+          <FormField :label="t('maintenanceTasks.filters.durationFrom')">
             <input
               v-model="filters.estimated_duration_from"
               type="number"
               min="1"
               inputmode="numeric"
-              placeholder="Minutes"
+              :placeholder="t('maintenanceTasks.filters.minutesPlaceholder')"
               :class="inputClass"
             >
           </FormField>
-          <FormField label="Duration to">
+          <FormField :label="t('maintenanceTasks.filters.durationTo')">
             <input
               v-model="filters.estimated_duration_to"
               type="number"
               min="1"
               inputmode="numeric"
-              placeholder="Minutes"
+              :placeholder="t('maintenanceTasks.filters.minutesPlaceholder')"
               :class="inputClass"
             >
           </FormField>
-          <FormField label="Vehicle">
+          <FormField :label="t('maintenanceTasks.filters.vehicle')">
             <VehicleCombobox
               v-model="filters.vehicle_id"
               name="vehicle_id"
-              placeholder="Search by plate, brand, or model"
+              :placeholder="t('maintenanceTasks.filters.vehiclePlaceholder')"
               :disabled="filters.without_vehicle"
             />
           </FormField>
-          <FormField label="Created from">
+          <FormField :label="t('maintenanceTasks.filters.createdFrom')">
             <FormControl v-model="filters.created_from" name="created_from" type="date" />
           </FormField>
-          <FormField label="Created to">
+          <FormField :label="t('maintenanceTasks.filters.createdTo')">
             <FormControl v-model="filters.created_to" name="created_to" type="date" />
           </FormField>
           <label class="flex min-h-12 items-center gap-2 font-semibold">
@@ -525,7 +539,7 @@ watch(
               name="without_vehicle"
               @change="handleWithoutVehicleChange"
             >
-            Reusable tasks only
+            {{ t('maintenanceTasks.filters.reusableTasksOnly') }}
           </label>
         </div>
 
@@ -537,23 +551,23 @@ watch(
           <BaseButton
             color="whiteDark"
             :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown"
-            :title="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
-            :aria-label="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
+            :title="advancedFiltersLabel"
+            :aria-label="advancedFiltersLabel"
             @click="filtersExpanded = !filtersExpanded"
           />
           <BaseButton
             color="whiteDark"
             :icon="mdiClose"
-            title="Clear filters"
-            aria-label="Clear filters"
+            :title="t('maintenanceTasks.actions.clearFilters')"
+            :aria-label="t('maintenanceTasks.actions.clearFilters')"
             :disabled="!hasActiveFilters"
             @click="clearFilters"
           />
           <BaseButton
             color="info"
             :icon="mdiCheck"
-            title="Apply filters"
-            aria-label="Apply filters"
+            :title="t('maintenanceTasks.actions.applyFilters')"
+            :aria-label="t('maintenanceTasks.actions.applyFilters')"
             type="submit"
           />
         </div>
@@ -565,8 +579,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('maintenanceTasks.actions.retry')"
+            :aria-label="t('maintenanceTasks.actions.retry')"
             small
             @click="fetchTasks"
           />
@@ -574,7 +588,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading maintenance tasks...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('maintenanceTasks.list.loading') }}
+        </p>
       </CardBox>
 
       <template v-else-if="!errorMessage">
@@ -582,8 +598,8 @@ watch(
           v-if="tasks.length"
           :columns="columns"
           :rows="tasks"
-          empty-title="No maintenance tasks found"
-          empty-description="Adjust the filters or create a new task."
+          :empty-title="t('maintenanceTasks.list.emptyTitle')"
+          :empty-description="t('maintenanceTasks.list.emptyDescription')"
         >
           <template #cell-task="{ row }">
             <div class="min-w-0">
@@ -606,13 +622,13 @@ watch(
           </template>
           <template #cell-status="{ value }">
             <AppBadge
-              :label="MAINTENANCE_TASK_STATUS_LABELS[value] ?? value"
+              :label="statusLabel(value)"
               :color="statusColor(value)"
             />
           </template>
           <template #cell-is_active="{ value }">
             <AppBadge
-              :label="value ? 'Active' : 'Inactive'"
+              :label="activeLabel(value)"
               :color="value ? 'success' : 'danger'"
             />
           </template>
@@ -625,8 +641,8 @@ watch(
                 :to="{ name: 'maintenance-tasks-detail', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiEyeOutline"
-                title="Open task"
-                aria-label="Open task"
+                :title="t('maintenanceTasks.actions.openTask')"
+                :aria-label="t('maintenanceTasks.actions.openTask')"
                 small
               />
               <BaseButton
@@ -634,16 +650,16 @@ watch(
                 :to="{ name: 'maintenance-tasks-edit', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiPencil"
-                title="Edit task"
-                aria-label="Edit task"
+                :title="t('maintenanceTasks.actions.editTask')"
+                :aria-label="t('maintenanceTasks.actions.editTask')"
                 small
               />
               <BaseButton
                 v-if="canDeleteTask"
                 color="danger"
                 :icon="mdiTrashCanOutline"
-                title="Delete task"
-                aria-label="Delete task"
+                :title="t('maintenanceTasks.actions.deleteTask')"
+                :aria-label="t('maintenanceTasks.actions.deleteTask')"
                 small
                 @click="askDelete(row)"
               />
@@ -653,23 +669,27 @@ watch(
 
         <AppEmptyState
           v-else
-          title="No maintenance tasks found"
-          description="Adjust the filters or create a new task."
+          :title="t('maintenanceTasks.list.emptyTitle')"
+          :description="t('maintenanceTasks.list.emptyDescription')"
         >
           <BaseButton
             v-if="canCreateTask"
             :to="{ name: 'maintenance-tasks-new' }"
             color="info"
             :icon="mdiPlus"
-            title="New task"
-            aria-label="New task"
+            :title="t('maintenanceTasks.actions.newTask')"
+            :aria-label="t('maintenanceTasks.actions.newTask')"
           />
         </AppEmptyState>
 
         <CardBox v-if="pagination.total > 0" class="mt-6">
           <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p class="text-sm text-gray-500 dark:text-slate-400">
-              Showing {{ pagination.from ?? 0 }}-{{ pagination.to ?? 0 }} of {{ pagination.total }}
+              {{ t('maintenanceTasks.pagination.showing', {
+                from: pagination.from ?? 0,
+                to: pagination.to ?? 0,
+                total: pagination.total,
+              }) }}
             </p>
             <div class="flex flex-wrap items-center gap-2">
               <select
@@ -685,20 +705,23 @@ watch(
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronLeft"
-                title="Previous page"
-                aria-label="Previous page"
+                :title="t('maintenanceTasks.pagination.previousPage')"
+                :aria-label="t('maintenanceTasks.pagination.previousPage')"
                 small
                 :disabled="!canGoPrevious"
                 @click="canGoPrevious ? updatePage(pagination.current_page - 1) : null"
               />
               <span class="px-2 text-sm font-semibold text-gray-700 dark:text-slate-200">
-                Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                {{ t('maintenanceTasks.pagination.pageOf', {
+                  page: pagination.current_page,
+                  pages: pagination.last_page,
+                }) }}
               </span>
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronRight"
-                title="Next page"
-                aria-label="Next page"
+                :title="t('maintenanceTasks.pagination.nextPage')"
+                :aria-label="t('maintenanceTasks.pagination.nextPage')"
                 small
                 :disabled="!canGoNext"
                 @click="canGoNext ? updatePage(pagination.current_page + 1) : null"
@@ -711,9 +734,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete maintenance task"
+      :title="t('maintenanceTasks.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('maintenanceTasks.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -721,9 +744,6 @@ watch(
       @confirm="deleteTask"
     >
       <p>{{ deleteMessage }}</p>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        Task deletion is limited to system administrators by backend policies.
-      </p>
     </CardBoxModal>
   </LayoutAuthenticated>
 </template>

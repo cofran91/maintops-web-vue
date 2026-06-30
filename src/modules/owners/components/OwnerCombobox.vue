@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { mdiChevronDown, mdiClose } from '@mdi/js'
 import { normalizeApiError } from '@/api/errors.js'
 import BaseIcon from '@/components/BaseIcon.vue'
@@ -15,7 +16,7 @@ const props = defineProps({
   name: String,
   placeholder: {
     type: String,
-    default: 'Search owners',
+    default: null,
   },
   perPage: {
     type: Number,
@@ -28,6 +29,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'select'])
+const { t } = useI18n()
 
 const search = ref('')
 const options = ref([])
@@ -45,6 +47,7 @@ const normalizedModelValue = computed(() =>
   props.modelValue === null || props.modelValue === undefined ? '' : String(props.modelValue),
 )
 const hasMorePages = computed(() => page.value < lastPage.value)
+const resolvedPlaceholder = computed(() => props.placeholder ?? t('owners.combobox.placeholder'))
 
 const ownerLabel = (owner) => {
   if (!owner) {
@@ -255,7 +258,7 @@ onBeforeUnmount(() => {
       role="combobox"
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
-      :placeholder="placeholder"
+      :placeholder="resolvedPlaceholder"
       :disabled="disabled"
       class="h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 pr-20
         disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800"
@@ -269,8 +272,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Clear owner"
-        aria-label="Clear owner"
+        :title="t('owners.combobox.clear')"
+        :aria-label="t('owners.combobox.clear')"
         @click="clearSelection(true)"
       >
         <BaseIcon :path="mdiClose" size="18" />
@@ -280,8 +283,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Show owners"
-        aria-label="Show owners"
+        :title="t('owners.combobox.show')"
+        :aria-label="t('owners.combobox.show')"
         @click="toggleOptions"
       >
         <BaseIcon :path="mdiChevronDown" size="18" />
@@ -312,21 +315,21 @@ onBeforeUnmount(() => {
           {{ owner.name }}
         </span>
         <span class="block text-xs text-gray-500 dark:text-slate-400">
-          {{ owner.email || owner.document_number || 'No contact data' }}
+          {{ owner.email || owner.document_number || t('owners.combobox.noContactData') }}
         </span>
       </button>
 
       <p v-if="loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading owners...
+        {{ t('owners.combobox.loading') }}
       </p>
       <p v-else-if="!loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        No owners found.
+        {{ t('owners.combobox.empty') }}
       </p>
       <p v-if="errorMessage" class="px-3 py-3 text-sm text-red-600 dark:text-red-400">
         {{ errorMessage }}
       </p>
       <p v-if="loading && options.length > 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading more...
+        {{ t('owners.combobox.loadingMore') }}
       </p>
     </div>
   </div>

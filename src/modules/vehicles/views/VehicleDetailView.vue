@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAccount,
   mdiArrowLeft,
@@ -30,6 +31,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const vehicle = ref(null)
 const loading = ref(false)
@@ -40,13 +42,13 @@ const deleteModalOpen = ref(false)
 const vehicleId = computed(() => String(route.params.id ?? ''))
 const canUpdateVehicle = computed(() => canUpdateForAnyRole(authStore.roles, RESOURCES.VEHICLES))
 const canDeleteVehicle = computed(() => canDeleteForAnyRole(authStore.roles, RESOURCES.VEHICLES))
-const title = computed(() => vehicle.value?.license_plate ?? 'Vehicle detail')
+const title = computed(() => vehicle.value?.license_plate ?? t('vehicles.detail.titleFallback'))
 const deleteMessage = computed(() => {
   if (!vehicle.value) {
     return ''
   }
 
-  return `This action will delete vehicle ${vehicle.value.license_plate}.`
+  return t('vehicles.delete.confirmMessage', { plate: vehicle.value.license_plate })
 })
 
 const fetchVehicle = async () => {
@@ -90,7 +92,9 @@ const formatKilometers = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} km`
+  return t('vehicles.units.kilometers', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const formatDate = (value) => {
@@ -98,7 +102,7 @@ const formatDate = (value) => {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
@@ -110,13 +114,17 @@ const vehicleItems = computed(() => {
   }
 
   return [
-    { icon: mdiCar, label: 'License plate', value: vehicle.value.license_plate },
-    { icon: mdiCar, label: 'Brand', value: formatValue(vehicle.value.brand) },
-    { icon: mdiCar, label: 'Model', value: formatValue(vehicle.value.model) },
-    { icon: mdiCar, label: 'Year', value: formatValue(vehicle.value.year) },
-    { icon: mdiCar, label: 'Color', value: formatValue(vehicle.value.color) },
-    { icon: mdiCar, label: 'Odometer', value: formatKilometers(vehicle.value.odometer_km) },
-    { icon: mdiCar, label: 'Updated', value: formatDate(vehicle.value.updated_at) },
+    { icon: mdiCar, label: t('vehicles.fields.licensePlate'), value: vehicle.value.license_plate },
+    { icon: mdiCar, label: t('vehicles.fields.brand'), value: formatValue(vehicle.value.brand) },
+    { icon: mdiCar, label: t('vehicles.fields.model'), value: formatValue(vehicle.value.model) },
+    { icon: mdiCar, label: t('vehicles.fields.year'), value: formatValue(vehicle.value.year) },
+    { icon: mdiCar, label: t('vehicles.fields.color'), value: formatValue(vehicle.value.color) },
+    {
+      icon: mdiCar,
+      label: t('vehicles.fields.odometer'),
+      value: formatKilometers(vehicle.value.odometer_km),
+    },
+    { icon: mdiCar, label: t('vehicles.fields.updated'), value: formatDate(vehicle.value.updated_at) },
   ]
 })
 
@@ -128,15 +136,23 @@ const ownerItems = computed(() => {
   const owner = vehicle.value.owner
 
   return [
-    { icon: mdiAccount, label: 'Name', value: owner?.name ?? `Owner #${vehicle.value.owner_id}` },
-    { icon: mdiEmailOutline, label: 'Email', value: formatValue(owner?.email) },
-    { icon: mdiPhoneOutline, label: 'Phone', value: formatValue(owner?.phone) },
+    {
+      icon: mdiAccount,
+      label: t('vehicles.fields.name'),
+      value: owner?.name ?? t('vehicles.labels.ownerNumber', { id: vehicle.value.owner_id }),
+    },
+    { icon: mdiEmailOutline, label: t('vehicles.fields.email'), value: formatValue(owner?.email) },
+    { icon: mdiPhoneOutline, label: t('vehicles.fields.phone'), value: formatValue(owner?.phone) },
     {
       icon: mdiFileDocumentOutline,
-      label: 'Document',
+      label: t('vehicles.fields.document'),
       value: formatValue(owner?.document_number),
     },
-    { icon: mdiMapMarkerOutline, label: 'Address', value: formatValue(owner?.address) },
+    {
+      icon: mdiMapMarkerOutline,
+      label: t('vehicles.fields.address'),
+      value: formatValue(owner?.address),
+    },
   ]
 })
 
@@ -153,8 +169,8 @@ watch(
   <LayoutAuthenticated>
     <AppPage
       :title="title"
-      subtitle="Review vehicle identity, owner contact data, and current mileage."
-      eyebrow="Operations"
+      :subtitle="t('vehicles.detail.subtitle')"
+      :eyebrow="t('vehicles.page.eyebrow')"
       :icon="mdiCar"
     >
       <template #actions>
@@ -162,23 +178,23 @@ watch(
           :to="{ name: 'operations-vehicles' }"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back to vehicles"
-          aria-label="Back to vehicles"
+          :title="t('vehicles.actions.backToVehicles')"
+          :aria-label="t('vehicles.actions.backToVehicles')"
         />
         <BaseButton
           v-if="vehicle && canUpdateVehicle"
           :to="{ name: 'operations-vehicles-edit', params: { id: vehicle.id } }"
           color="info"
           :icon="mdiPencil"
-          title="Edit vehicle"
-          aria-label="Edit vehicle"
+          :title="t('vehicles.actions.editVehicle')"
+          :aria-label="t('vehicles.actions.editVehicle')"
         />
         <BaseButton
           v-if="vehicle && canDeleteVehicle"
           color="danger"
           :icon="mdiTrashCanOutline"
-          title="Delete vehicle"
-          aria-label="Delete vehicle"
+          :title="t('vehicles.actions.deleteVehicle')"
+          :aria-label="t('vehicles.actions.deleteVehicle')"
           @click="deleteModalOpen = true"
         />
       </template>
@@ -189,8 +205,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('vehicles.actions.retry')"
+            :aria-label="t('vehicles.actions.retry')"
             small
             @click="fetchVehicle"
           />
@@ -198,13 +214,15 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading vehicle...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('vehicles.detail.loading') }}
+        </p>
       </CardBox>
 
       <AppEmptyState
         v-else-if="!vehicle && !errorMessage"
-        title="Vehicle unavailable"
-        description="There is no vehicle data to display."
+        :title="t('vehicles.detail.unavailableTitle')"
+        :description="t('vehicles.detail.unavailableDescription')"
       />
 
       <div v-else-if="vehicle" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]">
@@ -241,7 +259,7 @@ watch(
             </div>
             <div>
               <p class="mb-2 text-sm font-semibold text-gray-500 dark:text-slate-400">
-                Created
+                {{ t('vehicles.fields.created') }}
               </p>
               <p class="text-sm text-gray-700 dark:text-slate-200">
                 {{ formatDate(vehicle.created_at) }}
@@ -254,9 +272,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete vehicle"
+      :title="t('vehicles.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('vehicles.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -264,9 +282,6 @@ watch(
       @confirm="deleteVehicle"
     >
       <p>{{ deleteMessage }}</p>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        Vehicle deletion is limited to system administrators by backend policies.
-      </p>
     </CardBoxModal>
   </LayoutAuthenticated>
 </template>

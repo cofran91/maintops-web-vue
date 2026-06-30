@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccountEdit,
@@ -16,7 +17,7 @@ import {
   getAssignableRoles,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
-import { ROLE_LABELS, ROLES } from '@/types/auth.js'
+import { ROLES } from '@/types/auth.js'
 import usersApi from '@/modules/users/services/usersService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppPage from '@/components/ui/AppPage.vue'
@@ -34,6 +35,7 @@ import WorkshopCombobox from '@/modules/users/components/WorkshopCombobox.vue'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t, te } = useI18n()
 
 const inputClass =
   'h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 dark:bg-slate-800'
@@ -82,8 +84,12 @@ const isSystemAdmin = computed(() =>
 const showWorkshopField = computed(
   () => isSystemAdmin.value && form.role === ROLES.TECHNICIAN,
 )
-const pageTitle = computed(() => (isEditing.value ? 'Edit user' : 'Create user'))
-const submitLabel = computed(() => (isEditing.value ? 'Save changes' : 'Create user'))
+const pageTitle = computed(() =>
+  isEditing.value ? t('users.form.editTitle') : t('users.form.createTitle'),
+)
+const submitLabel = computed(() =>
+  isEditing.value ? t('users.actions.saveChanges') : t('users.actions.createUser'),
+)
 const submitIcon = computed(() => (isEditing.value ? mdiContentSaveOutline : mdiPlus))
 const backRoute = computed(() =>
   isEditing.value && userId.value
@@ -192,7 +198,12 @@ const nullableId = (value) => {
 }
 
 const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
-const roleLabel = (role) => ROLE_LABELS[role] ?? role
+const humanizeRole = (role) => String(role ?? '').replace(/_/g, ' ')
+const roleLabel = (role) => {
+  const key = `users.roles.${role}`
+
+  return te(key) ? t(key) : humanizeRole(role)
+}
 
 watch(
   () => route.fullPath,
@@ -239,8 +250,8 @@ watch(
   <LayoutAuthenticated>
     <AppPage
       :title="pageTitle"
-      subtitle="Manage profile data, active status, role assignment, and technician workshop scope."
-      eyebrow="Operations"
+      :subtitle="t('users.form.subtitle')"
+      :eyebrow="t('users.page.eyebrow')"
       :icon="mdiAccountEdit"
     >
       <template #actions>
@@ -248,13 +259,13 @@ watch(
           :to="backRoute"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back"
-          aria-label="Back"
+          :title="t('users.actions.back')"
+          :aria-label="t('users.actions.back')"
         />
       </template>
 
       <NotificationBar v-if="!canSubmit" color="danger">
-        Your role cannot perform this user action.
+        {{ t('users.form.forbidden') }}
       </NotificationBar>
 
       <NotificationBar v-if="loadError" color="danger">
@@ -263,8 +274,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('users.actions.retry')"
+            :aria-label="t('users.actions.retry')"
             small
             @click="fetchUser"
           />
@@ -272,7 +283,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading user...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('users.detail.loading') }}
+        </p>
       </CardBox>
 
       <CardBox
@@ -285,7 +298,7 @@ watch(
         </NotificationBar>
 
         <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
-          <FormField label="Name" label-for="name" :error="fieldError('name')">
+          <FormField :label="t('users.fields.name')" label-for="name" :error="fieldError('name')">
             <FormControl
               id="name"
               v-model="form.name"
@@ -296,7 +309,7 @@ watch(
             />
           </FormField>
 
-          <FormField label="Email" label-for="email" :error="fieldError('email')">
+          <FormField :label="t('users.fields.email')" label-for="email" :error="fieldError('email')">
             <FormControl
               id="email"
               v-model="form.email"
@@ -308,7 +321,7 @@ watch(
             />
           </FormField>
 
-          <FormField label="Role" label-for="role" :error="fieldError('role')">
+          <FormField :label="t('users.fields.role')" label-for="role" :error="fieldError('role')">
             <select id="role" v-model="form.role" name="role" required :class="inputClass">
               <option v-for="role in roleOptions" :key="role" :value="role">
                 {{ roleLabel(role) }}
@@ -318,20 +331,24 @@ watch(
 
           <FormField
             v-if="showWorkshopField"
-            label="Workshop"
+            :label="t('users.fields.workshop')"
             label-for="workshop_id"
             :error="fieldError('workshop_id')"
-            help="Only technician users can be assigned to a workshop from this form."
+            :help="t('users.form.workshopHelp')"
           >
             <WorkshopCombobox
               v-model="form.workshop_id"
               input-id="workshop_id"
               name="workshop_id"
-              placeholder="Search by code, name, or city"
+              :placeholder="t('users.filters.workshopPlaceholder')"
             />
           </FormField>
 
-          <FormField label="Password" label-for="password" :error="fieldError('password')">
+          <FormField
+            :label="t('users.fields.password')"
+            label-for="password"
+            :error="fieldError('password')"
+          >
             <FormControl
               id="password"
               v-model="form.password"
@@ -343,7 +360,7 @@ watch(
           </FormField>
 
           <FormField
-            label="Confirm password"
+            :label="t('users.fields.confirmPassword')"
             label-for="password_confirmation"
             :error="fieldError('password_confirmation')"
           >
@@ -357,7 +374,7 @@ watch(
             />
           </FormField>
 
-          <FormField label="Phone" label-for="phone" :error="fieldError('phone')">
+          <FormField :label="t('users.fields.phone')" label-for="phone" :error="fieldError('phone')">
             <FormControl
               id="phone"
               v-model="form.phone"
@@ -368,7 +385,7 @@ watch(
           </FormField>
 
           <FormField
-            label="Document"
+            :label="t('users.fields.document')"
             label-for="document_number"
             :error="fieldError('document_number')"
           >
@@ -381,7 +398,11 @@ watch(
           </FormField>
         </div>
 
-        <FormField label="Address" label-for="address" :error="fieldError('address')">
+        <FormField
+          :label="t('users.fields.address')"
+          label-for="address"
+          :error="fieldError('address')"
+        >
           <FormControl
             id="address"
             v-model="form.address"
@@ -396,11 +417,11 @@ watch(
             v-model="form.is_active"
             name="is_active"
             type="switch"
-            label="Active user"
+            :label="t('users.form.activeUser')"
             :input-value="true"
           />
           <AppBadge
-            :label="form.is_active ? 'Active' : 'Inactive'"
+            :label="form.is_active ? t('users.status.active') : t('users.status.inactive')"
             :color="form.is_active ? 'success' : 'danger'"
           />
         </div>
@@ -411,14 +432,14 @@ watch(
               :to="backRoute"
               color="whiteDark"
               :icon="mdiClose"
-              title="Cancel"
-              aria-label="Cancel"
+              :title="t('users.actions.cancel')"
+              :aria-label="t('users.actions.cancel')"
             />
             <BaseButton
               color="info"
               :icon="submitIcon"
-              :title="saving ? 'Saving...' : submitLabel"
-              :aria-label="saving ? 'Saving...' : submitLabel"
+              :title="saving ? t('users.actions.saving') : submitLabel"
+              :aria-label="saving ? t('users.actions.saving') : submitLabel"
               type="submit"
               :disabled="saving || roleOptions.length === 0"
             />

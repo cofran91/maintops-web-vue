@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiCheck,
   mdiChevronDown,
@@ -42,6 +43,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const EMPTY_FILTERS = Object.freeze({
   search: '',
@@ -57,15 +59,15 @@ const EMPTY_FILTERS = Object.freeze({
   created_to: '',
 })
 
-const columns = [
-  { key: 'plan', label: 'Plan' },
-  { key: 'tasks', label: 'Tasks' },
-  { key: 'recommended_interval_days', label: 'Days' },
-  { key: 'recommended_interval_km', label: 'Kilometers' },
-  { key: 'is_active', label: 'Active' },
-  { key: 'updated_at', label: 'Updated' },
+const columns = computed(() => [
+  { key: 'plan', label: t('maintenancePlans.columns.plan') },
+  { key: 'tasks', label: t('maintenancePlans.columns.tasks') },
+  { key: 'recommended_interval_days', label: t('maintenancePlans.columns.days') },
+  { key: 'recommended_interval_km', label: t('maintenancePlans.columns.kilometers') },
+  { key: 'is_active', label: t('maintenancePlans.columns.active') },
+  { key: 'updated_at', label: t('maintenancePlans.columns.updated') },
   { key: 'actions', label: '' },
-]
+])
 
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
@@ -102,8 +104,13 @@ const deleteMessage = computed(() => {
     return ''
   }
 
-  return `This action will delete plan ${planToDelete.value.name}.`
+  return t('maintenancePlans.delete.confirmMessage', { name: planToDelete.value.name })
 })
+const advancedFiltersLabel = computed(() =>
+  filtersExpanded.value
+    ? t('maintenancePlans.actions.hideAdvancedFilters')
+    : t('maintenancePlans.actions.showAdvancedFilters'),
+)
 
 const getStringQuery = (value) => {
   if (Array.isArray(value)) {
@@ -336,7 +343,9 @@ const daysLabel = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} days`
+  return t('maintenancePlans.units.days', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const kilometersLabel = (value) => {
@@ -344,7 +353,9 @@ const kilometersLabel = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} km`
+  return t('maintenancePlans.units.kilometers', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const formatDate = (value) => {
@@ -352,10 +363,13 @@ const formatDate = (value) => {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
   }).format(new Date(value))
 }
+
+const activeLabel = (isActive) =>
+  isActive ? t('maintenancePlans.labels.active') : t('maintenancePlans.labels.inactive')
 
 watch(
   () => route.query,
@@ -370,9 +384,9 @@ watch(
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Maintenance plans"
-      subtitle="Group maintenance tasks into reusable operational plans."
-      eyebrow="Maintenance"
+      :title="t('maintenancePlans.list.title')"
+      :subtitle="t('maintenancePlans.list.subtitle')"
+      :eyebrow="t('maintenancePlans.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -381,8 +395,8 @@ watch(
           :to="{ name: 'maintenance-plans-new' }"
           color="info"
           :icon="mdiPlus"
-          title="New plan"
-          aria-label="New plan"
+          :title="t('maintenancePlans.actions.newPlan')"
+          :aria-label="t('maintenancePlans.actions.newPlan')"
         />
       </template>
 
@@ -393,37 +407,41 @@ watch(
         @focusout="applyFiltersOnFocusOut"
       >
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <FormField label="Search">
+          <FormField :label="t('maintenancePlans.filters.search')">
             <FormControl
               v-model="filters.search"
               name="search"
-              placeholder="Plan name, code, description, or task"
+              :placeholder="t('maintenancePlans.filters.searchPlaceholder')"
             />
           </FormField>
-          <FormField label="Code">
-            <FormControl v-model="filters.code" name="code" placeholder="PREVENTIVE-10K" />
+          <FormField :label="t('maintenancePlans.filters.code')">
+            <FormControl
+              v-model="filters.code"
+              name="code"
+              :placeholder="t('maintenancePlans.filters.codePlaceholder')"
+            />
           </FormField>
-          <FormField label="Active">
+          <FormField :label="t('maintenancePlans.filters.active')">
             <select v-model="filters.is_active" name="is_active" :class="inputClass">
-              <option value="">All</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
+              <option value="">{{ t('maintenancePlans.filters.all') }}</option>
+              <option value="true">{{ t('maintenancePlans.labels.active') }}</option>
+              <option value="false">{{ t('maintenancePlans.labels.inactive') }}</option>
             </select>
           </FormField>
         </div>
 
         <div v-if="filtersExpanded" class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          <FormField label="Name">
+          <FormField :label="t('maintenancePlans.filters.name')">
             <FormControl v-model="filters.name" name="name" />
           </FormField>
-          <FormField label="Task">
+          <FormField :label="t('maintenancePlans.filters.task')">
             <MaintenanceTaskCombobox
               v-model="filters.task_id"
               name="task_id"
-              placeholder="Search by task code or name"
+              :placeholder="t('maintenancePlans.filters.taskPlaceholder')"
             />
           </FormField>
-          <FormField label="Days from">
+          <FormField :label="t('maintenancePlans.filters.daysFrom')">
             <input
               v-model="filters.recommended_interval_days_from"
               type="number"
@@ -432,7 +450,7 @@ watch(
               :class="inputClass"
             >
           </FormField>
-          <FormField label="Days to">
+          <FormField :label="t('maintenancePlans.filters.daysTo')">
             <input
               v-model="filters.recommended_interval_days_to"
               type="number"
@@ -441,7 +459,7 @@ watch(
               :class="inputClass"
             >
           </FormField>
-          <FormField label="Kilometers from">
+          <FormField :label="t('maintenancePlans.filters.kilometersFrom')">
             <input
               v-model="filters.recommended_interval_km_from"
               type="number"
@@ -450,7 +468,7 @@ watch(
               :class="inputClass"
             >
           </FormField>
-          <FormField label="Kilometers to">
+          <FormField :label="t('maintenancePlans.filters.kilometersTo')">
             <input
               v-model="filters.recommended_interval_km_to"
               type="number"
@@ -459,10 +477,10 @@ watch(
               :class="inputClass"
             >
           </FormField>
-          <FormField label="Created from">
+          <FormField :label="t('maintenancePlans.filters.createdFrom')">
             <FormControl v-model="filters.created_from" name="created_from" type="date" />
           </FormField>
-          <FormField label="Created to">
+          <FormField :label="t('maintenancePlans.filters.createdTo')">
             <FormControl v-model="filters.created_to" name="created_to" type="date" />
           </FormField>
         </div>
@@ -471,23 +489,23 @@ watch(
           <BaseButton
             color="whiteDark"
             :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown"
-            :title="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
-            :aria-label="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
+            :title="advancedFiltersLabel"
+            :aria-label="advancedFiltersLabel"
             @click="filtersExpanded = !filtersExpanded"
           />
           <BaseButton
             color="whiteDark"
             :icon="mdiClose"
-            title="Clear filters"
-            aria-label="Clear filters"
+            :title="t('maintenancePlans.actions.clearFilters')"
+            :aria-label="t('maintenancePlans.actions.clearFilters')"
             :disabled="!hasActiveFilters"
             @click="clearFilters"
           />
           <BaseButton
             color="info"
             :icon="mdiCheck"
-            title="Apply filters"
-            aria-label="Apply filters"
+            :title="t('maintenancePlans.actions.applyFilters')"
+            :aria-label="t('maintenancePlans.actions.applyFilters')"
             type="submit"
           />
         </div>
@@ -499,8 +517,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('maintenancePlans.actions.retry')"
+            :aria-label="t('maintenancePlans.actions.retry')"
             small
             @click="fetchPlans"
           />
@@ -508,7 +526,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading maintenance plans...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('maintenancePlans.list.loading') }}
+        </p>
       </CardBox>
 
       <template v-else-if="!errorMessage">
@@ -516,8 +536,8 @@ watch(
           v-if="plans.length"
           :columns="columns"
           :rows="plans"
-          empty-title="No maintenance plans found"
-          empty-description="Adjust the filters or create a new plan."
+          :empty-title="t('maintenancePlans.list.emptyTitle')"
+          :empty-description="t('maintenancePlans.list.emptyDescription')"
         >
           <template #cell-plan="{ row }">
             <div class="min-w-0">
@@ -540,7 +560,7 @@ watch(
           </template>
           <template #cell-is_active="{ value }">
             <AppBadge
-              :label="value ? 'Active' : 'Inactive'"
+              :label="activeLabel(value)"
               :color="value ? 'success' : 'danger'"
             />
           </template>
@@ -553,8 +573,8 @@ watch(
                 :to="{ name: 'maintenance-plans-detail', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiEyeOutline"
-                title="Open plan"
-                aria-label="Open plan"
+                :title="t('maintenancePlans.actions.openPlan')"
+                :aria-label="t('maintenancePlans.actions.openPlan')"
                 small
               />
               <BaseButton
@@ -562,16 +582,16 @@ watch(
                 :to="{ name: 'maintenance-plans-edit', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiPencil"
-                title="Edit plan"
-                aria-label="Edit plan"
+                :title="t('maintenancePlans.actions.editPlan')"
+                :aria-label="t('maintenancePlans.actions.editPlan')"
                 small
               />
               <BaseButton
                 v-if="canDeletePlan"
                 color="danger"
                 :icon="mdiTrashCanOutline"
-                title="Delete plan"
-                aria-label="Delete plan"
+                :title="t('maintenancePlans.actions.deletePlan')"
+                :aria-label="t('maintenancePlans.actions.deletePlan')"
                 small
                 @click="askDelete(row)"
               />
@@ -581,23 +601,27 @@ watch(
 
         <AppEmptyState
           v-else
-          title="No maintenance plans found"
-          description="Adjust the filters or create a new plan."
+          :title="t('maintenancePlans.list.emptyTitle')"
+          :description="t('maintenancePlans.list.emptyDescription')"
         >
           <BaseButton
             v-if="canCreatePlan"
             :to="{ name: 'maintenance-plans-new' }"
             color="info"
             :icon="mdiPlus"
-            title="New plan"
-            aria-label="New plan"
+            :title="t('maintenancePlans.actions.newPlan')"
+            :aria-label="t('maintenancePlans.actions.newPlan')"
           />
         </AppEmptyState>
 
         <CardBox v-if="pagination.total > 0" class="mt-6">
           <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p class="text-sm text-gray-500 dark:text-slate-400">
-              Showing {{ pagination.from ?? 0 }}-{{ pagination.to ?? 0 }} of {{ pagination.total }}
+              {{ t('maintenancePlans.pagination.showing', {
+                from: pagination.from ?? 0,
+                to: pagination.to ?? 0,
+                total: pagination.total,
+              }) }}
             </p>
             <div class="flex flex-wrap items-center gap-2">
               <select
@@ -613,20 +637,23 @@ watch(
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronLeft"
-                title="Previous page"
-                aria-label="Previous page"
+                :title="t('maintenancePlans.pagination.previousPage')"
+                :aria-label="t('maintenancePlans.pagination.previousPage')"
                 small
                 :disabled="!canGoPrevious"
                 @click="canGoPrevious ? updatePage(pagination.current_page - 1) : null"
               />
               <span class="px-2 text-sm font-semibold text-gray-700 dark:text-slate-200">
-                Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                {{ t('maintenancePlans.pagination.pageOf', {
+                  page: pagination.current_page,
+                  pages: pagination.last_page,
+                }) }}
               </span>
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronRight"
-                title="Next page"
-                aria-label="Next page"
+                :title="t('maintenancePlans.pagination.nextPage')"
+                :aria-label="t('maintenancePlans.pagination.nextPage')"
                 small
                 :disabled="!canGoNext"
                 @click="canGoNext ? updatePage(pagination.current_page + 1) : null"
@@ -639,9 +666,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete maintenance plan"
+      :title="t('maintenancePlans.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('maintenancePlans.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -650,7 +677,7 @@ watch(
     >
       <p>{{ deleteMessage }}</p>
       <p class="text-sm text-gray-500 dark:text-slate-400">
-        Plans linked to order items cannot be deleted by backend policy.
+        {{ t('maintenancePlans.delete.linkedOrderItemsNote') }}
       </p>
     </CardBoxModal>
   </LayoutAuthenticated>

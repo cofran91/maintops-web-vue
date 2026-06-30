@@ -16,12 +16,13 @@ import BaseButton from '@/components/BaseButton.vue'
 import CardBox from '@/components/CardBox.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 import { useAuthStore } from '@/stores/auth.js'
+import { localizedRouteSubtitle, localizedRouteTitle } from '@/i18n/routeLabels.js'
 
 const route = useRoute()
 const authStore = useAuthStore()
 
-const title = computed(() => route.meta.title ?? 'Record detail')
-const subtitle = computed(() => route.meta.subtitle ?? 'Review the selected operational record.')
+const title = computed(() => localizedRouteTitle(route))
+const subtitle = computed(() => localizedRouteSubtitle(route))
 const resource = computed(() => route.meta.resource)
 const canUpdateRecord = computed(() =>
   Boolean(resource.value && canUpdateForAnyRole(authStore.roles, resource.value)),

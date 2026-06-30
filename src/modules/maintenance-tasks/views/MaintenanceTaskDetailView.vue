@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
   mdiCalendar,
@@ -14,10 +15,7 @@ import {
 } from '@mdi/js'
 import { RESOURCES, canDeleteForAnyRole, canUpdateForAnyRole } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
-import {
-  MAINTENANCE_TASK_STATUS,
-  MAINTENANCE_TASK_STATUS_LABELS,
-} from '@/types/maintenanceTask.js'
+import { MAINTENANCE_TASK_STATUS } from '@/types/maintenanceTask.js'
 import maintenanceTasksApi from '@/modules/maintenance-tasks/services/maintenanceTasksService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppEmptyState from '@/components/ui/AppEmptyState.vue'
@@ -33,6 +31,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const task = ref(null)
 const loading = ref(false)
@@ -47,13 +46,13 @@ const canUpdateTask = computed(() =>
 const canDeleteTask = computed(() =>
   canDeleteForAnyRole(authStore.roles, RESOURCES.MAINTENANCE_TASKS),
 )
-const title = computed(() => task.value?.name ?? 'Maintenance task detail')
+const title = computed(() => task.value?.name ?? t('maintenanceTasks.detail.titleFallback'))
 const deleteMessage = computed(() => {
   if (!task.value) {
     return ''
   }
 
-  return `This action will delete task ${task.value.name}.`
+  return t('maintenanceTasks.delete.confirmMessage', { name: task.value.name })
 })
 
 const fetchTask = async () => {
@@ -110,7 +109,9 @@ const durationLabel = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} min`
+  return t('maintenanceTasks.units.minutes', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const formatDate = (value) => {
@@ -118,11 +119,15 @@ const formatDate = (value) => {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
 }
+
+const statusLabel = (status) => t(`maintenanceTasks.status.${status}`)
+const activeLabel = (isActive) =>
+  isActive ? t('maintenanceTasks.labels.active') : t('maintenanceTasks.labels.inactive')
 
 const taskItems = computed(() => {
   if (!task.value) {
@@ -130,20 +135,20 @@ const taskItems = computed(() => {
   }
 
   return [
-    { icon: mdiFileDocumentOutline, label: 'Code', value: task.value.code },
-    { icon: mdiWrenchOutline, label: 'Name', value: task.value.name },
+    { icon: mdiFileDocumentOutline, label: t('maintenanceTasks.fields.code'), value: task.value.code },
+    { icon: mdiWrenchOutline, label: t('maintenanceTasks.fields.name'), value: task.value.name },
     {
       icon: mdiWrenchOutline,
-      label: 'Vehicle system',
+      label: t('maintenanceTasks.fields.vehicleSystem'),
       value: task.value.vehicle_system?.name ?? '-',
     },
     {
       icon: mdiCalendar,
-      label: 'Estimated duration',
+      label: t('maintenanceTasks.fields.estimatedDuration'),
       value: durationLabel(task.value.estimated_duration_minutes),
     },
-    { icon: mdiCalendar, label: 'Created', value: formatDate(task.value.created_at) },
-    { icon: mdiCalendar, label: 'Updated', value: formatDate(task.value.updated_at) },
+    { icon: mdiCalendar, label: t('maintenanceTasks.fields.created'), value: formatDate(task.value.created_at) },
+    { icon: mdiCalendar, label: t('maintenanceTasks.fields.updated'), value: formatDate(task.value.updated_at) },
   ]
 })
 
@@ -155,12 +160,18 @@ const vehicleItems = computed(() => {
   const vehicle = task.value.vehicle
 
   return [
-    { icon: mdiCar, label: 'Scope', value: vehicle ? 'Vehicle-specific' : 'Reusable' },
-    { icon: mdiCar, label: 'License plate', value: formatValue(vehicle?.license_plate) },
-    { icon: mdiCar, label: 'Brand', value: formatValue(vehicle?.brand) },
-    { icon: mdiCar, label: 'Model', value: formatValue(vehicle?.model) },
-    { icon: mdiCar, label: 'Year', value: formatValue(vehicle?.year) },
-    { icon: mdiCar, label: 'Color', value: formatValue(vehicle?.color) },
+    {
+      icon: mdiCar,
+      label: t('maintenanceTasks.fields.scope'),
+      value: vehicle
+        ? t('maintenanceTasks.labels.vehicleSpecific')
+        : t('maintenanceTasks.labels.reusable'),
+    },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.licensePlate'), value: formatValue(vehicle?.license_plate) },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.brand'), value: formatValue(vehicle?.brand) },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.model'), value: formatValue(vehicle?.model) },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.year'), value: formatValue(vehicle?.year) },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.color'), value: formatValue(vehicle?.color) },
   ]
 })
 
@@ -177,8 +188,8 @@ watch(
   <LayoutAuthenticated>
     <AppPage
       :title="title"
-      subtitle="Review task definition, operational scope, status, and vehicle context."
-      eyebrow="Maintenance"
+      :subtitle="t('maintenanceTasks.detail.subtitle')"
+      :eyebrow="t('maintenanceTasks.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -186,23 +197,23 @@ watch(
           :to="{ name: 'maintenance-tasks' }"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back to tasks"
-          aria-label="Back to tasks"
+          :title="t('maintenanceTasks.actions.backToTasks')"
+          :aria-label="t('maintenanceTasks.actions.backToTasks')"
         />
         <BaseButton
           v-if="task && canUpdateTask"
           :to="{ name: 'maintenance-tasks-edit', params: { id: task.id } }"
           color="info"
           :icon="mdiPencil"
-          title="Edit task"
-          aria-label="Edit task"
+          :title="t('maintenanceTasks.actions.editTask')"
+          :aria-label="t('maintenanceTasks.actions.editTask')"
         />
         <BaseButton
           v-if="task && canDeleteTask"
           color="danger"
           :icon="mdiTrashCanOutline"
-          title="Delete task"
-          aria-label="Delete task"
+          :title="t('maintenanceTasks.actions.deleteTask')"
+          :aria-label="t('maintenanceTasks.actions.deleteTask')"
           @click="deleteModalOpen = true"
         />
       </template>
@@ -213,8 +224,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('maintenanceTasks.actions.retry')"
+            :aria-label="t('maintenanceTasks.actions.retry')"
             small
             @click="fetchTask"
           />
@@ -222,24 +233,26 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading maintenance task...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('maintenanceTasks.detail.loading') }}
+        </p>
       </CardBox>
 
       <AppEmptyState
         v-else-if="!task && !errorMessage"
-        title="Maintenance task unavailable"
-        description="There is no task data to display."
+        :title="t('maintenanceTasks.detail.unavailableTitle')"
+        :description="t('maintenanceTasks.detail.unavailableDescription')"
       />
 
       <div v-else-if="task" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]">
         <CardBox>
           <div class="mb-5 flex flex-wrap gap-2">
             <AppBadge
-              :label="MAINTENANCE_TASK_STATUS_LABELS[task.status] ?? task.status"
+              :label="statusLabel(task.status)"
               :color="statusColor(task.status)"
             />
             <AppBadge
-              :label="task.is_active ? 'Active' : 'Inactive'"
+              :label="activeLabel(task.is_active)"
               :color="task.is_active ? 'success' : 'danger'"
             />
           </div>
@@ -261,7 +274,7 @@ watch(
 
           <div class="mt-6">
             <p class="mb-1 text-sm font-semibold text-gray-500 dark:text-slate-400">
-              Description
+              {{ t('maintenanceTasks.fields.description') }}
             </p>
             <p class="whitespace-pre-line text-sm text-gray-700 dark:text-slate-200">
               {{ formatValue(task.description) }}
@@ -290,9 +303,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete maintenance task"
+      :title="t('maintenanceTasks.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('maintenanceTasks.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -300,9 +313,6 @@ watch(
       @confirm="deleteTask"
     >
       <p>{{ deleteMessage }}</p>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        Task deletion is limited to system administrators by backend policies.
-      </p>
     </CardBoxModal>
   </LayoutAuthenticated>
 </template>

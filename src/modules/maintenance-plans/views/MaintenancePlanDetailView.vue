@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
   mdiCalendar,
@@ -29,6 +30,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const plan = ref(null)
 const loading = ref(false)
@@ -36,13 +38,13 @@ const deleting = ref(false)
 const errorMessage = ref('')
 const deleteModalOpen = ref(false)
 
-const taskColumns = [
-  { key: 'task', label: 'Task' },
-  { key: 'vehicle_system', label: 'System' },
-  { key: 'scope', label: 'Scope' },
-  { key: 'estimated_duration_minutes', label: 'Duration' },
-  { key: 'is_active', label: 'Active' },
-]
+const taskColumns = computed(() => [
+  { key: 'task', label: t('maintenancePlans.taskColumns.task') },
+  { key: 'vehicle_system', label: t('maintenancePlans.taskColumns.system') },
+  { key: 'scope', label: t('maintenancePlans.taskColumns.scope') },
+  { key: 'estimated_duration_minutes', label: t('maintenancePlans.taskColumns.duration') },
+  { key: 'is_active', label: t('maintenancePlans.taskColumns.active') },
+])
 
 const planId = computed(() => String(route.params.id ?? ''))
 const tasks = computed(() => plan.value?.tasks ?? [])
@@ -52,13 +54,13 @@ const canUpdatePlan = computed(() =>
 const canDeletePlan = computed(() =>
   canDeleteForAnyRole(authStore.roles, RESOURCES.MAINTENANCE_PLANS),
 )
-const title = computed(() => plan.value?.name ?? 'Maintenance plan detail')
+const title = computed(() => plan.value?.name ?? t('maintenancePlans.detail.titleFallback'))
 const deleteMessage = computed(() => {
   if (!plan.value) {
     return ''
   }
 
-  return `This action will delete plan ${plan.value.name}.`
+  return t('maintenancePlans.delete.confirmMessage', { name: plan.value.name })
 })
 
 const fetchPlan = async () => {
@@ -102,7 +104,9 @@ const daysLabel = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} days`
+  return t('maintenancePlans.units.days', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const kilometersLabel = (value) => {
@@ -110,7 +114,9 @@ const kilometersLabel = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} km`
+  return t('maintenancePlans.units.kilometers', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const durationLabel = (value) => {
@@ -118,15 +124,19 @@ const durationLabel = (value) => {
     return '-'
   }
 
-  return `${new Intl.NumberFormat('en').format(value)} min`
+  return t('maintenancePlans.units.minutes', {
+    value: new Intl.NumberFormat(locale.value).format(value),
+  })
 }
 
 const scopeLabel = (task) => {
   if (!task.vehicle) {
-    return 'Reusable'
+    return t('maintenancePlans.labels.reusable')
   }
 
-  return task.vehicle.license_plate ?? `Vehicle #${task.vehicle_id}`
+  return task.vehicle.license_plate ?? t('maintenancePlans.labels.vehicleNumber', {
+    id: task.vehicle_id,
+  })
 }
 
 const formatDate = (value) => {
@@ -134,11 +144,14 @@ const formatDate = (value) => {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
 }
+
+const activeLabel = (isActive) =>
+  isActive ? t('maintenancePlans.labels.active') : t('maintenancePlans.labels.inactive')
 
 const planItems = computed(() => {
   if (!plan.value) {
@@ -146,20 +159,20 @@ const planItems = computed(() => {
   }
 
   return [
-    { icon: mdiFileDocumentOutline, label: 'Code', value: plan.value.code },
-    { icon: mdiWrenchOutline, label: 'Name', value: plan.value.name },
+    { icon: mdiFileDocumentOutline, label: t('maintenancePlans.fields.code'), value: plan.value.code },
+    { icon: mdiWrenchOutline, label: t('maintenancePlans.fields.name'), value: plan.value.name },
     {
       icon: mdiCalendar,
-      label: 'Recommended days',
+      label: t('maintenancePlans.fields.recommendedDays'),
       value: daysLabel(plan.value.recommended_interval_days),
     },
     {
       icon: mdiCalendar,
-      label: 'Recommended kilometers',
+      label: t('maintenancePlans.fields.recommendedKilometers'),
       value: kilometersLabel(plan.value.recommended_interval_km),
     },
-    { icon: mdiCalendar, label: 'Created', value: formatDate(plan.value.created_at) },
-    { icon: mdiCalendar, label: 'Updated', value: formatDate(plan.value.updated_at) },
+    { icon: mdiCalendar, label: t('maintenancePlans.fields.created'), value: formatDate(plan.value.created_at) },
+    { icon: mdiCalendar, label: t('maintenancePlans.fields.updated'), value: formatDate(plan.value.updated_at) },
   ]
 })
 
@@ -176,8 +189,8 @@ watch(
   <LayoutAuthenticated>
     <AppPage
       :title="title"
-      subtitle="Review grouped tasks, recommended intervals, and availability."
-      eyebrow="Maintenance"
+      :subtitle="t('maintenancePlans.detail.subtitle')"
+      :eyebrow="t('maintenancePlans.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -185,23 +198,23 @@ watch(
           :to="{ name: 'maintenance-plans' }"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back to plans"
-          aria-label="Back to plans"
+          :title="t('maintenancePlans.actions.backToPlans')"
+          :aria-label="t('maintenancePlans.actions.backToPlans')"
         />
         <BaseButton
           v-if="plan && canUpdatePlan"
           :to="{ name: 'maintenance-plans-edit', params: { id: plan.id } }"
           color="info"
           :icon="mdiPencil"
-          title="Edit plan"
-          aria-label="Edit plan"
+          :title="t('maintenancePlans.actions.editPlan')"
+          :aria-label="t('maintenancePlans.actions.editPlan')"
         />
         <BaseButton
           v-if="plan && canDeletePlan"
           color="danger"
           :icon="mdiTrashCanOutline"
-          title="Delete plan"
-          aria-label="Delete plan"
+          :title="t('maintenancePlans.actions.deletePlan')"
+          :aria-label="t('maintenancePlans.actions.deletePlan')"
           @click="deleteModalOpen = true"
         />
       </template>
@@ -212,8 +225,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('maintenancePlans.actions.retry')"
+            :aria-label="t('maintenancePlans.actions.retry')"
             small
             @click="fetchPlan"
           />
@@ -221,23 +234,28 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading maintenance plan...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('maintenancePlans.detail.loading') }}
+        </p>
       </CardBox>
 
       <AppEmptyState
         v-else-if="!plan && !errorMessage"
-        title="Maintenance plan unavailable"
-        description="There is no plan data to display."
+        :title="t('maintenancePlans.detail.unavailableTitle')"
+        :description="t('maintenancePlans.detail.unavailableDescription')"
       />
 
       <div v-else-if="plan" class="grid grid-cols-1 gap-6">
         <CardBox>
           <div class="mb-5 flex flex-wrap gap-2">
             <AppBadge
-              :label="plan.is_active ? 'Active' : 'Inactive'"
+              :label="activeLabel(plan.is_active)"
               :color="plan.is_active ? 'success' : 'danger'"
             />
-            <AppBadge :label="`${tasks.length} tasks`" color="info" />
+            <AppBadge
+              :label="t('maintenancePlans.labels.tasksCount', { count: tasks.length })"
+              color="info"
+            />
           </div>
 
           <dl class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -257,7 +275,7 @@ watch(
 
           <div class="mt-6">
             <p class="mb-1 text-sm font-semibold text-gray-500 dark:text-slate-400">
-              Description
+              {{ t('maintenancePlans.fields.description') }}
             </p>
             <p class="whitespace-pre-line text-sm text-gray-700 dark:text-slate-200">
               {{ formatValue(plan.description) }}
@@ -270,8 +288,8 @@ watch(
             v-if="tasks.length"
             :columns="taskColumns"
             :rows="tasks"
-            empty-title="No tasks assigned"
-            empty-description="Edit the plan to associate maintenance tasks."
+            :empty-title="t('maintenancePlans.detail.noTasksAssignedTitle')"
+            :empty-description="t('maintenancePlans.detail.noTasksAssignedDescription')"
           >
             <template #cell-task="{ row }">
               <div class="min-w-0">
@@ -294,7 +312,7 @@ watch(
             </template>
             <template #cell-is_active="{ value }">
               <AppBadge
-                :label="value ? 'Active' : 'Inactive'"
+                :label="activeLabel(value)"
                 :color="value ? 'success' : 'danger'"
               />
             </template>
@@ -302,8 +320,8 @@ watch(
 
           <AppEmptyState
             v-else
-            title="No tasks assigned"
-            description="Edit the plan to associate maintenance tasks."
+            :title="t('maintenancePlans.detail.noTasksAssignedTitle')"
+            :description="t('maintenancePlans.detail.noTasksAssignedDescription')"
           />
         </CardBox>
       </div>
@@ -311,9 +329,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete maintenance plan"
+      :title="t('maintenancePlans.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('maintenancePlans.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -322,7 +340,7 @@ watch(
     >
       <p>{{ deleteMessage }}</p>
       <p class="text-sm text-gray-500 dark:text-slate-400">
-        Plans linked to order items cannot be deleted by backend policy.
+        {{ t('maintenancePlans.delete.linkedOrderItemsNote') }}
       </p>
     </CardBoxModal>
   </LayoutAuthenticated>

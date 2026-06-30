@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { mdiChevronDown, mdiClose } from '@mdi/js'
 import { normalizeApiError } from '@/api/errors.js'
 import BaseIcon from '@/components/BaseIcon.vue'
@@ -15,7 +16,7 @@ const props = defineProps({
   name: String,
   placeholder: {
     type: String,
-    default: 'Search workshops',
+    default: null,
   },
   perPage: {
     type: Number,
@@ -28,6 +29,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'select'])
+const { t } = useI18n()
 
 const search = ref('')
 const options = ref([])
@@ -45,6 +47,7 @@ const normalizedModelValue = computed(() =>
   props.modelValue === null || props.modelValue === undefined ? '' : String(props.modelValue),
 )
 const hasMorePages = computed(() => page.value < lastPage.value)
+const resolvedPlaceholder = computed(() => props.placeholder ?? t('workshops.combobox.placeholder'))
 
 const workshopLabel = (workshop) => {
   if (!workshop) {
@@ -260,7 +263,7 @@ onBeforeUnmount(() => {
       role="combobox"
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
-      :placeholder="placeholder"
+      :placeholder="resolvedPlaceholder"
       :disabled="disabled"
       class="h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 pr-20
         disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800"
@@ -274,8 +277,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Clear workshop"
-        aria-label="Clear workshop"
+        :title="t('workshops.combobox.clear')"
+        :aria-label="t('workshops.combobox.clear')"
         @click="clearSelection(true)"
       >
         <BaseIcon :path="mdiClose" size="18" />
@@ -285,8 +288,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Show workshops"
-        aria-label="Show workshops"
+        :title="t('workshops.combobox.show')"
+        :aria-label="t('workshops.combobox.show')"
         @click="toggleOptions"
       >
         <BaseIcon :path="mdiChevronDown" size="18" />
@@ -317,21 +320,21 @@ onBeforeUnmount(() => {
           {{ workshop.code }} - {{ workshop.name }}
         </span>
         <span class="block text-xs text-gray-500 dark:text-slate-400">
-          {{ workshop.city || 'No city' }}
+          {{ workshop.city || t('workshops.combobox.noCity') }}
         </span>
       </button>
 
       <p v-if="loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading workshops...
+        {{ t('workshops.combobox.loading') }}
       </p>
       <p v-else-if="!loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        No workshops found.
+        {{ t('workshops.combobox.empty') }}
       </p>
       <p v-if="errorMessage" class="px-3 py-3 text-sm text-red-600 dark:text-red-400">
         {{ errorMessage }}
       </p>
       <p v-if="loading && options.length > 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading more...
+        {{ t('workshops.combobox.loadingMore') }}
       </p>
     </div>
   </div>

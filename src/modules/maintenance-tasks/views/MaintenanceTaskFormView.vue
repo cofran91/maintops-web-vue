@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
   mdiClose,
@@ -34,6 +35,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const inputClass =
   'h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 dark:bg-slate-800'
@@ -70,9 +72,15 @@ const canSubmit = computed(() =>
     : canCreateForAnyRole(authStore.roles, RESOURCES.MAINTENANCE_TASKS),
 )
 const pageTitle = computed(() =>
-  isEditing.value ? 'Edit maintenance task' : 'Create maintenance task',
+  isEditing.value
+    ? t('maintenanceTasks.form.editTitle')
+    : t('maintenanceTasks.form.createTitle'),
 )
-const submitLabel = computed(() => (isEditing.value ? 'Save changes' : 'Create task'))
+const submitLabel = computed(() =>
+  isEditing.value
+    ? t('maintenanceTasks.actions.saveChanges')
+    : t('maintenanceTasks.actions.createTask'),
+)
 const submitIcon = computed(() => (isEditing.value ? mdiContentSaveOutline : mdiPlus))
 const backRoute = computed(() =>
   isEditing.value && taskId.value
@@ -173,29 +181,29 @@ const validateForm = () => {
   const duration = Number(form.estimated_duration_minutes)
 
   if (!hasPositiveInteger(form.vehicle_system_id)) {
-    errors.vehicle_system_id = ['Select a vehicle system.']
+    errors.vehicle_system_id = [t('maintenanceTasks.validation.selectVehicleSystem')]
   }
 
   if (form.name.trim() === '') {
-    errors.name = ['Name is required.']
+    errors.name = [t('maintenanceTasks.validation.nameRequired')]
   }
 
   if (form.code.trim() === '') {
-    errors.code = ['Code is required.']
+    errors.code = [t('maintenanceTasks.validation.codeRequired')]
   }
 
   if (!Number.isInteger(duration) || duration < 1 || duration > 10080) {
-    errors.estimated_duration_minutes = ['Enter a duration from 1 to 10,080 minutes.']
+    errors.estimated_duration_minutes = [t('maintenanceTasks.validation.durationRange')]
   }
 
   if (showVehicleField.value && !hasPositiveInteger(form.vehicle_id)) {
-    errors.vehicle_id = ['Select a vehicle.']
+    errors.vehicle_id = [t('maintenanceTasks.validation.selectVehicle')]
   }
 
   validationErrors.value = errors
 
   if (Object.keys(errors).length > 0) {
-    formError.value = 'Review the highlighted fields before saving.'
+    formError.value = t('maintenanceTasks.validation.reviewHighlighted')
     return false
   }
 
@@ -261,8 +269,8 @@ watch(
   <LayoutAuthenticated>
     <AppPage
       :title="pageTitle"
-      subtitle="Manage vehicle systems, reusable scope, vehicle assignment, and estimates."
-      eyebrow="Maintenance"
+      :subtitle="t('maintenanceTasks.form.subtitle')"
+      :eyebrow="t('maintenanceTasks.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -270,13 +278,13 @@ watch(
           :to="backRoute"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back"
-          aria-label="Back"
+          :title="t('maintenanceTasks.actions.back')"
+          :aria-label="t('maintenanceTasks.actions.back')"
         />
       </template>
 
       <NotificationBar v-if="!canSubmit" color="danger">
-        Your role cannot perform this maintenance task action.
+        {{ t('maintenanceTasks.form.forbidden') }}
       </NotificationBar>
 
       <NotificationBar v-if="loadError" color="danger">
@@ -285,8 +293,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('maintenanceTasks.actions.retry')"
+            :aria-label="t('maintenanceTasks.actions.retry')"
             small
             @click="initializeForm"
           />
@@ -294,7 +302,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading maintenance task...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('maintenanceTasks.detail.loading') }}
+        </p>
       </CardBox>
 
       <CardBox
@@ -307,12 +317,12 @@ watch(
         </NotificationBar>
 
         <NotificationBar v-if="advisorRequiresVehicle" color="info">
-          Advisor-created tasks must be linked to a vehicle.
+          {{ t('maintenanceTasks.form.advisorVehicleRequired') }}
         </NotificationBar>
 
         <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
           <FormField
-            label="Vehicle system"
+            :label="t('maintenanceTasks.fields.vehicleSystem')"
             label-for="vehicle_system_id"
             :error="fieldError('vehicle_system_id')"
           >
@@ -323,18 +333,20 @@ watch(
               required
               :class="inputClass"
             >
-              <option value="" disabled>Select a vehicle system</option>
+              <option value="" disabled>
+                {{ t('maintenanceTasks.form.selectVehicleSystem') }}
+              </option>
               <option v-for="system in vehicleSystems" :key="system.id" :value="String(system.id)">
                 {{ system.name }}
               </option>
             </select>
           </FormField>
 
-          <FormField label="Name" label-for="name" :error="fieldError('name')">
+          <FormField :label="t('maintenanceTasks.fields.name')" label-for="name" :error="fieldError('name')">
             <FormControl id="name" v-model="form.name" name="name" required maxlength="255" />
           </FormField>
 
-          <FormField label="Code" label-for="code" :error="fieldError('code')">
+          <FormField :label="t('maintenanceTasks.fields.code')" label-for="code" :error="fieldError('code')">
             <FormControl
               id="code"
               v-model="form.code"
@@ -346,7 +358,7 @@ watch(
           </FormField>
 
           <FormField
-            label="Estimated duration"
+            :label="t('maintenanceTasks.fields.estimatedDuration')"
             label-for="estimated_duration_minutes"
             :error="fieldError('estimated_duration_minutes')"
           >
@@ -369,19 +381,21 @@ watch(
             v-model="generalTask"
             name="general_task"
             type="switch"
-            label="Reusable task"
+            :label="t('maintenanceTasks.form.reusableTask')"
             :input-value="true"
             @update:model-value="handleGeneralTaskChange"
           />
           <AppBadge
-            :label="generalTask ? 'Reusable' : 'Vehicle-specific'"
+            :label="generalTask
+              ? t('maintenanceTasks.labels.reusable')
+              : t('maintenanceTasks.labels.vehicleSpecific')"
             :color="generalTask ? 'info' : 'warning'"
           />
         </div>
 
         <FormField
           v-if="showVehicleField"
-          label="Vehicle"
+          :label="t('maintenanceTasks.fields.vehicle')"
           label-for="vehicle_id"
           :error="fieldError('vehicle_id')"
         >
@@ -389,11 +403,11 @@ watch(
             v-model="form.vehicle_id"
             input-id="vehicle_id"
             name="vehicle_id"
-            placeholder="Search by plate, brand, or model"
+            :placeholder="t('maintenanceTasks.filters.vehiclePlaceholder')"
           />
         </FormField>
 
-        <FormField label="Description" label-for="description" :error="fieldError('description')">
+        <FormField :label="t('maintenanceTasks.fields.description')" label-for="description" :error="fieldError('description')">
           <FormControl
             id="description"
             v-model="form.description"
@@ -408,11 +422,13 @@ watch(
             v-model="form.is_active"
             name="is_active"
             type="switch"
-            label="Active task"
+            :label="t('maintenanceTasks.form.activeTask')"
             :input-value="true"
           />
           <AppBadge
-            :label="form.is_active ? 'Active' : 'Inactive'"
+            :label="form.is_active
+              ? t('maintenanceTasks.labels.active')
+              : t('maintenanceTasks.labels.inactive')"
             :color="form.is_active ? 'success' : 'danger'"
           />
         </div>
@@ -423,14 +439,14 @@ watch(
               :to="backRoute"
               color="whiteDark"
               :icon="mdiClose"
-              title="Cancel"
-              aria-label="Cancel"
+              :title="t('maintenanceTasks.actions.cancel')"
+              :aria-label="t('maintenanceTasks.actions.cancel')"
             />
             <BaseButton
               color="info"
               :icon="submitIcon"
-              :title="saving ? 'Saving...' : submitLabel"
-              :aria-label="saving ? 'Saving...' : submitLabel"
+              :title="saving ? t('maintenanceTasks.actions.saving') : submitLabel"
+              :aria-label="saving ? t('maintenanceTasks.actions.saving') : submitLabel"
               type="submit"
               :disabled="saving"
             />

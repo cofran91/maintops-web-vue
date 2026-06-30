@@ -8,6 +8,7 @@ import UserAvatarCurrentUser from '@/components/UserAvatarCurrentUser.vue'
 import NavBarMenuList from '@/components/NavBarMenuList.vue'
 import BaseDivider from '@/components/BaseDivider.vue'
 import { useDarkModeStore } from '@/stores/darkMode'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   item: {
@@ -17,6 +18,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['menu-click'])
+const { t } = useI18n()
 
 const is = computed(() => {
   if (props.item.href) {
@@ -46,7 +48,11 @@ const componentClass = computed(() => {
 })
 
 const itemLabel = computed(() =>
-  props.item.isCurrentUser ? useMainStore().userName : props.item.label,
+  props.item.isCurrentUser
+    ? useMainStore().userName
+    : props.item.labelKey
+      ? t(props.item.labelKey)
+      : props.item.label,
 )
 
 const isDropdownActive = ref(false)

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
   mdiCar,
@@ -30,6 +31,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const inputClass =
   'h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 dark:bg-slate-800'
@@ -57,8 +59,12 @@ const canSubmit = computed(() =>
     ? canUpdateForAnyRole(authStore.roles, RESOURCES.VEHICLES)
     : canCreateForAnyRole(authStore.roles, RESOURCES.VEHICLES),
 )
-const pageTitle = computed(() => (isEditing.value ? 'Edit vehicle' : 'Create vehicle'))
-const submitLabel = computed(() => (isEditing.value ? 'Save changes' : 'Create vehicle'))
+const pageTitle = computed(() =>
+  isEditing.value ? t('vehicles.form.editTitle') : t('vehicles.form.createTitle'),
+)
+const submitLabel = computed(() =>
+  isEditing.value ? t('vehicles.actions.saveChanges') : t('vehicles.actions.createVehicle'),
+)
 const submitIcon = computed(() => (isEditing.value ? mdiContentSaveOutline : mdiPlus))
 const backRoute = computed(() =>
   isEditing.value && vehicleId.value
@@ -141,21 +147,21 @@ const validateForm = () => {
   const errors = {}
 
   if (!hasPositiveInteger(form.owner_id)) {
-    errors.owner_id = ['Select an active owner.']
+    errors.owner_id = [t('vehicles.validation.selectOwner')]
   }
 
   if (form.license_plate.trim() === '') {
-    errors.license_plate = ['License plate is required.']
+    errors.license_plate = [t('vehicles.validation.licensePlateRequired')]
   }
 
   if (!isNonNegativeInteger(form.odometer_km)) {
-    errors.odometer_km = ['Odometer must be zero or greater.']
+    errors.odometer_km = [t('vehicles.validation.odometerNonNegative')]
   }
 
   validationErrors.value = errors
 
   if (Object.keys(errors).length > 0) {
-    formError.value = 'Review the highlighted fields before saving.'
+    formError.value = t('vehicles.validation.reviewHighlighted')
     return false
   }
 
@@ -231,8 +237,8 @@ watch(
   <LayoutAuthenticated>
     <AppPage
       :title="pageTitle"
-      subtitle="Manage owner assignment, vehicle identity data, and current odometer."
-      eyebrow="Operations"
+      :subtitle="t('vehicles.form.subtitle')"
+      :eyebrow="t('vehicles.page.eyebrow')"
       :icon="mdiCar"
     >
       <template #actions>
@@ -240,13 +246,13 @@ watch(
           :to="backRoute"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back"
-          aria-label="Back"
+          :title="t('vehicles.actions.back')"
+          :aria-label="t('vehicles.actions.back')"
         />
       </template>
 
       <NotificationBar v-if="!canSubmit" color="danger">
-        Your role cannot perform this vehicle action.
+        {{ t('vehicles.form.forbidden') }}
       </NotificationBar>
 
       <NotificationBar v-if="loadError" color="danger">
@@ -255,8 +261,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('vehicles.actions.retry')"
+            :aria-label="t('vehicles.actions.retry')"
             small
             @click="fetchVehicle"
           />
@@ -264,7 +270,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading vehicle...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('vehicles.detail.loading') }}
+        </p>
       </CardBox>
 
       <CardBox
@@ -278,21 +286,21 @@ watch(
 
         <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
           <FormField
-            label="Owner"
+            :label="t('vehicles.fields.owner')"
             label-for="owner_id"
             :error="fieldError('owner_id')"
-            help="Only active owners can be assigned to vehicles."
+            :help="t('vehicles.form.ownerHelp')"
           >
             <OwnerCombobox
               v-model="form.owner_id"
               input-id="owner_id"
               name="owner_id"
-              placeholder="Search by owner name, email, or document"
+              :placeholder="t('vehicles.filters.ownerPlaceholder')"
             />
           </FormField>
 
           <FormField
-            label="License plate"
+            :label="t('vehicles.fields.licensePlate')"
             label-for="license_plate"
             :error="fieldError('license_plate')"
           >
@@ -306,15 +314,15 @@ watch(
             />
           </FormField>
 
-          <FormField label="Brand" label-for="brand" :error="fieldError('brand')">
+          <FormField :label="t('vehicles.fields.brand')" label-for="brand" :error="fieldError('brand')">
             <FormControl id="brand" v-model="form.brand" name="brand" maxlength="100" />
           </FormField>
 
-          <FormField label="Model" label-for="model" :error="fieldError('model')">
+          <FormField :label="t('vehicles.fields.model')" label-for="model" :error="fieldError('model')">
             <FormControl id="model" v-model="form.model" name="model" maxlength="100" />
           </FormField>
 
-          <FormField label="Year" label-for="year" :error="fieldError('year')">
+          <FormField :label="t('vehicles.fields.year')" label-for="year" :error="fieldError('year')">
             <input
               id="year"
               v-model="form.year"
@@ -327,12 +335,12 @@ watch(
             >
           </FormField>
 
-          <FormField label="Color" label-for="color" :error="fieldError('color')">
+          <FormField :label="t('vehicles.fields.color')" label-for="color" :error="fieldError('color')">
             <FormControl id="color" v-model="form.color" name="color" maxlength="80" />
           </FormField>
 
           <FormField
-            label="Odometer"
+            :label="t('vehicles.fields.odometer')"
             label-for="odometer_km"
             :error="fieldError('odometer_km')"
           >
@@ -355,14 +363,14 @@ watch(
               :to="backRoute"
               color="whiteDark"
               :icon="mdiClose"
-              title="Cancel"
-              aria-label="Cancel"
+              :title="t('vehicles.actions.cancel')"
+              :aria-label="t('vehicles.actions.cancel')"
             />
             <BaseButton
               color="info"
               :icon="submitIcon"
-              :title="saving ? 'Saving...' : submitLabel"
-              :aria-label="saving ? 'Saving...' : submitLabel"
+              :title="saving ? t('vehicles.actions.saving') : submitLabel"
+              :aria-label="saving ? t('vehicles.actions.saving') : submitLabel"
               type="submit"
               :disabled="saving"
             />

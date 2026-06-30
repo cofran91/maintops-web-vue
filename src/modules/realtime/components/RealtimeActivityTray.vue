@@ -7,9 +7,11 @@ import BaseButton from '@/components/BaseButton.vue'
 import BaseIcon from '@/components/BaseIcon.vue'
 import NavBarItemPlain from '@/components/NavBarItemPlain.vue'
 import { useLiveActivity } from '@/modules/realtime/services/liveActivityService.js'
+import { useI18n } from 'vue-i18n'
 
 const open = ref(false)
 const route = useRoute()
+const { locale, t } = useI18n()
 const {
   activities,
   unreadCount,
@@ -25,23 +27,25 @@ const relativeTime = (timestamp) => {
   const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000))
 
   if (seconds < 60) {
-    return 'Just now'
+    return t('realtime.relativeTime.justNow')
   }
 
   const minutes = Math.floor(seconds / 60)
 
   if (minutes < 60) {
-    return `${minutes} min ago`
+    return t('realtime.relativeTime.minutesAgo', { count: minutes })
   }
 
   const hours = Math.floor(minutes / 60)
 
-  return hours < 24 ? `${hours} h ago` : new Intl.DateTimeFormat('en').format(timestamp)
+  return hours < 24
+    ? t('realtime.relativeTime.hoursAgo', { count: hours })
+    : new Intl.DateTimeFormat(locale.value).format(timestamp)
 }
 
 const dateTime = (timestamp) => new Date(timestamp).toISOString()
 
-const kindLabel = (kind) => (kind === 'item' ? 'Item' : 'Order')
+const kindLabel = (kind) => (kind === 'item' ? t('realtime.activity.item') : t('realtime.activity.order'))
 
 const kindColor = (kind) => (kind === 'item' ? 'warning' : 'info')
 
@@ -57,8 +61,8 @@ watch(
   <div class="flex items-stretch">
     <NavBarItemPlain
       display="flex"
-      title="Notifications"
-      aria-label="Notifications"
+      :title="t('realtime.activity.notifications')"
+      :aria-label="t('realtime.activity.notifications')"
       :aria-expanded="open"
       aria-controls="realtime-notifications-panel"
       role="button"
@@ -85,7 +89,7 @@ watch(
       id="realtime-notifications-panel"
       class="fixed right-4 top-16 z-50 w-[calc(100vw-2rem)] max-w-md rounded-sm border
         border-gray-100 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
-      aria-label="Notifications"
+      :aria-label="t('realtime.activity.notifications')"
     >
       <header
         class="flex items-start justify-between gap-3 border-b border-gray-100 p-4
@@ -93,10 +97,10 @@ watch(
       >
         <div class="min-w-0">
           <h2 class="text-sm font-semibold text-gray-900 dark:text-slate-100">
-            Notifications
+            {{ t('realtime.activity.notifications') }}
           </h2>
           <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">
-            Stored until marked as read.
+            {{ t('realtime.activity.storedUntilRead') }}
           </p>
         </div>
         <div class="flex flex-none items-center gap-2">
@@ -104,16 +108,16 @@ watch(
             v-if="activities.length > 0"
             color="whiteDark"
             :icon="mdiCheck"
-            title="Mark all as read"
-            aria-label="Mark all as read"
+            :title="t('realtime.activity.clear')"
+            :aria-label="t('realtime.activity.clear')"
             small
             @click="markAllLiveActivitiesAsRead"
           />
           <BaseButton
             color="whiteDark"
             :icon="mdiClose"
-            title="Close notifications"
-            aria-label="Close notifications"
+            :title="t('realtime.activity.close')"
+            :aria-label="t('realtime.activity.close')"
             small
             @click="open = false"
           />
@@ -144,8 +148,8 @@ watch(
           <BaseButton
             color="whiteDark"
             :icon="mdiClose"
-            title="Mark notification as read"
-            aria-label="Mark notification as read"
+            :title="t('realtime.activity.dismiss')"
+            :aria-label="t('realtime.activity.dismiss')"
             small
             @click="dismissLiveActivity(activity.id)"
           />
@@ -154,10 +158,10 @@ watch(
 
       <div v-else class="p-6 text-center">
         <p class="text-sm font-semibold text-gray-900 dark:text-slate-100">
-          No unread notifications
+          {{ t('realtime.activity.emptyTitle') }}
         </p>
         <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">
-          Order and item updates will appear here.
+          {{ t('realtime.activity.emptyDescription') }}
         </p>
       </div>
     </aside>

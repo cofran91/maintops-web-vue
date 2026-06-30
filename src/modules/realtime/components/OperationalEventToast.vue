@@ -7,9 +7,11 @@ import {
   hideLiveActivityToast,
   useLiveActivity,
 } from '@/modules/realtime/services/liveActivityService.js'
+import { useI18n } from 'vue-i18n'
 
 const TOAST_VISIBLE_MS = 5000
 const { latestActivity } = useLiveActivity()
+const { t } = useI18n()
 let dismissTimer = null
 
 const clearDismissTimer = () => {
@@ -66,8 +68,8 @@ onBeforeUnmount(() => {
       <BaseButton
         color="whiteDark"
         :icon="mdiClose"
-        title="Dismiss update"
-        aria-label="Dismiss update"
+        :title="t('realtime.activity.toastDismiss')"
+        :aria-label="t('realtime.activity.toastDismiss')"
         small
         @click="hideLiveActivityToast(latestActivity.id)"
       />

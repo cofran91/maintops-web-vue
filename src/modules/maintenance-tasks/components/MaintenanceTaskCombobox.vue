@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { mdiChevronDown, mdiClose } from '@mdi/js'
 import { normalizeApiError } from '@/api/errors.js'
 import BaseIcon from '@/components/BaseIcon.vue'
@@ -19,7 +20,7 @@ const props = defineProps({
   name: String,
   placeholder: {
     type: String,
-    default: 'Search maintenance tasks',
+    default: null,
   },
   perPage: {
     type: Number,
@@ -28,6 +29,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'select'])
+const { t } = useI18n()
 
 const search = ref('')
 const options = ref([])
@@ -44,6 +46,9 @@ let requestId = 0
 const normalizedModelValue = computed(() =>
   props.modelValue === null || props.modelValue === undefined ? '' : String(props.modelValue),
 )
+const resolvedPlaceholder = computed(() =>
+  props.placeholder ?? t('maintenanceTasks.combobox.placeholder'),
+)
 const hasMorePages = computed(() => page.value < lastPage.value)
 
 const taskLabel = (task) => {
@@ -55,7 +60,7 @@ const taskLabel = (task) => {
 }
 
 const taskMeta = (task) =>
-  [task.vehicle_system?.name, task.vehicle?.license_plate ?? 'Reusable']
+  [task.vehicle_system?.name, task.vehicle?.license_plate ?? t('maintenanceTasks.labels.reusable')]
     .filter(Boolean)
     .join(' / ')
 
@@ -261,7 +266,7 @@ onBeforeUnmount(() => {
       role="combobox"
       aria-haspopup="listbox"
       :aria-expanded="isOpen"
-      :placeholder="placeholder"
+      :placeholder="resolvedPlaceholder"
       :disabled="disabled"
       class="h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 pr-20
         disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800"
@@ -275,8 +280,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Clear task"
-        aria-label="Clear task"
+        :title="t('maintenanceTasks.combobox.clear')"
+        :aria-label="t('maintenanceTasks.combobox.clear')"
         @click="clearSelection(true)"
       >
         <BaseIcon :path="mdiClose" size="18" />
@@ -286,8 +291,8 @@ onBeforeUnmount(() => {
         class="flex h-9 w-9 items-center justify-center rounded-sm text-gray-500
           hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700"
         :disabled="disabled"
-        title="Show tasks"
-        aria-label="Show tasks"
+        :title="t('maintenanceTasks.combobox.show')"
+        :aria-label="t('maintenanceTasks.combobox.show')"
         @click="toggleOptions"
       >
         <BaseIcon :path="mdiChevronDown" size="18" />
@@ -323,16 +328,16 @@ onBeforeUnmount(() => {
       </button>
 
       <p v-if="loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading tasks...
+        {{ t('maintenanceTasks.combobox.loading') }}
       </p>
       <p v-else-if="!loading && options.length === 0" class="px-3 py-3 text-sm text-gray-500">
-        No tasks found.
+        {{ t('maintenanceTasks.combobox.empty') }}
       </p>
       <p v-if="errorMessage" class="px-3 py-3 text-sm text-red-600 dark:text-red-400">
         {{ errorMessage }}
       </p>
       <p v-if="loading && options.length > 0" class="px-3 py-3 text-sm text-gray-500">
-        Loading more...
+        {{ t('maintenanceTasks.combobox.loadingMore') }}
       </p>
     </div>
   </div>

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiCheck,
@@ -44,6 +45,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 
 const EMPTY_FILTERS = Object.freeze({
   search: '',
@@ -59,15 +61,15 @@ const EMPTY_FILTERS = Object.freeze({
   created_to: '',
 })
 
-const columns = [
-  { key: 'workshop', label: 'Workshop' },
-  { key: 'manager', label: 'Manager' },
-  { key: 'city', label: 'City' },
-  { key: 'vehicle_systems', label: 'Systems' },
-  { key: 'is_active', label: 'Status' },
-  { key: 'updated_at', label: 'Updated' },
+const columns = computed(() => [
+  { key: 'workshop', label: t('workshops.columns.workshop') },
+  { key: 'manager', label: t('workshops.columns.manager') },
+  { key: 'city', label: t('workshops.columns.city') },
+  { key: 'vehicle_systems', label: t('workshops.columns.systems') },
+  { key: 'is_active', label: t('workshops.columns.status') },
+  { key: 'updated_at', label: t('workshops.columns.updated') },
   { key: 'actions', label: '' },
-]
+])
 
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
@@ -100,7 +102,7 @@ const deleteMessage = computed(() => {
     return ''
   }
 
-  return `This action will delete workshop ${workshopToDelete.value.name}.`
+  return t('workshops.delete.confirmMessage', { name: workshopToDelete.value.name })
 })
 
 const getStringQuery = (value) => {
@@ -331,7 +333,8 @@ const formatValue = (value) =>
   value === null || value === undefined || value === '' ? '-' : value
 
 const statusColor = (isActive) => (isActive ? 'success' : 'danger')
-const statusLabel = (isActive) => (isActive ? 'Active' : 'Inactive')
+const statusLabel = (isActive) =>
+  isActive ? t('workshops.status.active') : t('workshops.status.inactive')
 
 const systemSummary = (workshop) => {
   const systems = workshop.vehicle_systems ?? []
@@ -352,7 +355,7 @@ const formatDate = (value) => {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
   }).format(new Date(value))
 }
@@ -371,9 +374,9 @@ watch(
 <template>
   <LayoutAuthenticated>
     <AppPage
-      title="Workshops"
-      subtitle="Manage service locations, managers, schedules, technicians, and served systems."
-      eyebrow="Operations"
+      :title="t('workshops.list.title')"
+      :subtitle="t('workshops.list.subtitle')"
+      :eyebrow="t('workshops.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -382,8 +385,8 @@ watch(
           :to="{ name: 'operations-workshops-new' }"
           color="info"
           :icon="mdiPlus"
-          title="New workshop"
-          aria-label="New workshop"
+          :title="t('workshops.actions.newWorkshop')"
+          :aria-label="t('workshops.actions.newWorkshop')"
         />
       </template>
 
@@ -394,53 +397,61 @@ watch(
         @focusout="applyFiltersOnFocusOut"
       >
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <FormField label="Search">
+          <FormField :label="t('workshops.filters.search')">
             <FormControl
               v-model="filters.search"
               name="search"
-              placeholder="Name, code, city, phone, or manager"
+              :placeholder="t('workshops.filters.searchPlaceholder')"
             />
           </FormField>
-          <FormField label="Code">
-            <FormControl v-model="filters.code" name="code" placeholder="NORTH-WORKSHOP" />
+          <FormField :label="t('workshops.filters.code')">
+            <FormControl
+              v-model="filters.code"
+              name="code"
+              :placeholder="t('workshops.filters.codePlaceholder')"
+            />
           </FormField>
-          <FormField label="Status">
+          <FormField :label="t('workshops.filters.status')">
             <select v-model="filters.is_active" name="is_active" :class="inputClass">
-              <option value="">All statuses</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
+              <option value="">{{ t('workshops.filters.allStatuses') }}</option>
+              <option value="true">{{ t('workshops.status.active') }}</option>
+              <option value="false">{{ t('workshops.status.inactive') }}</option>
             </select>
           </FormField>
         </div>
 
         <div v-if="filtersExpanded" class="grid grid-cols-1 gap-4 lg:grid-cols-4">
-          <FormField label="Name">
+          <FormField :label="t('workshops.filters.name')">
             <FormControl v-model="filters.name" name="name" />
           </FormField>
-          <FormField label="City">
-            <FormControl v-model="filters.city" name="city" placeholder="Bogota" />
+          <FormField :label="t('workshops.filters.city')">
+            <FormControl
+              v-model="filters.city"
+              name="city"
+              :placeholder="t('workshops.filters.cityPlaceholder')"
+            />
           </FormField>
-          <FormField label="Phone">
+          <FormField :label="t('workshops.filters.phone')">
             <FormControl v-model="filters.phone" name="phone" />
           </FormField>
-          <FormField label="Email">
+          <FormField :label="t('workshops.filters.email')">
             <FormControl v-model="filters.email" name="email" type="email" />
           </FormField>
-          <FormField label="Manager">
+          <FormField :label="t('workshops.filters.manager')">
             <UserCombobox
               v-model="filters.manager_user_id"
               name="manager_user_id"
-              placeholder="Search workshop managers"
+              :placeholder="t('workshops.filters.managerPlaceholder')"
               :role="ROLES.WORKSHOP_MANAGER"
             />
           </FormField>
-          <FormField label="Vehicle system">
+          <FormField :label="t('workshops.filters.vehicleSystem')">
             <select
               v-model="filters.vehicle_system_id"
               name="vehicle_system_id"
               :class="inputClass"
             >
-              <option value="">All systems</option>
+              <option value="">{{ t('workshops.filters.allSystems') }}</option>
               <option
                 v-for="system in vehicleSystems"
                 :key="system.id"
@@ -453,10 +464,10 @@ watch(
               {{ vehicleSystemsError }}
             </p>
           </FormField>
-          <FormField label="Created from">
+          <FormField :label="t('workshops.filters.createdFrom')">
             <FormControl v-model="filters.created_from" name="created_from" type="date" />
           </FormField>
-          <FormField label="Created to">
+          <FormField :label="t('workshops.filters.createdTo')">
             <FormControl v-model="filters.created_to" name="created_to" type="date" />
           </FormField>
         </div>
@@ -465,23 +476,31 @@ watch(
           <BaseButton
             color="whiteDark"
             :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown"
-            :title="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
-            :aria-label="filtersExpanded ? 'Hide advanced filters' : 'Show advanced filters'"
+            :title="
+              filtersExpanded
+                ? t('workshops.actions.hideAdvancedFilters')
+                : t('workshops.actions.showAdvancedFilters')
+            "
+            :aria-label="
+              filtersExpanded
+                ? t('workshops.actions.hideAdvancedFilters')
+                : t('workshops.actions.showAdvancedFilters')
+            "
             @click="filtersExpanded = !filtersExpanded"
           />
           <BaseButton
             color="whiteDark"
             :icon="mdiClose"
-            title="Clear filters"
-            aria-label="Clear filters"
+            :title="t('workshops.actions.clearFilters')"
+            :aria-label="t('workshops.actions.clearFilters')"
             :disabled="!hasActiveFilters"
             @click="clearFilters"
           />
           <BaseButton
             color="info"
             :icon="mdiCheck"
-            title="Apply filters"
-            aria-label="Apply filters"
+            :title="t('workshops.actions.applyFilters')"
+            :aria-label="t('workshops.actions.applyFilters')"
             type="submit"
           />
         </div>
@@ -493,8 +512,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('workshops.actions.retry')"
+            :aria-label="t('workshops.actions.retry')"
             small
             @click="fetchWorkshops"
           />
@@ -502,7 +521,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading workshops...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('workshops.list.loading') }}
+        </p>
       </CardBox>
 
       <template v-else-if="!errorMessage">
@@ -510,8 +531,8 @@ watch(
           v-if="workshops.length"
           :columns="columns"
           :rows="workshops"
-          empty-title="No workshops found"
-          empty-description="Adjust the filters or create a new workshop."
+          :empty-title="t('workshops.list.emptyTitle')"
+          :empty-description="t('workshops.list.emptyDescription')"
         >
           <template #cell-workshop="{ row }">
             <div class="min-w-0">
@@ -547,8 +568,8 @@ watch(
                 :to="{ name: 'operations-workshops-detail', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiEyeOutline"
-                title="Open workshop"
-                aria-label="Open workshop"
+                :title="t('workshops.actions.openWorkshop')"
+                :aria-label="t('workshops.actions.openWorkshop')"
                 small
               />
               <BaseButton
@@ -556,16 +577,16 @@ watch(
                 :to="{ name: 'operations-workshops-edit', params: { id: row.id } }"
                 color="whiteDark"
                 :icon="mdiPencil"
-                title="Edit workshop"
-                aria-label="Edit workshop"
+                :title="t('workshops.actions.editWorkshop')"
+                :aria-label="t('workshops.actions.editWorkshop')"
                 small
               />
               <BaseButton
                 v-if="canDeleteWorkshop"
                 color="danger"
                 :icon="mdiTrashCanOutline"
-                title="Delete workshop"
-                aria-label="Delete workshop"
+                :title="t('workshops.actions.deleteWorkshop')"
+                :aria-label="t('workshops.actions.deleteWorkshop')"
                 small
                 @click="askDelete(row)"
               />
@@ -575,23 +596,29 @@ watch(
 
         <AppEmptyState
           v-else
-          title="No workshops found"
-          description="Adjust the filters or create a new workshop."
+          :title="t('workshops.list.emptyTitle')"
+          :description="t('workshops.list.emptyDescription')"
         >
           <BaseButton
             v-if="canCreateWorkshop"
             :to="{ name: 'operations-workshops-new' }"
             color="info"
             :icon="mdiPlus"
-            title="New workshop"
-            aria-label="New workshop"
+            :title="t('workshops.actions.newWorkshop')"
+            :aria-label="t('workshops.actions.newWorkshop')"
           />
         </AppEmptyState>
 
         <CardBox v-if="pagination.total > 0" class="mt-6">
           <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p class="text-sm text-gray-500 dark:text-slate-400">
-              Showing {{ pagination.from ?? 0 }}-{{ pagination.to ?? 0 }} of {{ pagination.total }}
+              {{
+                t('workshops.pagination.showing', {
+                  from: pagination.from ?? 0,
+                  to: pagination.to ?? 0,
+                  total: pagination.total,
+                })
+              }}
             </p>
             <div class="flex flex-wrap items-center gap-2">
               <select
@@ -607,20 +634,25 @@ watch(
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronLeft"
-                title="Previous page"
-                aria-label="Previous page"
+                :title="t('workshops.pagination.previousPage')"
+                :aria-label="t('workshops.pagination.previousPage')"
                 small
                 :disabled="!canGoPrevious"
                 @click="canGoPrevious ? updatePage(pagination.current_page - 1) : null"
               />
               <span class="px-2 text-sm font-semibold text-gray-700 dark:text-slate-200">
-                Page {{ pagination.current_page }} of {{ pagination.last_page }}
+                {{
+                  t('workshops.pagination.pageOf', {
+                    page: pagination.current_page,
+                    pages: pagination.last_page,
+                  })
+                }}
               </span>
               <BaseButton
                 color="whiteDark"
                 :icon="mdiChevronRight"
-                title="Next page"
-                aria-label="Next page"
+                :title="t('workshops.pagination.nextPage')"
+                :aria-label="t('workshops.pagination.nextPage')"
                 small
                 :disabled="!canGoNext"
                 @click="canGoNext ? updatePage(pagination.current_page + 1) : null"
@@ -633,9 +665,9 @@ watch(
 
     <CardBoxModal
       v-model="deleteModalOpen"
-      title="Delete workshop"
+      :title="t('workshops.delete.title')"
       button="danger"
-      button-label="Delete"
+      :button-label="t('workshops.actions.delete')"
       :button-icon="mdiTrashCanOutline"
       :cancel-icon="mdiClose"
       has-cancel
@@ -643,9 +675,6 @@ watch(
       @confirm="deleteWorkshop"
     >
       <p>{{ deleteMessage }}</p>
-      <p class="text-sm text-gray-500 dark:text-slate-400">
-        Workshop deletion is limited to system administrators by backend policies.
-      </p>
     </CardBoxModal>
   </LayoutAuthenticated>
 </template>

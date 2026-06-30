@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccountEdit,
@@ -31,6 +32,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const form = reactive({
   name: '',
@@ -55,8 +57,12 @@ const canSubmit = computed(() =>
     ? canUpdateForAnyRole(authStore.roles, RESOURCES.OWNERS)
     : canCreateForAnyRole(authStore.roles, RESOURCES.OWNERS),
 )
-const pageTitle = computed(() => (isEditing.value ? 'Edit owner' : 'Create owner'))
-const submitLabel = computed(() => (isEditing.value ? 'Save changes' : 'Create owner'))
+const pageTitle = computed(() =>
+  isEditing.value ? t('owners.form.editTitle') : t('owners.form.createTitle'),
+)
+const submitLabel = computed(() =>
+  isEditing.value ? t('owners.actions.saveChanges') : t('owners.actions.createOwner'),
+)
 const submitIcon = computed(() => (isEditing.value ? mdiContentSaveOutline : mdiPlus))
 const backRoute = computed(() =>
   isEditing.value && ownerId.value
@@ -168,8 +174,8 @@ watch(
   <LayoutAuthenticated>
     <AppPage
       :title="pageTitle"
-      subtitle="Manage owner contact data and active availability for vehicle assignment."
-      eyebrow="Operations"
+      :subtitle="t('owners.form.subtitle')"
+      :eyebrow="t('owners.page.eyebrow')"
       :icon="mdiAccountEdit"
     >
       <template #actions>
@@ -177,13 +183,13 @@ watch(
           :to="backRoute"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back"
-          aria-label="Back"
+          :title="t('owners.actions.back')"
+          :aria-label="t('owners.actions.back')"
         />
       </template>
 
       <NotificationBar v-if="!canSubmit" color="danger">
-        Your role cannot perform this owner action.
+        {{ t('owners.form.forbidden') }}
       </NotificationBar>
 
       <NotificationBar v-if="loadError" color="danger">
@@ -192,8 +198,8 @@ watch(
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('owners.actions.retry')"
+            :aria-label="t('owners.actions.retry')"
             small
             @click="fetchOwner"
           />
@@ -201,7 +207,9 @@ watch(
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading owner...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('owners.detail.loading') }}
+        </p>
       </CardBox>
 
       <CardBox
@@ -214,7 +222,7 @@ watch(
         </NotificationBar>
 
         <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
-          <FormField label="Name" label-for="name" :error="fieldError('name')">
+          <FormField :label="t('owners.fields.name')" label-for="name" :error="fieldError('name')">
             <FormControl
               id="name"
               v-model="form.name"
@@ -225,7 +233,7 @@ watch(
             />
           </FormField>
 
-          <FormField label="Email" label-for="email" :error="fieldError('email')">
+          <FormField :label="t('owners.fields.email')" label-for="email" :error="fieldError('email')">
             <FormControl
               id="email"
               v-model="form.email"
@@ -237,7 +245,7 @@ watch(
             />
           </FormField>
 
-          <FormField label="Phone" label-for="phone" :error="fieldError('phone')">
+          <FormField :label="t('owners.fields.phone')" label-for="phone" :error="fieldError('phone')">
             <FormControl
               id="phone"
               v-model="form.phone"
@@ -248,7 +256,7 @@ watch(
           </FormField>
 
           <FormField
-            label="Document"
+            :label="t('owners.fields.document')"
             label-for="document_number"
             :error="fieldError('document_number')"
           >
@@ -261,7 +269,11 @@ watch(
           </FormField>
         </div>
 
-        <FormField label="Address" label-for="address" :error="fieldError('address')">
+        <FormField
+          :label="t('owners.fields.address')"
+          label-for="address"
+          :error="fieldError('address')"
+        >
           <FormControl
             id="address"
             v-model="form.address"
@@ -276,11 +288,11 @@ watch(
             v-model="form.is_active"
             name="is_active"
             type="switch"
-            label="Active owner"
+            :label="t('owners.form.activeOwner')"
             :input-value="true"
           />
           <AppBadge
-            :label="form.is_active ? 'Active' : 'Inactive'"
+            :label="form.is_active ? t('owners.status.active') : t('owners.status.inactive')"
             :color="form.is_active ? 'success' : 'danger'"
           />
         </div>
@@ -291,14 +303,14 @@ watch(
               :to="backRoute"
               color="whiteDark"
               :icon="mdiClose"
-              title="Cancel"
-              aria-label="Cancel"
+              :title="t('owners.actions.cancel')"
+              :aria-label="t('owners.actions.cancel')"
             />
             <BaseButton
               color="info"
               :icon="submitIcon"
-              :title="saving ? 'Saving...' : submitLabel"
-              :aria-label="saving ? 'Saving...' : submitLabel"
+              :title="saving ? t('owners.actions.saving') : submitLabel"
+              :aria-label="saving ? t('owners.actions.saving') : submitLabel"
               type="submit"
               :disabled="saving"
             />

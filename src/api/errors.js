@@ -1,31 +1,57 @@
 import axios from 'axios'
-import {
-  API_NETWORK_ERROR_MESSAGE,
-  API_TIMEOUT_ERROR_MESSAGE,
-  DEFAULT_API_ERROR_MESSAGE,
-} from '@/types/errors.js'
+import { hasTranslation, t } from '@/i18n/index.js'
 
 const isRecord = (value) => typeof value === 'object' && value !== null
 const timeoutErrorCodes = new Set(['ECONNABORTED', 'ETIMEDOUT'])
+
+const getCode = (data) => {
+  if (!isRecord(data)) {
+    return undefined
+  }
+
+  if (typeof data.code === 'string') {
+    return data.code
+  }
+
+  if (isRecord(data.detail) && typeof data.detail.code === 'string') {
+    return data.detail.code
+  }
+
+  return undefined
+}
+
+const translatedCodeMessage = (code, params = undefined) => {
+  if (typeof code !== 'string') {
+    return undefined
+  }
+
+  const key = `api.codes.${code}`
+
+  return hasTranslation(key) ? t(key, params) : undefined
+}
 
 const getMessage = (data) => {
   if (typeof data === 'string' && data.trim() !== '') {
     return data
   }
 
-  if (!isRecord(data) || typeof data.message !== 'string') {
+  if (!isRecord(data)) {
     return undefined
   }
 
-  return data.message
-}
-
-const getCode = (data) => {
-  if (!isRecord(data) || typeof data.code !== 'string') {
-    return undefined
+  if (typeof data.message === 'string') {
+    return data.message
   }
 
-  return data.code
+  if (typeof data.detail === 'string') {
+    return data.detail
+  }
+
+  if (isRecord(data.detail) && typeof data.detail.message === 'string') {
+    return data.detail.message
+  }
+
+  return translatedCodeMessage(getCode(data), isRecord(data.detail) ? data.detail : data)
 }
 
 const normalizeValidationErrors = (errors) => {
@@ -58,7 +84,32 @@ const getValidationErrors = (data) => {
     return undefined
   }
 
+  if (isRecord(data.detail) && Array.isArray(data.detail.errors)) {
+    return normalizeStructuredValidationErrors(data.detail.errors)
+  }
+
   return normalizeValidationErrors(data.errors)
+}
+
+const validationErrorMessage = (error) => {
+  const type = typeof error.type === 'string' ? error.type : 'default'
+  const key = `api.validation.${type}`
+
+  return hasTranslation(key) ? t(key, error.context) : t('api.validation.default')
+}
+
+const normalizeStructuredValidationErrors = (errors) => {
+  const normalized = {}
+
+  errors.forEach((error) => {
+    if (!isRecord(error) || typeof error.field !== 'string' || error.field === '') {
+      return
+    }
+
+    normalized[error.field] = [validationErrorMessage(error)]
+  })
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined
 }
 
 const getTransportErrorMessage = (error) => {
@@ -66,7 +117,7 @@ const getTransportErrorMessage = (error) => {
     return undefined
   }
 
-  return timeoutErrorCodes.has(error.code) ? API_TIMEOUT_ERROR_MESSAGE : API_NETWORK_ERROR_MESSAGE
+  return timeoutErrorCodes.has(error.code) ? t('api.errors.timeout') : t('api.errors.network')
 }
 
 export const isApiError = (error) =>
@@ -88,7 +139,7 @@ export const normalizeApiError = (error) => {
         getMessage(data) ??
         getTransportErrorMessage(error) ??
         error.message ??
-        DEFAULT_API_ERROR_MESSAGE,
+        t('api.errors.default'),
       status: error.response?.status ?? null,
       code: getCode(data) ?? error.code,
       errors: getValidationErrors(data),
@@ -99,14 +150,14 @@ export const normalizeApiError = (error) => {
 
   if (error instanceof Error) {
     return {
-      message: error.message || DEFAULT_API_ERROR_MESSAGE,
+      message: error.message || t('api.errors.default'),
       status: null,
       isNetworkError: false,
     }
   }
 
   return {
-    message: DEFAULT_API_ERROR_MESSAGE,
+    message: t('api.errors.default'),
     status: null,
     isNetworkError: false,
   }

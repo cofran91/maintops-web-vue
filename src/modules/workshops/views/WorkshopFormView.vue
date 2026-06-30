@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiArrowLeft,
@@ -38,16 +39,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-
-const DAY_LABELS = Object.freeze({
-  monday: 'Monday',
-  tuesday: 'Tuesday',
-  wednesday: 'Wednesday',
-  thursday: 'Thursday',
-  friday: 'Friday',
-  saturday: 'Saturday',
-  sunday: 'Sunday',
-})
+const { t } = useI18n()
 const DEFAULT_OPEN_TIME = '08:00'
 const DEFAULT_CLOSE_TIME = '17:00'
 const USER_PAGE_SIZE = 10
@@ -66,7 +58,6 @@ const form = reactive({
 const scheduleRows = reactive(
   WORKSHOP_DAYS.map((day, index) => ({
     key: day,
-    label: DAY_LABELS[day],
     enabled: index < 5,
     opens_at: DEFAULT_OPEN_TIME,
     closes_at: DEFAULT_CLOSE_TIME,
@@ -98,8 +89,12 @@ const canSubmit = computed(() =>
     ? canUpdateForAnyRole(authStore.roles, RESOURCES.WORKSHOPS)
     : canCreateForAnyRole(authStore.roles, RESOURCES.WORKSHOPS),
 )
-const pageTitle = computed(() => (isEditing.value ? 'Edit workshop' : 'Create workshop'))
-const submitLabel = computed(() => (isEditing.value ? 'Save changes' : 'Create workshop'))
+const pageTitle = computed(() =>
+  isEditing.value ? t('workshops.form.editTitle') : t('workshops.form.createTitle'),
+)
+const submitLabel = computed(() =>
+  isEditing.value ? t('workshops.actions.saveChanges') : t('workshops.actions.createWorkshop'),
+)
 const submitIcon = computed(() => (isEditing.value ? mdiContentSaveOutline : mdiPlus))
 const backRoute = computed(() =>
   isEditing.value && workshopId.value
@@ -270,19 +265,19 @@ const validateForm = () => {
   const errors = {}
 
   if (!hasPositiveInteger(form.manager_user_id)) {
-    errors.manager_user_id = ['Select an active workshop manager.']
+    errors.manager_user_id = [t('workshops.validation.selectManager')]
   }
 
   if (form.name.trim() === '') {
-    errors.name = ['Name is required.']
+    errors.name = [t('workshops.validation.nameRequired')]
   }
 
   if (form.code.trim() === '') {
-    errors.code = ['Code is required.']
+    errors.code = [t('workshops.validation.codeRequired')]
   }
 
   if (form.vehicle_system_ids.length === 0) {
-    errors.vehicle_system_ids = ['Select at least one vehicle system.']
+    errors.vehicle_system_ids = [t('workshops.validation.selectVehicleSystem')]
   }
 
   let hasOpenDay = false
@@ -295,25 +290,25 @@ const validateForm = () => {
     hasOpenDay = true
 
     if (!day.opens_at || !day.closes_at) {
-      errors[`weekly_schedule.${day.key}`] = ['Set both opening and closing time.']
+      errors[`weekly_schedule.${day.key}`] = [t('workshops.validation.setOpeningClosing')]
       return
     }
 
     if (day.opens_at >= day.closes_at) {
       errors[`weekly_schedule.${day.key}.closes_at`] = [
-        'Closing time must be after opening time.',
+        t('workshops.validation.closingAfterOpening'),
       ]
     }
   })
 
   if (!hasOpenDay) {
-    errors.weekly_schedule = ['Select at least one service day.']
+    errors.weekly_schedule = [t('workshops.validation.selectServiceDay')]
   }
 
   validationErrors.value = errors
 
   if (Object.keys(errors).length > 0) {
-    formError.value = 'Review the highlighted fields before saving.'
+    formError.value = t('workshops.validation.reviewHighlighted')
     return false
   }
 
@@ -462,6 +457,8 @@ const fieldError = (field) => {
 
 const scheduleError = (day) => fieldError(`weekly_schedule.${day}`)
 
+const dayLabel = (day) => t(`workshops.days.${day}`)
+
 watch(
   () => route.fullPath,
   () => {
@@ -487,8 +484,8 @@ onBeforeUnmount(() => {
   <LayoutAuthenticated>
     <AppPage
       :title="pageTitle"
-      subtitle="Manage manager assignment, service systems, technicians, and weekly availability."
-      eyebrow="Operations"
+      :subtitle="t('workshops.form.subtitle')"
+      :eyebrow="t('workshops.page.eyebrow')"
       :icon="mdiWrenchOutline"
     >
       <template #actions>
@@ -496,13 +493,13 @@ onBeforeUnmount(() => {
           :to="backRoute"
           color="whiteDark"
           :icon="mdiArrowLeft"
-          title="Back"
-          aria-label="Back"
+          :title="t('workshops.actions.back')"
+          :aria-label="t('workshops.actions.back')"
         />
       </template>
 
       <NotificationBar v-if="!canSubmit" color="danger">
-        Your role cannot perform this workshop action.
+        {{ t('workshops.form.forbidden') }}
       </NotificationBar>
 
       <NotificationBar v-if="loadError" color="danger">
@@ -511,8 +508,8 @@ onBeforeUnmount(() => {
           <BaseButton
             color="white"
             :icon="mdiRefresh"
-            title="Retry"
-            aria-label="Retry"
+            :title="t('workshops.actions.retry')"
+            :aria-label="t('workshops.actions.retry')"
             small
             @click="initializeForm"
           />
@@ -520,7 +517,9 @@ onBeforeUnmount(() => {
       </NotificationBar>
 
       <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">Loading workshop...</p>
+        <p class="text-sm text-gray-500 dark:text-slate-400">
+          {{ t('workshops.detail.loading') }}
+        </p>
       </CardBox>
 
       <CardBox
@@ -534,7 +533,7 @@ onBeforeUnmount(() => {
 
         <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
           <FormField
-            label="Workshop manager"
+            :label="t('workshops.fields.workshopManager')"
             label-for="manager_user_id"
             :error="fieldError('manager_user_id')"
           >
@@ -542,35 +541,35 @@ onBeforeUnmount(() => {
               v-model="form.manager_user_id"
               input-id="manager_user_id"
               name="manager_user_id"
-              placeholder="Search workshop managers"
+              :placeholder="t('workshops.filters.managerPlaceholder')"
               :role="ROLES.WORKSHOP_MANAGER"
             />
           </FormField>
 
-          <FormField label="Name" label-for="name" :error="fieldError('name')">
+          <FormField :label="t('workshops.fields.name')" label-for="name" :error="fieldError('name')">
             <FormControl id="name" v-model="form.name" name="name" required maxlength="255" />
           </FormField>
 
-          <FormField label="Code" label-for="code" :error="fieldError('code')">
+          <FormField :label="t('workshops.fields.code')" label-for="code" :error="fieldError('code')">
             <FormControl
               id="code"
               v-model="form.code"
               name="code"
               required
               maxlength="100"
-              placeholder="NORTH-WORKSHOP"
+              :placeholder="t('workshops.filters.codePlaceholder')"
             />
           </FormField>
 
-          <FormField label="City" label-for="city" :error="fieldError('city')">
+          <FormField :label="t('workshops.fields.city')" label-for="city" :error="fieldError('city')">
             <FormControl id="city" v-model="form.city" name="city" maxlength="255" />
           </FormField>
 
-          <FormField label="Phone" label-for="phone" :error="fieldError('phone')">
+          <FormField :label="t('workshops.fields.phone')" label-for="phone" :error="fieldError('phone')">
             <FormControl id="phone" v-model="form.phone" name="phone" type="tel" maxlength="50" />
           </FormField>
 
-          <FormField label="Email" label-for="email" :error="fieldError('email')">
+          <FormField :label="t('workshops.fields.email')" label-for="email" :error="fieldError('email')">
             <FormControl
               id="email"
               v-model="form.email"
@@ -581,7 +580,11 @@ onBeforeUnmount(() => {
           </FormField>
         </div>
 
-        <FormField label="Address" label-for="address" :error="fieldError('address')">
+        <FormField
+          :label="t('workshops.fields.address')"
+          label-for="address"
+          :error="fieldError('address')"
+        >
           <FormControl
             id="address"
             v-model="form.address"
@@ -591,7 +594,7 @@ onBeforeUnmount(() => {
           />
         </FormField>
 
-        <FormField label="Vehicle systems" :error="fieldError('vehicle_system_ids')">
+        <FormField :label="t('workshops.fields.vehicleSystems')" :error="fieldError('vehicle_system_ids')">
           <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
             <label
               v-for="system in vehicleSystems"
@@ -605,11 +608,14 @@ onBeforeUnmount(() => {
             </label>
           </div>
           <p v-if="vehicleSystems.length === 0" class="mt-2 text-sm text-gray-500">
-            No vehicle systems available.
+            {{ t('workshops.form.noVehicleSystems') }}
           </p>
         </FormField>
 
-        <FormField label="Assigned technicians" :error="fieldError('technician_user_ids')">
+        <FormField
+          :label="t('workshops.fields.assignedTechnicians')"
+          :error="fieldError('technician_user_ids')"
+        >
           <div class="space-y-3">
             <div
               class="flex min-h-12 flex-wrap items-center gap-2 rounded-sm border border-gray-700
@@ -619,7 +625,7 @@ onBeforeUnmount(() => {
                 v-if="selectedTechnicians.length === 0"
                 class="text-sm text-gray-500 dark:text-slate-400"
               >
-                No technicians selected.
+                {{ t('workshops.form.noTechniciansSelected') }}
               </span>
               <span
                 v-for="technician in selectedTechnicians"
@@ -632,8 +638,8 @@ onBeforeUnmount(() => {
                   color="whiteDark"
                   :icon="mdiClose"
                   small
-                  :title="`Remove ${technician.name}`"
-                  :aria-label="`Remove ${technician.name}`"
+                  :title="t('workshops.actions.removeTechnician', { name: technician.name })"
+                  :aria-label="t('workshops.actions.removeTechnician', { name: technician.name })"
                   @click="removeTechnician(technician.id)"
                 />
               </span>
@@ -647,7 +653,7 @@ onBeforeUnmount(() => {
                 role="combobox"
                 aria-haspopup="listbox"
                 :aria-expanded="technicianSelectOpen"
-                placeholder="Search available technicians"
+                :placeholder="t('workshops.form.searchAvailableTechnicians')"
                 class="h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 pr-12
                   dark:bg-slate-800"
                 @focus="openTechnicianOptions"
@@ -658,8 +664,8 @@ onBeforeUnmount(() => {
                 class="absolute right-1 top-1 flex h-10 w-10 items-center justify-center
                   rounded-sm text-gray-500 hover:bg-gray-100 dark:text-slate-300
                   dark:hover:bg-slate-700"
-                title="Show technicians"
-                aria-label="Show technicians"
+                :title="t('workshops.actions.showTechnicians')"
+                :aria-label="t('workshops.actions.showTechnicians')"
                 @click="toggleTechnicianOptions"
               >
                 <BaseIcon :path="mdiChevronDown" size="18" />
@@ -690,7 +696,7 @@ onBeforeUnmount(() => {
                     {{ technician.name }}
                   </span>
                   <span class="block text-xs text-gray-500 dark:text-slate-400">
-                    {{ technician.email || 'No contact data' }}
+                    {{ technician.email || t('workshops.form.noContactData') }}
                   </span>
                 </button>
 
@@ -698,13 +704,13 @@ onBeforeUnmount(() => {
                   v-if="technicianLoading && technicianOptions.length === 0"
                   class="px-3 py-3 text-sm text-gray-500"
                 >
-                  Loading technicians...
+                  {{ t('workshops.form.loadingTechnicians') }}
                 </p>
                 <p
                   v-else-if="!technicianLoading && technicianOptions.length === 0"
                   class="px-3 py-3 text-sm text-gray-500"
                 >
-                  No technicians found.
+                  {{ t('workshops.form.noTechniciansFound') }}
                 </p>
                 <p v-if="technicianError" class="px-3 py-3 text-sm text-red-600">
                   {{ technicianError }}
@@ -713,14 +719,17 @@ onBeforeUnmount(() => {
                   v-if="technicianLoading && technicianOptions.length > 0"
                   class="px-3 py-3 text-sm text-gray-500"
                 >
-                  Loading more...
+                  {{ t('workshops.form.loadingMore') }}
                 </p>
               </div>
             </div>
           </div>
         </FormField>
 
-        <FormField label="Weekly schedule" :error="fieldError('weekly_schedule')">
+        <FormField
+          :label="t('workshops.fields.weeklySchedule')"
+          :error="fieldError('weekly_schedule')"
+        >
           <div class="overflow-hidden rounded-sm border border-gray-700">
             <div
               v-for="day in scheduleRows"
@@ -734,10 +743,10 @@ onBeforeUnmount(() => {
                   dark:text-slate-100"
               >
                 <input v-model="day.enabled" type="checkbox">
-                {{ day.label }}
+                {{ dayLabel(day.key) }}
               </label>
               <label class="grid gap-1 text-xs font-semibold text-gray-500 dark:text-slate-400">
-                Opens
+                {{ t('workshops.fields.opens') }}
                 <input
                   v-model="day.opens_at"
                   type="time"
@@ -746,7 +755,7 @@ onBeforeUnmount(() => {
                 >
               </label>
               <label class="grid gap-1 text-xs font-semibold text-gray-500 dark:text-slate-400">
-                Closes
+                {{ t('workshops.fields.closes') }}
                 <input
                   v-model="day.closes_at"
                   type="time"
@@ -766,11 +775,11 @@ onBeforeUnmount(() => {
             v-model="form.is_active"
             name="is_active"
             type="switch"
-            label="Active workshop"
+            :label="t('workshops.form.activeWorkshop')"
             :input-value="true"
           />
           <AppBadge
-            :label="form.is_active ? 'Active' : 'Inactive'"
+            :label="form.is_active ? t('workshops.status.active') : t('workshops.status.inactive')"
             :color="form.is_active ? 'success' : 'danger'"
           />
         </div>
@@ -781,14 +790,14 @@ onBeforeUnmount(() => {
               :to="backRoute"
               color="whiteDark"
               :icon="mdiClose"
-              title="Cancel"
-              aria-label="Cancel"
+              :title="t('workshops.actions.cancel')"
+              :aria-label="t('workshops.actions.cancel')"
             />
             <BaseButton
               color="info"
               :icon="submitIcon"
-              :title="saving ? 'Saving...' : submitLabel"
-              :aria-label="saving ? 'Saving...' : submitLabel"
+              :title="saving ? t('workshops.actions.saving') : submitLabel"
+              :aria-label="saving ? t('workshops.actions.saving') : submitLabel"
               type="submit"
               :disabled="saving"
             />
