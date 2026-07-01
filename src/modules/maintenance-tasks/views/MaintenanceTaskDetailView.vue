@@ -1,45 +1,52 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
   mdiCalendar,
   mdiCar,
-  mdiClose,
   mdiFileDocumentOutline,
   mdiPencil,
-  mdiRefresh,
   mdiTrashCanOutline,
   mdiWrenchOutline,
 } from '@mdi/js'
 import { RESOURCES, canDeleteForAnyRole, canUpdateForAnyRole } from '@/auth/permissions.js'
-import { normalizeApiError } from '@/api/errors.js'
+import { useResourceDetail } from '@/modules/shared/composables/useResourceDetail.js'
+import {
+  emptyFallback,
+  formatDate as formatDateValue,
+  formatTranslatedUnit,
+} from '@/modules/shared/utils/formatters.js'
 import { MAINTENANCE_TASK_STATUS } from '@/types/maintenanceTask.js'
 import maintenanceTasksApi from '@/modules/maintenance-tasks/services/maintenanceTasksService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppEmptyState from '@/components/ui/AppEmptyState.vue'
 import AppPage from '@/components/ui/AppPage.vue'
+import DeleteResourceModal from '@/modules/shared/components/DeleteResourceModal.vue'
+import ResourceListStatus from '@/modules/shared/components/ResourceListStatus.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseIcon from '@/components/BaseIcon.vue'
 import CardBox from '@/components/CardBox.vue'
-import CardBoxModal from '@/components/CardBoxModal.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import NotificationBar from '@/components/NotificationBar.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
-const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 const { locale, t } = useI18n()
 
-const task = ref(null)
-const loading = ref(false)
-const deleting = ref(false)
-const errorMessage = ref('')
-const deleteModalOpen = ref(false)
+const {
+  resource: task,
+  loading,
+  deleting,
+  errorMessage,
+  deleteModalOpen,
+  fetchResource: fetchTask,
+  deleteResource: deleteTask,
+} = useResourceDetail({
+  fetcher: maintenanceTasksApi.show,
+  remover: maintenanceTasksApi.remove,
+  redirectTo: { name: 'maintenance-tasks' },
+})
 
-const taskId = computed(() => String(route.params.id ?? ''))
 const canUpdateTask = computed(() =>
   canUpdateForAnyRole(authStore.roles, RESOURCES.MAINTENANCE_TASKS),
 )
@@ -55,39 +62,6 @@ const deleteMessage = computed(() => {
   return t('maintenanceTasks.delete.confirmMessage', { name: task.value.name })
 })
 
-const fetchTask = async () => {
-  loading.value = true
-  errorMessage.value = ''
-  task.value = null
-
-  try {
-    task.value = await maintenanceTasksApi.show(taskId.value)
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    loading.value = false
-  }
-}
-
-const deleteTask = async () => {
-  if (!task.value) {
-    return
-  }
-
-  deleting.value = true
-  errorMessage.value = ''
-
-  try {
-    await maintenanceTasksApi.remove(task.value.id)
-    deleteModalOpen.value = false
-    await router.push({ name: 'maintenance-tasks' })
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    deleting.value = false
-  }
-}
-
 const statusColor = (status) => {
   const colors = {
     [MAINTENANCE_TASK_STATUS.CREATED]: 'neutral',
@@ -101,29 +75,14 @@ const statusColor = (status) => {
   return colors[status] ?? 'neutral'
 }
 
-const formatValue = (value) =>
-  value === null || value === undefined || value === '' ? '-' : value
+const durationLabel = (value) =>
+  formatTranslatedUnit(value, locale.value, t, 'maintenanceTasks.units.minutes')
 
-const durationLabel = (value) => {
-  if (value === null || value === undefined) {
-    return '-'
-  }
-
-  return t('maintenanceTasks.units.minutes', {
-    value: new Intl.NumberFormat(locale.value).format(value),
-  })
-}
-
-const formatDate = (value) => {
-  if (!value) {
-    return '-'
-  }
-
-  return new Intl.DateTimeFormat(locale.value, {
+const formatDate = (value) =>
+  formatDateValue(value, locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value))
-}
+  })
 
 const statusLabel = (status) => t(`maintenanceTasks.status.${status}`)
 const activeLabel = (isActive) =>
@@ -167,21 +126,17 @@ const vehicleItems = computed(() => {
         ? t('maintenanceTasks.labels.vehicleSpecific')
         : t('maintenanceTasks.labels.reusable'),
     },
-    { icon: mdiCar, label: t('maintenanceTasks.fields.licensePlate'), value: formatValue(vehicle?.license_plate) },
-    { icon: mdiCar, label: t('maintenanceTasks.fields.brand'), value: formatValue(vehicle?.brand) },
-    { icon: mdiCar, label: t('maintenanceTasks.fields.model'), value: formatValue(vehicle?.model) },
-    { icon: mdiCar, label: t('maintenanceTasks.fields.year'), value: formatValue(vehicle?.year) },
-    { icon: mdiCar, label: t('maintenanceTasks.fields.color'), value: formatValue(vehicle?.color) },
+    {
+      icon: mdiCar,
+      label: t('maintenanceTasks.fields.licensePlate'),
+      value: emptyFallback(vehicle?.license_plate),
+    },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.brand'), value: emptyFallback(vehicle?.brand) },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.model'), value: emptyFallback(vehicle?.model) },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.year'), value: emptyFallback(vehicle?.year) },
+    { icon: mdiCar, label: t('maintenanceTasks.fields.color'), value: emptyFallback(vehicle?.color) },
   ]
 })
-
-watch(
-  taskId,
-  () => {
-    void fetchTask()
-  },
-  { immediate: true },
-)
 </script>
 
 <template>
@@ -218,33 +173,24 @@ watch(
         />
       </template>
 
-      <NotificationBar v-if="errorMessage" color="danger">
-        {{ errorMessage }}
-        <template #right>
-          <BaseButton
-            color="white"
-            :icon="mdiRefresh"
-            :title="t('maintenanceTasks.actions.retry')"
-            :aria-label="t('maintenanceTasks.actions.retry')"
-            small
-            @click="fetchTask"
-          />
-        </template>
-      </NotificationBar>
-
-      <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">
-          {{ t('maintenanceTasks.detail.loading') }}
-        </p>
-      </CardBox>
+      <ResourceListStatus
+        :error-message="errorMessage"
+        :loading="loading"
+        :loading-label="t('maintenanceTasks.detail.loading')"
+        :retry-label="t('maintenanceTasks.actions.retry')"
+        @retry="fetchTask"
+      />
 
       <AppEmptyState
-        v-else-if="!task && !errorMessage"
+        v-if="!loading && !task && !errorMessage"
         :title="t('maintenanceTasks.detail.unavailableTitle')"
         :description="t('maintenanceTasks.detail.unavailableDescription')"
       />
 
-      <div v-else-if="task" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]">
+      <div
+        v-if="!loading && task"
+        class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]"
+      >
         <CardBox>
           <div class="mb-5 flex flex-wrap gap-2">
             <AppBadge
@@ -277,7 +223,7 @@ watch(
               {{ t('maintenanceTasks.fields.description') }}
             </p>
             <p class="whitespace-pre-line text-sm text-gray-700 dark:text-slate-200">
-              {{ formatValue(task.description) }}
+              {{ emptyFallback(task.description) }}
             </p>
           </div>
         </CardBox>
@@ -301,18 +247,13 @@ watch(
       </div>
     </AppPage>
 
-    <CardBoxModal
+    <DeleteResourceModal
       v-model="deleteModalOpen"
       :title="t('maintenanceTasks.delete.title')"
-      button="danger"
-      :button-label="t('maintenanceTasks.actions.delete')"
-      :button-icon="mdiTrashCanOutline"
-      :cancel-icon="mdiClose"
-      has-cancel
-      :is-processing="deleting"
+      :delete-label="t('maintenanceTasks.actions.delete')"
+      :message="deleteMessage"
+      :processing="deleting"
       @confirm="deleteTask"
-    >
-      <p>{{ deleteMessage }}</p>
-    </CardBoxModal>
+    />
   </LayoutAuthenticated>
 </template>

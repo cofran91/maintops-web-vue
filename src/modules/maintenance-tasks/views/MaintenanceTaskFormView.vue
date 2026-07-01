@@ -16,20 +16,22 @@ import {
   canUpdateForAnyRole,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
+import {
+  firstFieldError,
+  hasPositiveInteger,
+  nullableText,
+} from '@/modules/shared/utils/formValues.js'
 import { ROLES } from '@/types/auth.js'
 import maintenanceTasksApi from '@/modules/maintenance-tasks/services/maintenanceTasksService.js'
 import vehicleSystemsApi from '@/modules/vehicle-systems/services/vehicleSystemsService.js'
-import AppBadge from '@/components/ui/AppBadge.vue'
 import AppPage from '@/components/ui/AppPage.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import CardBox from '@/components/CardBox.vue'
-import FormCheckRadio from '@/components/FormCheckRadio.vue'
-import FormControl from '@/components/FormControl.vue'
-import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
+import MaintenanceTaskGeneralFields from '@/modules/maintenance-tasks/components/MaintenanceTaskGeneralFields.vue'
+import MaintenanceTaskScopeFields from '@/modules/maintenance-tasks/components/MaintenanceTaskScopeFields.vue'
 import NotificationBar from '@/components/NotificationBar.vue'
-import VehicleCombobox from '@/modules/vehicles/components/VehicleCombobox.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
 const route = useRoute()
@@ -220,25 +222,22 @@ const buildPayload = () => ({
   is_active: form.is_active,
 })
 
+const setField = (field, value) => {
+  form[field] = value
+}
+
 const handleGeneralTaskChange = () => {
   if (generalTask.value) {
     form.vehicle_id = ''
   }
 }
 
-const hasPositiveInteger = (value) => {
-  const number = Number(value)
-
-  return Number.isInteger(number) && number > 0
+const setGeneralTask = (value) => {
+  generalTask.value = value
+  handleGeneralTaskChange()
 }
 
-const nullableText = (value) => {
-  const trimmedValue = String(value ?? '').trim()
-
-  return trimmedValue === '' ? null : trimmedValue
-}
-
-const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
+const fieldError = (field) => firstFieldError(validationErrors.value, field)
 
 watch(
   () => route.fullPath,
@@ -320,118 +319,23 @@ watch(
           {{ t('maintenanceTasks.form.advisorVehicleRequired') }}
         </NotificationBar>
 
-        <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
-          <FormField
-            :label="t('maintenanceTasks.fields.vehicleSystem')"
-            label-for="vehicle_system_id"
-            :error="fieldError('vehicle_system_id')"
-          >
-            <select
-              id="vehicle_system_id"
-              v-model="form.vehicle_system_id"
-              name="vehicle_system_id"
-              required
-              :class="inputClass"
-            >
-              <option value="" disabled>
-                {{ t('maintenanceTasks.form.selectVehicleSystem') }}
-              </option>
-              <option v-for="system in vehicleSystems" :key="system.id" :value="String(system.id)">
-                {{ system.name }}
-              </option>
-            </select>
-          </FormField>
+        <MaintenanceTaskGeneralFields
+          :form="form"
+          :field-error="fieldError"
+          :input-class="inputClass"
+          :vehicle-systems="vehicleSystems"
+          @update-field="setField"
+        />
 
-          <FormField :label="t('maintenanceTasks.fields.name')" label-for="name" :error="fieldError('name')">
-            <FormControl id="name" v-model="form.name" name="name" required maxlength="255" />
-          </FormField>
-
-          <FormField :label="t('maintenanceTasks.fields.code')" label-for="code" :error="fieldError('code')">
-            <FormControl
-              id="code"
-              v-model="form.code"
-              name="code"
-              required
-              maxlength="100"
-              placeholder="OIL-CHANGE"
-            />
-          </FormField>
-
-          <FormField
-            :label="t('maintenanceTasks.fields.estimatedDuration')"
-            label-for="estimated_duration_minutes"
-            :error="fieldError('estimated_duration_minutes')"
-          >
-            <input
-              id="estimated_duration_minutes"
-              v-model="form.estimated_duration_minutes"
-              name="estimated_duration_minutes"
-              type="number"
-              min="1"
-              max="10080"
-              inputmode="numeric"
-              required
-              :class="inputClass"
-            >
-          </FormField>
-        </div>
-
-        <div v-if="!advisorRequiresVehicle" class="mb-6 flex items-center gap-3">
-          <FormCheckRadio
-            v-model="generalTask"
-            name="general_task"
-            type="switch"
-            :label="t('maintenanceTasks.form.reusableTask')"
-            :input-value="true"
-            @update:model-value="handleGeneralTaskChange"
-          />
-          <AppBadge
-            :label="generalTask
-              ? t('maintenanceTasks.labels.reusable')
-              : t('maintenanceTasks.labels.vehicleSpecific')"
-            :color="generalTask ? 'info' : 'warning'"
-          />
-        </div>
-
-        <FormField
-          v-if="showVehicleField"
-          :label="t('maintenanceTasks.fields.vehicle')"
-          label-for="vehicle_id"
-          :error="fieldError('vehicle_id')"
-        >
-          <VehicleCombobox
-            v-model="form.vehicle_id"
-            input-id="vehicle_id"
-            name="vehicle_id"
-            :placeholder="t('maintenanceTasks.filters.vehiclePlaceholder')"
-          />
-        </FormField>
-
-        <FormField :label="t('maintenanceTasks.fields.description')" label-for="description" :error="fieldError('description')">
-          <FormControl
-            id="description"
-            v-model="form.description"
-            name="description"
-            type="textarea"
-            maxlength="2000"
-          />
-        </FormField>
-
-        <div class="mb-6 flex items-center gap-3">
-          <FormCheckRadio
-            v-model="form.is_active"
-            name="is_active"
-            type="switch"
-            :label="t('maintenanceTasks.form.activeTask')"
-            :input-value="true"
-          />
-          <AppBadge
-            :label="form.is_active
-              ? t('maintenanceTasks.labels.active')
-              : t('maintenanceTasks.labels.inactive')"
-            :color="form.is_active ? 'success' : 'danger'"
-          />
-        </div>
+        <MaintenanceTaskScopeFields
+          :form="form"
+          :general-task="generalTask"
+          :advisor-requires-vehicle="advisorRequiresVehicle"
+          :show-vehicle-field="showVehicleField"
+          :field-error="fieldError"
+          @update-field="setField"
+          @update-general-task="setGeneralTask"
+        />
 
         <template #footer>
           <BaseButtons>

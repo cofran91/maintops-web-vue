@@ -89,7 +89,7 @@ Analytics:
 
 ## Project Structure
 
-The frontend uses a compact feature-module structure:
+The frontend uses a feature-module structure with a small shared module layer for reusable domain patterns:
 
 ```text
 src/
@@ -111,13 +111,24 @@ Feature modules follow the same responsibility split:
 
 ```text
 modules/<feature>/
-  services/     HTTP clients or integration services for that feature.
-  views/        Route-level screens.
   components/   Feature-specific reusable components when needed.
   composables/   Feature-specific reactive helpers when needed.
+  services/     HTTP clients or integration services for that feature.
+  utils/        Feature-specific formatters, labels, or pure helpers when needed.
+  views/        Route-level screens.
 ```
 
-This keeps shared UI primitives separate from domain-specific workflows, and keeps API access out of route components.
+Cross-module resource patterns live under `modules/shared`:
+
+```text
+modules/shared/
+  components/   Domain-aware reusable components such as async entity inputs and list controls.
+  composables/   Shared reactive resource workflows.
+  services/     Factories for common service behavior.
+  utils/        Shared query, formatter, and form-value helpers.
+```
+
+This keeps generic UI primitives in `components`, reusable domain workflows in `modules/shared`, feature-specific workflows inside each module, and API access out of route components.
 
 ## Architecture Decisions
 

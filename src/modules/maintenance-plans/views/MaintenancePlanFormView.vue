@@ -16,17 +16,19 @@ import {
   canUpdateForAnyRole,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
+import {
+  firstFieldError,
+  nullableNumber,
+  nullableText,
+} from '@/modules/shared/utils/formValues.js'
 import maintenancePlansApi from '@/modules/maintenance-plans/services/maintenancePlansService.js'
-import AppBadge from '@/components/ui/AppBadge.vue'
 import AppPage from '@/components/ui/AppPage.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import CardBox from '@/components/CardBox.vue'
-import FormCheckRadio from '@/components/FormCheckRadio.vue'
-import FormControl from '@/components/FormControl.vue'
-import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import MaintenanceTaskMultiSelect from '@/modules/maintenance-tasks/components/MaintenanceTaskMultiSelect.vue'
+import MaintenancePlanGeneralFields from '@/modules/maintenance-plans/components/MaintenancePlanGeneralFields.vue'
+import MaintenancePlanTaskSelectionField from '@/modules/maintenance-plans/components/MaintenancePlanTaskSelectionField.vue'
 import NotificationBar from '@/components/NotificationBar.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
@@ -205,6 +207,14 @@ const buildPayload = () => ({
   is_active: form.is_active,
 })
 
+const setField = (field, value) => {
+  form[field] = value
+}
+
+const setTaskIds = (taskIds) => {
+  form.task_ids = taskIds
+}
+
 const handleTaskSelection = (tasks) => {
   selectedTaskItems.value = tasks
 }
@@ -219,31 +229,7 @@ const hasValidInterval = (value, maxValue) => {
   return Number.isInteger(number) && number >= 1 && number <= maxValue
 }
 
-const nullableText = (value) => {
-  const trimmedValue = String(value ?? '').trim()
-
-  return trimmedValue === '' ? null : trimmedValue
-}
-
-const nullableNumber = (value) => {
-  if (value === '' || Number.isNaN(Number(value))) {
-    return null
-  }
-
-  return Number(value)
-}
-
-const fieldError = (field) => {
-  if (validationErrors.value[field]?.[0]) {
-    return validationErrors.value[field][0]
-  }
-
-  const nestedField = `${field}.`
-  const nestedError = Object.entries(validationErrors.value)
-    .find(([key]) => key.startsWith(nestedField))?.[1]?.[0]
-
-  return nestedError ?? ''
-}
+const fieldError = (field) => firstFieldError(validationErrors.value, field)
 
 watch(
   () => route.fullPath,
@@ -311,93 +297,20 @@ watch(
           {{ formError }}
         </NotificationBar>
 
-        <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
-          <FormField :label="t('maintenancePlans.fields.code')" label-for="code" :error="fieldError('code')">
-            <FormControl
-              id="code"
-              v-model="form.code"
-              name="code"
-              required
-              maxlength="100"
-              :placeholder="t('maintenancePlans.filters.codePlaceholder')"
-            />
-          </FormField>
+        <MaintenancePlanGeneralFields
+          :form="form"
+          :field-error="fieldError"
+          :input-class="inputClass"
+          @update-field="setField"
+        />
 
-          <FormField :label="t('maintenancePlans.fields.name')" label-for="name" :error="fieldError('name')">
-            <FormControl id="name" v-model="form.name" name="name" required maxlength="255" />
-          </FormField>
-
-          <FormField
-            :label="t('maintenancePlans.fields.recommendedDays')"
-            label-for="recommended_interval_days"
-            :error="fieldError('recommended_interval_days')"
-          >
-            <input
-              id="recommended_interval_days"
-              v-model="form.recommended_interval_days"
-              name="recommended_interval_days"
-              type="number"
-              min="1"
-              max="3650"
-              inputmode="numeric"
-              :class="inputClass"
-            >
-          </FormField>
-
-          <FormField
-            :label="t('maintenancePlans.fields.recommendedKilometers')"
-            label-for="recommended_interval_km"
-            :error="fieldError('recommended_interval_km')"
-          >
-            <input
-              id="recommended_interval_km"
-              v-model="form.recommended_interval_km"
-              name="recommended_interval_km"
-              type="number"
-              min="1"
-              max="1000000"
-              inputmode="numeric"
-              :class="inputClass"
-            >
-          </FormField>
-        </div>
-
-        <FormField :label="t('maintenancePlans.fields.tasks')" label-for="task_ids" :error="fieldError('task_ids')">
-          <MaintenanceTaskMultiSelect
-            v-model="form.task_ids"
-            input-id="task_ids"
-            name="task_ids"
-            :placeholder="t('maintenancePlans.filters.taskPlaceholder')"
-            :selected-items="selectedTaskItems"
-            @select="handleTaskSelection"
-          />
-        </FormField>
-
-        <FormField :label="t('maintenancePlans.fields.description')" label-for="description" :error="fieldError('description')">
-          <FormControl
-            id="description"
-            v-model="form.description"
-            name="description"
-            type="textarea"
-            maxlength="2000"
-          />
-        </FormField>
-
-        <div class="mb-6 flex items-center gap-3">
-          <FormCheckRadio
-            v-model="form.is_active"
-            name="is_active"
-            type="switch"
-            :label="t('maintenancePlans.form.activePlan')"
-            :input-value="true"
-          />
-          <AppBadge
-            :label="form.is_active
-              ? t('maintenancePlans.labels.active')
-              : t('maintenancePlans.labels.inactive')"
-            :color="form.is_active ? 'success' : 'danger'"
-          />
-        </div>
+        <MaintenancePlanTaskSelectionField
+          :task-ids="form.task_ids"
+          :selected-items="selectedTaskItems"
+          :error="fieldError('task_ids')"
+          @update-task-ids="setTaskIds"
+          @select="handleTaskSelection"
+        />
 
         <template #footer>
           <BaseButtons>

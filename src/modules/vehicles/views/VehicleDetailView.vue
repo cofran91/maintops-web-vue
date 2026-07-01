@@ -1,45 +1,52 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiAccount,
   mdiArrowLeft,
   mdiCar,
-  mdiClose,
   mdiEmailOutline,
   mdiFileDocumentOutline,
   mdiMapMarkerOutline,
   mdiPencil,
   mdiPhoneOutline,
-  mdiRefresh,
   mdiTrashCanOutline,
 } from '@mdi/js'
 import { RESOURCES, canDeleteForAnyRole, canUpdateForAnyRole } from '@/auth/permissions.js'
-import { normalizeApiError } from '@/api/errors.js'
+import { useResourceDetail } from '@/modules/shared/composables/useResourceDetail.js'
+import {
+  emptyFallback,
+  formatDate as formatDateValue,
+  formatTranslatedUnit,
+} from '@/modules/shared/utils/formatters.js'
 import vehiclesApi from '@/modules/vehicles/services/vehiclesService.js'
 import AppEmptyState from '@/components/ui/AppEmptyState.vue'
 import AppPage from '@/components/ui/AppPage.vue'
+import DeleteResourceModal from '@/modules/shared/components/DeleteResourceModal.vue'
+import ResourceListStatus from '@/modules/shared/components/ResourceListStatus.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseIcon from '@/components/BaseIcon.vue'
 import CardBox from '@/components/CardBox.vue'
-import CardBoxModal from '@/components/CardBoxModal.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import NotificationBar from '@/components/NotificationBar.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
-const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 const { locale, t } = useI18n()
 
-const vehicle = ref(null)
-const loading = ref(false)
-const deleting = ref(false)
-const errorMessage = ref('')
-const deleteModalOpen = ref(false)
+const {
+  resource: vehicle,
+  loading,
+  deleting,
+  errorMessage,
+  deleteModalOpen,
+  fetchResource: fetchVehicle,
+  deleteResource: deleteVehicle,
+} = useResourceDetail({
+  fetcher: vehiclesApi.show,
+  remover: vehiclesApi.remove,
+  redirectTo: { name: 'operations-vehicles' },
+})
 
-const vehicleId = computed(() => String(route.params.id ?? ''))
 const canUpdateVehicle = computed(() => canUpdateForAnyRole(authStore.roles, RESOURCES.VEHICLES))
 const canDeleteVehicle = computed(() => canDeleteForAnyRole(authStore.roles, RESOURCES.VEHICLES))
 const title = computed(() => vehicle.value?.license_plate ?? t('vehicles.detail.titleFallback'))
@@ -51,62 +58,14 @@ const deleteMessage = computed(() => {
   return t('vehicles.delete.confirmMessage', { plate: vehicle.value.license_plate })
 })
 
-const fetchVehicle = async () => {
-  loading.value = true
-  errorMessage.value = ''
-  vehicle.value = null
+const formatKilometers = (value) =>
+  formatTranslatedUnit(value, locale.value, t, 'vehicles.units.kilometers')
 
-  try {
-    vehicle.value = await vehiclesApi.show(vehicleId.value)
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    loading.value = false
-  }
-}
-
-const deleteVehicle = async () => {
-  if (!vehicle.value) {
-    return
-  }
-
-  deleting.value = true
-  errorMessage.value = ''
-
-  try {
-    await vehiclesApi.remove(vehicle.value.id)
-    deleteModalOpen.value = false
-    await router.push({ name: 'operations-vehicles' })
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    deleting.value = false
-  }
-}
-
-const formatValue = (value) =>
-  value === null || value === undefined || value === '' ? '-' : value
-
-const formatKilometers = (value) => {
-  if (value === null || value === undefined) {
-    return '-'
-  }
-
-  return t('vehicles.units.kilometers', {
-    value: new Intl.NumberFormat(locale.value).format(value),
-  })
-}
-
-const formatDate = (value) => {
-  if (!value) {
-    return '-'
-  }
-
-  return new Intl.DateTimeFormat(locale.value, {
+const formatDate = (value) =>
+  formatDateValue(value, locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value))
-}
+  })
 
 const vehicleItems = computed(() => {
   if (!vehicle.value) {
@@ -115,16 +74,20 @@ const vehicleItems = computed(() => {
 
   return [
     { icon: mdiCar, label: t('vehicles.fields.licensePlate'), value: vehicle.value.license_plate },
-    { icon: mdiCar, label: t('vehicles.fields.brand'), value: formatValue(vehicle.value.brand) },
-    { icon: mdiCar, label: t('vehicles.fields.model'), value: formatValue(vehicle.value.model) },
-    { icon: mdiCar, label: t('vehicles.fields.year'), value: formatValue(vehicle.value.year) },
-    { icon: mdiCar, label: t('vehicles.fields.color'), value: formatValue(vehicle.value.color) },
+    { icon: mdiCar, label: t('vehicles.fields.brand'), value: emptyFallback(vehicle.value.brand) },
+    { icon: mdiCar, label: t('vehicles.fields.model'), value: emptyFallback(vehicle.value.model) },
+    { icon: mdiCar, label: t('vehicles.fields.year'), value: emptyFallback(vehicle.value.year) },
+    { icon: mdiCar, label: t('vehicles.fields.color'), value: emptyFallback(vehicle.value.color) },
     {
       icon: mdiCar,
       label: t('vehicles.fields.odometer'),
       value: formatKilometers(vehicle.value.odometer_km),
     },
-    { icon: mdiCar, label: t('vehicles.fields.updated'), value: formatDate(vehicle.value.updated_at) },
+    {
+      icon: mdiCar,
+      label: t('vehicles.fields.updated'),
+      value: formatDate(vehicle.value.updated_at),
+    },
   ]
 })
 
@@ -141,28 +104,20 @@ const ownerItems = computed(() => {
       label: t('vehicles.fields.name'),
       value: owner?.name ?? t('vehicles.labels.ownerNumber', { id: vehicle.value.owner_id }),
     },
-    { icon: mdiEmailOutline, label: t('vehicles.fields.email'), value: formatValue(owner?.email) },
-    { icon: mdiPhoneOutline, label: t('vehicles.fields.phone'), value: formatValue(owner?.phone) },
+    { icon: mdiEmailOutline, label: t('vehicles.fields.email'), value: emptyFallback(owner?.email) },
+    { icon: mdiPhoneOutline, label: t('vehicles.fields.phone'), value: emptyFallback(owner?.phone) },
     {
       icon: mdiFileDocumentOutline,
       label: t('vehicles.fields.document'),
-      value: formatValue(owner?.document_number),
+      value: emptyFallback(owner?.document_number),
     },
     {
       icon: mdiMapMarkerOutline,
       label: t('vehicles.fields.address'),
-      value: formatValue(owner?.address),
+      value: emptyFallback(owner?.address),
     },
   ]
 })
-
-watch(
-  vehicleId,
-  () => {
-    void fetchVehicle()
-  },
-  { immediate: true },
-)
 </script>
 
 <template>
@@ -199,33 +154,24 @@ watch(
         />
       </template>
 
-      <NotificationBar v-if="errorMessage" color="danger">
-        {{ errorMessage }}
-        <template #right>
-          <BaseButton
-            color="white"
-            :icon="mdiRefresh"
-            :title="t('vehicles.actions.retry')"
-            :aria-label="t('vehicles.actions.retry')"
-            small
-            @click="fetchVehicle"
-          />
-        </template>
-      </NotificationBar>
-
-      <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">
-          {{ t('vehicles.detail.loading') }}
-        </p>
-      </CardBox>
+      <ResourceListStatus
+        :error-message="errorMessage"
+        :loading="loading"
+        :loading-label="t('vehicles.detail.loading')"
+        :retry-label="t('vehicles.actions.retry')"
+        @retry="fetchVehicle"
+      />
 
       <AppEmptyState
-        v-else-if="!vehicle && !errorMessage"
+        v-if="!loading && !vehicle && !errorMessage"
         :title="t('vehicles.detail.unavailableTitle')"
         :description="t('vehicles.detail.unavailableDescription')"
       />
 
-      <div v-else-if="vehicle" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]">
+      <div
+        v-if="!loading && vehicle"
+        class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]"
+      >
         <CardBox>
           <dl class="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div v-for="item in vehicleItems" :key="item.label">
@@ -270,18 +216,13 @@ watch(
       </div>
     </AppPage>
 
-    <CardBoxModal
+    <DeleteResourceModal
       v-model="deleteModalOpen"
       :title="t('vehicles.delete.title')"
-      button="danger"
-      :button-label="t('vehicles.actions.delete')"
-      :button-icon="mdiTrashCanOutline"
-      :cancel-icon="mdiClose"
-      has-cancel
-      :is-processing="deleting"
+      :delete-label="t('vehicles.actions.delete')"
+      :message="deleteMessage"
+      :processing="deleting"
       @confirm="deleteVehicle"
-    >
-      <p>{{ deleteMessage }}</p>
-    </CardBoxModal>
+    />
   </LayoutAuthenticated>
 </template>

@@ -1,47 +1,50 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccount,
   mdiArrowLeft,
   mdiCalendar,
-  mdiClose,
   mdiEmailOutline,
   mdiMapMarkerOutline,
   mdiPencil,
   mdiPhoneOutline,
-  mdiRefresh,
   mdiTrashCanOutline,
   mdiWrenchOutline,
 } from '@mdi/js'
 import { RESOURCES, canDeleteForAnyRole, canUpdateForAnyRole } from '@/auth/permissions.js'
-import { normalizeApiError } from '@/api/errors.js'
+import { useResourceDetail } from '@/modules/shared/composables/useResourceDetail.js'
+import { emptyFallback, formatDate as formatDateValue } from '@/modules/shared/utils/formatters.js'
 import { WORKSHOP_DAYS } from '@/types/workshop.js'
 import workshopsApi from '@/modules/workshops/services/workshopsService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppEmptyState from '@/components/ui/AppEmptyState.vue'
 import AppPage from '@/components/ui/AppPage.vue'
+import DeleteResourceModal from '@/modules/shared/components/DeleteResourceModal.vue'
+import ResourceListStatus from '@/modules/shared/components/ResourceListStatus.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseIcon from '@/components/BaseIcon.vue'
 import CardBox from '@/components/CardBox.vue'
-import CardBoxModal from '@/components/CardBoxModal.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import NotificationBar from '@/components/NotificationBar.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
-const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 const { locale, t } = useI18n()
 
-const workshop = ref(null)
-const loading = ref(false)
-const deleting = ref(false)
-const errorMessage = ref('')
-const deleteModalOpen = ref(false)
+const {
+  resource: workshop,
+  loading,
+  deleting,
+  errorMessage,
+  deleteModalOpen,
+  fetchResource: fetchWorkshop,
+  deleteResource: deleteWorkshop,
+} = useResourceDetail({
+  fetcher: workshopsApi.show,
+  remover: workshopsApi.remove,
+  redirectTo: { name: 'operations-workshops' },
+})
 
-const workshopId = computed(() => String(route.params.id ?? ''))
 const canUpdateWorkshop = computed(() => canUpdateForAnyRole(authStore.roles, RESOURCES.WORKSHOPS))
 const canDeleteWorkshop = computed(() => canDeleteForAnyRole(authStore.roles, RESOURCES.WORKSHOPS))
 const title = computed(() => workshop.value?.name ?? t('workshops.detail.titleFallback'))
@@ -55,52 +58,11 @@ const deleteMessage = computed(() => {
   return t('workshops.delete.confirmMessage', { name: workshop.value.name })
 })
 
-const fetchWorkshop = async () => {
-  loading.value = true
-  errorMessage.value = ''
-  workshop.value = null
-
-  try {
-    workshop.value = await workshopsApi.show(workshopId.value)
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    loading.value = false
-  }
-}
-
-const deleteWorkshop = async () => {
-  if (!workshop.value) {
-    return
-  }
-
-  deleting.value = true
-  errorMessage.value = ''
-
-  try {
-    await workshopsApi.remove(workshop.value.id)
-    deleteModalOpen.value = false
-    await router.push({ name: 'operations-workshops' })
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    deleting.value = false
-  }
-}
-
-const formatValue = (value) =>
-  value === null || value === undefined || value === '' ? '-' : value
-
-const formatDate = (value) => {
-  if (!value) {
-    return '-'
-  }
-
-  return new Intl.DateTimeFormat(locale.value, {
+const formatDate = (value) =>
+  formatDateValue(value, locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value))
-}
+  })
 
 const dayLabel = (day) => t(`workshops.days.${day}`)
 
@@ -135,25 +97,33 @@ const detailItems = computed(() => {
         workshop.value.manager?.name ??
         t('workshops.labels.userNumber', { id: workshop.value.manager_user_id }),
     },
-    { icon: mdiMapMarkerOutline, label: t('workshops.fields.city'), value: formatValue(workshop.value.city) },
+    {
+      icon: mdiMapMarkerOutline,
+      label: t('workshops.fields.city'),
+      value: emptyFallback(workshop.value.city),
+    },
     {
       icon: mdiMapMarkerOutline,
       label: t('workshops.fields.address'),
-      value: formatValue(workshop.value.address),
+      value: emptyFallback(workshop.value.address),
     },
-    { icon: mdiPhoneOutline, label: t('workshops.fields.phone'), value: formatValue(workshop.value.phone) },
-    { icon: mdiEmailOutline, label: t('workshops.fields.email'), value: formatValue(workshop.value.email) },
-    { icon: mdiCalendar, label: t('workshops.fields.updated'), value: formatDate(workshop.value.updated_at) },
+    {
+      icon: mdiPhoneOutline,
+      label: t('workshops.fields.phone'),
+      value: emptyFallback(workshop.value.phone),
+    },
+    {
+      icon: mdiEmailOutline,
+      label: t('workshops.fields.email'),
+      value: emptyFallback(workshop.value.email),
+    },
+    {
+      icon: mdiCalendar,
+      label: t('workshops.fields.updated'),
+      value: formatDate(workshop.value.updated_at),
+    },
   ]
 })
-
-watch(
-  workshopId,
-  () => {
-    void fetchWorkshop()
-  },
-  { immediate: true },
-)
 </script>
 
 <template>
@@ -190,33 +160,24 @@ watch(
         />
       </template>
 
-      <NotificationBar v-if="errorMessage" color="danger">
-        {{ errorMessage }}
-        <template #right>
-          <BaseButton
-            color="white"
-            :icon="mdiRefresh"
-            :title="t('workshops.actions.retry')"
-            :aria-label="t('workshops.actions.retry')"
-            small
-            @click="fetchWorkshop"
-          />
-        </template>
-      </NotificationBar>
-
-      <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">
-          {{ t('workshops.detail.loading') }}
-        </p>
-      </CardBox>
+      <ResourceListStatus
+        :error-message="errorMessage"
+        :loading="loading"
+        :loading-label="t('workshops.detail.loading')"
+        :retry-label="t('workshops.actions.retry')"
+        @retry="fetchWorkshop"
+      />
 
       <AppEmptyState
-        v-else-if="!workshop && !errorMessage"
+        v-if="!loading && !workshop && !errorMessage"
         :title="t('workshops.detail.unavailableTitle')"
         :description="t('workshops.detail.unavailableDescription')"
       />
 
-      <div v-else-if="workshop" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]">
+      <div
+        v-if="!loading && workshop"
+        class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_360px]"
+      >
         <div class="space-y-6">
           <CardBox>
             <dl class="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -327,18 +288,13 @@ watch(
       </div>
     </AppPage>
 
-    <CardBoxModal
+    <DeleteResourceModal
       v-model="deleteModalOpen"
       :title="t('workshops.delete.title')"
-      button="danger"
-      :button-label="t('workshops.actions.delete')"
-      :button-icon="mdiTrashCanOutline"
-      :cancel-icon="mdiClose"
-      has-cancel
-      :is-processing="deleting"
+      :delete-label="t('workshops.actions.delete')"
+      :message="deleteMessage"
+      :processing="deleting"
       @confirm="deleteWorkshop"
-    >
-      <p>{{ deleteMessage }}</p>
-    </CardBoxModal>
+    />
   </LayoutAuthenticated>
 </template>

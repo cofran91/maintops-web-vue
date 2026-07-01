@@ -1,40 +1,15 @@
-import http, { unwrapApiData } from '@/api/http.js'
-import { buildIndexParams, normalizePaginatedData } from '@/api/query.js'
+import { createResourceService } from '@/modules/shared/services/createResourceService.js'
 
 const ENDPOINT = '/users'
 
-export const usersApi = {
-  async index(params = {}) {
-    const response = await http.get(ENDPOINT, {
-      params: buildIndexParams(params),
-    })
-
-    return normalizePaginatedData(
-      unwrapApiData(response.data, 'Users could not be loaded.'),
-    )
+export const usersApi = createResourceService({
+  endpoint: ENDPOINT,
+  messages: {
+    load: 'Users could not be loaded.',
+    show: 'The selected user could not be loaded.',
+    create: 'The user could not be created.',
+    update: 'The user could not be updated.',
   },
-
-  async show(id) {
-    const response = await http.get(`${ENDPOINT}/${id}`)
-
-    return unwrapApiData(response.data, 'The selected user could not be loaded.')
-  },
-
-  async create(payload) {
-    const response = await http.post(ENDPOINT, payload)
-
-    return unwrapApiData(response.data, 'The user could not be created.')
-  },
-
-  async update(id, payload) {
-    const response = await http.patch(`${ENDPOINT}/${id}`, payload)
-
-    return unwrapApiData(response.data, 'The user could not be updated.')
-  },
-
-  async remove(id) {
-    await http.delete(`${ENDPOINT}/${id}`)
-  },
-}
+})
 
 export default usersApi

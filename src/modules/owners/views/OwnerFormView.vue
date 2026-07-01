@@ -16,6 +16,7 @@ import {
   canUpdateForAnyRole,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
+import { firstFieldError, nullableText } from '@/modules/shared/utils/formValues.js'
 import ownersApi from '@/modules/owners/services/ownersService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppPage from '@/components/ui/AppPage.vue'
@@ -140,13 +141,7 @@ const buildPayload = () => ({
   address: nullableText(form.address),
 })
 
-const nullableText = (value) => {
-  const trimmedValue = String(value ?? '').trim()
-
-  return trimmedValue === '' ? null : trimmedValue
-}
-
-const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
+const fieldError = (field) => firstFieldError(validationErrors.value, field)
 
 watch(
   () => route.fullPath,

@@ -1,42 +1,50 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   mdiArrowLeft,
   mdiCalendar,
-  mdiClose,
   mdiFileDocumentOutline,
   mdiPencil,
-  mdiRefresh,
   mdiTrashCanOutline,
   mdiWrenchOutline,
 } from '@mdi/js'
 import { RESOURCES, canDeleteForAnyRole, canUpdateForAnyRole } from '@/auth/permissions.js'
-import { normalizeApiError } from '@/api/errors.js'
+import { useResourceDetail } from '@/modules/shared/composables/useResourceDetail.js'
+import {
+  emptyFallback,
+  formatDate as formatDateValue,
+  formatTranslatedUnit,
+} from '@/modules/shared/utils/formatters.js'
 import maintenancePlansApi from '@/modules/maintenance-plans/services/maintenancePlansService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppDataTable from '@/components/ui/AppDataTable.vue'
 import AppEmptyState from '@/components/ui/AppEmptyState.vue'
 import AppPage from '@/components/ui/AppPage.vue'
+import DeleteResourceModal from '@/modules/shared/components/DeleteResourceModal.vue'
+import ResourceListStatus from '@/modules/shared/components/ResourceListStatus.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseIcon from '@/components/BaseIcon.vue'
 import CardBox from '@/components/CardBox.vue'
-import CardBoxModal from '@/components/CardBoxModal.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import NotificationBar from '@/components/NotificationBar.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
-const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 const { locale, t } = useI18n()
 
-const plan = ref(null)
-const loading = ref(false)
-const deleting = ref(false)
-const errorMessage = ref('')
-const deleteModalOpen = ref(false)
+const {
+  resource: plan,
+  loading,
+  deleting,
+  errorMessage,
+  deleteModalOpen,
+  fetchResource: fetchPlan,
+  deleteResource: deletePlan,
+} = useResourceDetail({
+  fetcher: maintenancePlansApi.show,
+  remover: maintenancePlansApi.remove,
+  redirectTo: { name: 'maintenance-plans' },
+})
 
 const taskColumns = computed(() => [
   { key: 'task', label: t('maintenancePlans.taskColumns.task') },
@@ -46,7 +54,6 @@ const taskColumns = computed(() => [
   { key: 'is_active', label: t('maintenancePlans.taskColumns.active') },
 ])
 
-const planId = computed(() => String(route.params.id ?? ''))
 const tasks = computed(() => plan.value?.tasks ?? [])
 const canUpdatePlan = computed(() =>
   canUpdateForAnyRole(authStore.roles, RESOURCES.MAINTENANCE_PLANS),
@@ -63,71 +70,14 @@ const deleteMessage = computed(() => {
   return t('maintenancePlans.delete.confirmMessage', { name: plan.value.name })
 })
 
-const fetchPlan = async () => {
-  loading.value = true
-  errorMessage.value = ''
-  plan.value = null
+const daysLabel = (value) =>
+  formatTranslatedUnit(value, locale.value, t, 'maintenancePlans.units.days')
 
-  try {
-    plan.value = await maintenancePlansApi.show(planId.value)
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    loading.value = false
-  }
-}
+const kilometersLabel = (value) =>
+  formatTranslatedUnit(value, locale.value, t, 'maintenancePlans.units.kilometers')
 
-const deletePlan = async () => {
-  if (!plan.value) {
-    return
-  }
-
-  deleting.value = true
-  errorMessage.value = ''
-
-  try {
-    await maintenancePlansApi.remove(plan.value.id)
-    deleteModalOpen.value = false
-    await router.push({ name: 'maintenance-plans' })
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    deleting.value = false
-  }
-}
-
-const formatValue = (value) =>
-  value === null || value === undefined || value === '' ? '-' : value
-
-const daysLabel = (value) => {
-  if (value === null || value === undefined) {
-    return '-'
-  }
-
-  return t('maintenancePlans.units.days', {
-    value: new Intl.NumberFormat(locale.value).format(value),
-  })
-}
-
-const kilometersLabel = (value) => {
-  if (value === null || value === undefined) {
-    return '-'
-  }
-
-  return t('maintenancePlans.units.kilometers', {
-    value: new Intl.NumberFormat(locale.value).format(value),
-  })
-}
-
-const durationLabel = (value) => {
-  if (value === null || value === undefined) {
-    return '-'
-  }
-
-  return t('maintenancePlans.units.minutes', {
-    value: new Intl.NumberFormat(locale.value).format(value),
-  })
-}
+const durationLabel = (value) =>
+  formatTranslatedUnit(value, locale.value, t, 'maintenancePlans.units.minutes')
 
 const scopeLabel = (task) => {
   if (!task.vehicle) {
@@ -139,16 +89,11 @@ const scopeLabel = (task) => {
   })
 }
 
-const formatDate = (value) => {
-  if (!value) {
-    return '-'
-  }
-
-  return new Intl.DateTimeFormat(locale.value, {
+const formatDate = (value) =>
+  formatDateValue(value, locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value))
-}
+  })
 
 const activeLabel = (isActive) =>
   isActive ? t('maintenancePlans.labels.active') : t('maintenancePlans.labels.inactive')
@@ -175,14 +120,6 @@ const planItems = computed(() => {
     { icon: mdiCalendar, label: t('maintenancePlans.fields.updated'), value: formatDate(plan.value.updated_at) },
   ]
 })
-
-watch(
-  planId,
-  () => {
-    void fetchPlan()
-  },
-  { immediate: true },
-)
 </script>
 
 <template>
@@ -219,33 +156,21 @@ watch(
         />
       </template>
 
-      <NotificationBar v-if="errorMessage" color="danger">
-        {{ errorMessage }}
-        <template #right>
-          <BaseButton
-            color="white"
-            :icon="mdiRefresh"
-            :title="t('maintenancePlans.actions.retry')"
-            :aria-label="t('maintenancePlans.actions.retry')"
-            small
-            @click="fetchPlan"
-          />
-        </template>
-      </NotificationBar>
-
-      <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">
-          {{ t('maintenancePlans.detail.loading') }}
-        </p>
-      </CardBox>
+      <ResourceListStatus
+        :error-message="errorMessage"
+        :loading="loading"
+        :loading-label="t('maintenancePlans.detail.loading')"
+        :retry-label="t('maintenancePlans.actions.retry')"
+        @retry="fetchPlan"
+      />
 
       <AppEmptyState
-        v-else-if="!plan && !errorMessage"
+        v-if="!loading && !plan && !errorMessage"
         :title="t('maintenancePlans.detail.unavailableTitle')"
         :description="t('maintenancePlans.detail.unavailableDescription')"
       />
 
-      <div v-else-if="plan" class="grid grid-cols-1 gap-6">
+      <div v-if="!loading && plan" class="grid grid-cols-1 gap-6">
         <CardBox>
           <div class="mb-5 flex flex-wrap gap-2">
             <AppBadge
@@ -278,7 +203,7 @@ watch(
               {{ t('maintenancePlans.fields.description') }}
             </p>
             <p class="whitespace-pre-line text-sm text-gray-700 dark:text-slate-200">
-              {{ formatValue(plan.description) }}
+              {{ emptyFallback(plan.description) }}
             </p>
           </div>
         </CardBox>
@@ -327,21 +252,17 @@ watch(
       </div>
     </AppPage>
 
-    <CardBoxModal
+    <DeleteResourceModal
       v-model="deleteModalOpen"
       :title="t('maintenancePlans.delete.title')"
-      button="danger"
-      :button-label="t('maintenancePlans.actions.delete')"
-      :button-icon="mdiTrashCanOutline"
-      :cancel-icon="mdiClose"
-      has-cancel
-      :is-processing="deleting"
+      :delete-label="t('maintenancePlans.actions.delete')"
+      :message="deleteMessage"
+      :processing="deleting"
       @confirm="deletePlan"
     >
-      <p>{{ deleteMessage }}</p>
       <p class="text-sm text-gray-500 dark:text-slate-400">
         {{ t('maintenancePlans.delete.linkedOrderItemsNote') }}
       </p>
-    </CardBoxModal>
+    </DeleteResourceModal>
   </LayoutAuthenticated>
 </template>

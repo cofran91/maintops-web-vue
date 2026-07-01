@@ -1,47 +1,50 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccount,
   mdiAccountEdit,
   mdiArrowLeft,
-  mdiClose,
   mdiEmailOutline,
   mdiFileDocumentOutline,
   mdiMapMarkerOutline,
   mdiPhoneOutline,
-  mdiRefresh,
   mdiShieldAccountOutline,
   mdiTrashCanOutline,
   mdiWrenchOutline,
 } from '@mdi/js'
 import { RESOURCES, canDeleteForAnyRole, canUpdateForAnyRole } from '@/auth/permissions.js'
-import { normalizeApiError } from '@/api/errors.js'
+import { useResourceDetail } from '@/modules/shared/composables/useResourceDetail.js'
+import { emptyFallback, formatDate as formatDateValue } from '@/modules/shared/utils/formatters.js'
 import usersApi from '@/modules/users/services/usersService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppEmptyState from '@/components/ui/AppEmptyState.vue'
 import AppPage from '@/components/ui/AppPage.vue'
+import DeleteResourceModal from '@/modules/shared/components/DeleteResourceModal.vue'
+import ResourceListStatus from '@/modules/shared/components/ResourceListStatus.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseIcon from '@/components/BaseIcon.vue'
 import CardBox from '@/components/CardBox.vue'
-import CardBoxModal from '@/components/CardBoxModal.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import NotificationBar from '@/components/NotificationBar.vue'
 import { useAuthStore } from '@/stores/auth.js'
 
-const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 const { locale, t, te } = useI18n()
 
-const user = ref(null)
-const loading = ref(false)
-const deleting = ref(false)
-const errorMessage = ref('')
-const deleteModalOpen = ref(false)
+const {
+  resource: user,
+  loading,
+  deleting,
+  errorMessage,
+  deleteModalOpen,
+  fetchResource: fetchUser,
+  deleteResource: deleteUser,
+} = useResourceDetail({
+  fetcher: usersApi.show,
+  remover: usersApi.remove,
+  redirectTo: { name: 'operations-users' },
+})
 
-const userId = computed(() => String(route.params.id ?? ''))
 const canUpdateUser = computed(() => canUpdateForAnyRole(authStore.roles, RESOURCES.USERS))
 const canDeleteUser = computed(() => canDeleteForAnyRole(authStore.roles, RESOURCES.USERS))
 const title = computed(() => user.value?.name ?? t('users.detail.titleFallback'))
@@ -52,39 +55,6 @@ const deleteMessage = computed(() => {
 
   return t('users.delete.confirmMessage', { name: user.value.name })
 })
-
-const fetchUser = async () => {
-  loading.value = true
-  errorMessage.value = ''
-  user.value = null
-
-  try {
-    user.value = await usersApi.show(userId.value)
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    loading.value = false
-  }
-}
-
-const deleteUser = async () => {
-  if (!user.value) {
-    return
-  }
-
-  deleting.value = true
-  errorMessage.value = ''
-
-  try {
-    await usersApi.remove(user.value.id)
-    deleteModalOpen.value = false
-    await router.push({ name: 'operations-users' })
-  } catch (error) {
-    errorMessage.value = normalizeApiError(error).message
-  } finally {
-    deleting.value = false
-  }
-}
 
 const primaryRole = (value) => value?.roles?.[0] ?? null
 const humanizeRole = (role) => String(role ?? '').replace(/_/g, ' ')
@@ -100,18 +70,12 @@ const roleLabel = (role) => {
 const statusColor = (isActive) => (isActive ? 'success' : 'danger')
 const statusLabel = (isActive) =>
   isActive ? t('users.status.active') : t('users.status.inactive')
-const formatValue = (value) => (value === null || value === undefined || value === '' ? '-' : value)
 
-const formatDate = (value) => {
-  if (!value) {
-    return '-'
-  }
-
-  return new Intl.DateTimeFormat(locale.value, {
+const formatDate = (value) =>
+  formatDateValue(value, locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value))
-}
+  })
 
 const detailItems = computed(() => {
   if (!user.value) {
@@ -126,33 +90,29 @@ const detailItems = computed(() => {
       label: t('users.fields.role'),
       value: roleLabel(primaryRole(user.value)),
     },
-    { icon: mdiPhoneOutline, label: t('users.fields.phone'), value: formatValue(user.value.phone) },
+    { icon: mdiPhoneOutline, label: t('users.fields.phone'), value: emptyFallback(user.value.phone) },
     {
       icon: mdiFileDocumentOutline,
       label: t('users.fields.document'),
-      value: formatValue(user.value.document_number),
+      value: emptyFallback(user.value.document_number),
     },
     {
       icon: mdiMapMarkerOutline,
       label: t('users.fields.address'),
-      value: formatValue(user.value.address),
+      value: emptyFallback(user.value.address),
     },
     {
       icon: mdiWrenchOutline,
       label: t('users.fields.workshop'),
       value: user.value.workshop?.name ?? user.value.workshop?.code ?? '-',
     },
-    { icon: mdiAccount, label: t('users.fields.updated'), value: formatDate(user.value.updated_at) },
+    {
+      icon: mdiAccount,
+      label: t('users.fields.updated'),
+      value: formatDate(user.value.updated_at),
+    },
   ]
 })
-
-watch(
-  userId,
-  () => {
-    void fetchUser()
-  },
-  { immediate: true },
-)
 </script>
 
 <template>
@@ -189,33 +149,21 @@ watch(
         />
       </template>
 
-      <NotificationBar v-if="errorMessage" color="danger">
-        {{ errorMessage }}
-        <template #right>
-          <BaseButton
-            color="white"
-            :icon="mdiRefresh"
-            :title="t('users.actions.retry')"
-            :aria-label="t('users.actions.retry')"
-            small
-            @click="fetchUser"
-          />
-        </template>
-      </NotificationBar>
-
-      <CardBox v-if="loading">
-        <p class="text-sm text-gray-500 dark:text-slate-400">
-          {{ t('users.detail.loading') }}
-        </p>
-      </CardBox>
+      <ResourceListStatus
+        :error-message="errorMessage"
+        :loading="loading"
+        :loading-label="t('users.detail.loading')"
+        :retry-label="t('users.actions.retry')"
+        @retry="fetchUser"
+      />
 
       <AppEmptyState
-        v-else-if="!user && !errorMessage"
+        v-if="!loading && !user && !errorMessage"
         :title="t('users.detail.unavailableTitle')"
         :description="t('users.detail.unavailableDescription')"
       />
 
-      <div v-else-if="user" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_320px]">
+      <div v-if="!loading && user" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_320px]">
         <CardBox>
           <dl class="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div v-for="item in detailItems" :key="item.label">
@@ -262,21 +210,17 @@ watch(
       </div>
     </AppPage>
 
-    <CardBoxModal
+    <DeleteResourceModal
       v-model="deleteModalOpen"
       :title="t('users.delete.title')"
-      button="danger"
-      :button-label="t('users.actions.delete')"
-      :button-icon="mdiTrashCanOutline"
-      :cancel-icon="mdiClose"
-      has-cancel
-      :is-processing="deleting"
+      :delete-label="t('users.actions.delete')"
+      :message="deleteMessage"
+      :processing="deleting"
       @confirm="deleteUser"
     >
-      <p>{{ deleteMessage }}</p>
       <p class="text-sm text-gray-500 dark:text-slate-400">
         {{ t('users.delete.selfDeleteNote') }}
       </p>
-    </CardBoxModal>
+    </DeleteResourceModal>
   </LayoutAuthenticated>
 </template>

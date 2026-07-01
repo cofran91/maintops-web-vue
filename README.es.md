@@ -89,7 +89,7 @@ Analytics:
 
 ## Estructura Del Proyecto
 
-El frontend usa una estructura compacta por feature modules:
+El frontend usa una estructura por feature modules con una capa pequeña de módulo compartido para patrones reutilizables de dominio:
 
 ```text
 src/
@@ -111,13 +111,24 @@ Los feature modules siguen la misma separación de responsabilidades:
 
 ```text
 modules/<feature>/
-  services/     Clientes HTTP o servicios de integración.
-  views/        Pantallas a nivel de ruta.
   components/   Componentes reutilizables específicos del feature cuando aplica.
   composables/   Helpers reactivos específicos del feature cuando aplica.
+  services/     Clientes HTTP o servicios de integración.
+  utils/        Formatters, labels o helpers puros específicos del feature cuando aplica.
+  views/        Pantallas a nivel de ruta.
 ```
 
-Esto separa primitivas UI compartidas de workflows específicos de dominio y mantiene el acceso API fuera de los componentes de ruta.
+Los patrones de recursos reutilizables entre módulos viven en `modules/shared`:
+
+```text
+modules/shared/
+  components/   Componentes reutilizables con conocimiento de dominio, como inputs async y controles de listados.
+  composables/   Flujos reactivos compartidos para recursos.
+  services/     Factories para comportamiento común de servicios.
+  utils/        Helpers compartidos de queries, formatters y valores de formulario.
+```
+
+Esto mantiene las primitivas UI genéricas en `components`, los workflows reutilizables de dominio en `modules/shared`, los workflows específicos dentro de cada feature module y el acceso API fuera de los componentes de ruta.
 
 ## Decisiones De Arquitectura
 

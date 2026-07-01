@@ -17,20 +17,23 @@ import {
   getAssignableRoles,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
+import {
+  firstFieldError,
+  nullableId,
+  nullableText,
+} from '@/modules/shared/utils/formValues.js'
 import { ROLES } from '@/types/auth.js'
 import usersApi from '@/modules/users/services/usersService.js'
-import AppBadge from '@/components/ui/AppBadge.vue'
 import AppPage from '@/components/ui/AppPage.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import CardBox from '@/components/CardBox.vue'
-import FormCheckRadio from '@/components/FormCheckRadio.vue'
-import FormControl from '@/components/FormControl.vue'
-import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 import NotificationBar from '@/components/NotificationBar.vue'
+import UserAccountFields from '@/modules/users/components/UserAccountFields.vue'
+import UserPasswordFields from '@/modules/users/components/UserPasswordFields.vue'
+import UserRoleFields from '@/modules/users/components/UserRoleFields.vue'
 import { useAuthStore } from '@/stores/auth.js'
-import WorkshopCombobox from '@/modules/users/components/WorkshopCombobox.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -185,19 +188,10 @@ const buildPayload = () => {
   return payload
 }
 
-const nullableText = (value) => {
-  const trimmedValue = String(value ?? '').trim()
-
-  return trimmedValue === '' ? null : trimmedValue
+const fieldError = (field) => firstFieldError(validationErrors.value, field)
+const setField = (field, value) => {
+  form[field] = value
 }
-
-const nullableId = (value) => {
-  const number = Number(value)
-
-  return Number.isInteger(number) && number > 0 ? number : null
-}
-
-const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
 const humanizeRole = (role) => String(role ?? '').replace(/_/g, ' ')
 const roleLabel = (role) => {
   const key = `users.roles.${role}`
@@ -297,134 +291,27 @@ watch(
           {{ formError }}
         </NotificationBar>
 
-        <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
-          <FormField :label="t('users.fields.name')" label-for="name" :error="fieldError('name')">
-            <FormControl
-              id="name"
-              v-model="form.name"
-              name="name"
-              required
-              autocomplete="name"
-              maxlength="255"
-            />
-          </FormField>
+        <UserAccountFields
+          :form="form"
+          :field-error="fieldError"
+          @update-field="setField"
+        />
 
-          <FormField :label="t('users.fields.email')" label-for="email" :error="fieldError('email')">
-            <FormControl
-              id="email"
-              v-model="form.email"
-              name="email"
-              type="email"
-              required
-              autocomplete="email"
-              maxlength="255"
-            />
-          </FormField>
+        <UserRoleFields
+          :form="form"
+          :field-error="fieldError"
+          :input-class="inputClass"
+          :role-options="roleOptions"
+          :role-label="roleLabel"
+          :show-workshop-field="showWorkshopField"
+          @update-field="setField"
+        />
 
-          <FormField :label="t('users.fields.role')" label-for="role" :error="fieldError('role')">
-            <select id="role" v-model="form.role" name="role" required :class="inputClass">
-              <option v-for="role in roleOptions" :key="role" :value="role">
-                {{ roleLabel(role) }}
-              </option>
-            </select>
-          </FormField>
-
-          <FormField
-            v-if="showWorkshopField"
-            :label="t('users.fields.workshop')"
-            label-for="workshop_id"
-            :error="fieldError('workshop_id')"
-            :help="t('users.form.workshopHelp')"
-          >
-            <WorkshopCombobox
-              v-model="form.workshop_id"
-              input-id="workshop_id"
-              name="workshop_id"
-              :placeholder="t('users.filters.workshopPlaceholder')"
-            />
-          </FormField>
-
-          <FormField
-            :label="t('users.fields.password')"
-            label-for="password"
-            :error="fieldError('password')"
-          >
-            <FormControl
-              id="password"
-              v-model="form.password"
-              name="password"
-              type="password"
-              required
-              autocomplete="new-password"
-            />
-          </FormField>
-
-          <FormField
-            :label="t('users.fields.confirmPassword')"
-            label-for="password_confirmation"
-            :error="fieldError('password_confirmation')"
-          >
-            <FormControl
-              id="password_confirmation"
-              v-model="form.password_confirmation"
-              name="password_confirmation"
-              type="password"
-              required
-              autocomplete="new-password"
-            />
-          </FormField>
-
-          <FormField :label="t('users.fields.phone')" label-for="phone" :error="fieldError('phone')">
-            <FormControl
-              id="phone"
-              v-model="form.phone"
-              name="phone"
-              type="tel"
-              maxlength="50"
-            />
-          </FormField>
-
-          <FormField
-            :label="t('users.fields.document')"
-            label-for="document_number"
-            :error="fieldError('document_number')"
-          >
-            <FormControl
-              id="document_number"
-              v-model="form.document_number"
-              name="document_number"
-              maxlength="100"
-            />
-          </FormField>
-        </div>
-
-        <FormField
-          :label="t('users.fields.address')"
-          label-for="address"
-          :error="fieldError('address')"
-        >
-          <FormControl
-            id="address"
-            v-model="form.address"
-            name="address"
-            type="textarea"
-            maxlength="500"
-          />
-        </FormField>
-
-        <div class="mb-6 flex items-center gap-3">
-          <FormCheckRadio
-            v-model="form.is_active"
-            name="is_active"
-            type="switch"
-            :label="t('users.form.activeUser')"
-            :input-value="true"
-          />
-          <AppBadge
-            :label="form.is_active ? t('users.status.active') : t('users.status.inactive')"
-            :color="form.is_active ? 'success' : 'danger'"
-          />
-        </div>
+        <UserPasswordFields
+          :form="form"
+          :field-error="fieldError"
+          @update-field="setField"
+        />
 
         <template #footer>
           <BaseButtons>

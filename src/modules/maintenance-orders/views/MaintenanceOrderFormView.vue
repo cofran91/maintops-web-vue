@@ -10,6 +10,10 @@ import {
 } from '@mdi/js'
 import { RESOURCES, canCreateForAnyRole } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
+import {
+  firstFieldError,
+  hasPositiveInteger,
+} from '@/modules/shared/utils/formValues.js'
 import { ROLES } from '@/types/auth.js'
 import maintenanceOrdersApi from '@/modules/maintenance-orders/services/maintenanceOrdersService.js'
 import AppPage from '@/components/ui/AppPage.vue'
@@ -117,13 +121,7 @@ const buildPayload = () => {
   return payload
 }
 
-const hasPositiveInteger = (value) => {
-  const number = Number(value)
-
-  return Number.isInteger(number) && number > 0
-}
-
-const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
+const fieldError = (field) => firstFieldError(validationErrors.value, field)
 
 watch(
   () => route.fullPath,

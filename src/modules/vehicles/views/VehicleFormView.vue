@@ -16,6 +16,12 @@ import {
   canUpdateForAnyRole,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
+import {
+  firstFieldError,
+  hasPositiveInteger,
+  nullableInteger,
+  nullableText,
+} from '@/modules/shared/utils/formValues.js'
 import vehiclesApi from '@/modules/vehicles/services/vehiclesService.js'
 import AppPage from '@/components/ui/AppPage.vue'
 import BaseButton from '@/components/BaseButton.vue'
@@ -173,32 +179,10 @@ const buildPayload = () => ({
   license_plate: form.license_plate,
   brand: nullableText(form.brand),
   model: nullableText(form.model),
-  year: nullableNumber(form.year),
+  year: nullableInteger(form.year),
   color: nullableText(form.color),
   odometer_km: Number(form.odometer_km),
 })
-
-const nullableText = (value) => {
-  const trimmedValue = String(value ?? '').trim()
-
-  return trimmedValue === '' ? null : trimmedValue
-}
-
-const nullableNumber = (value) => {
-  if (value === '' || value === null || value === undefined) {
-    return null
-  }
-
-  const number = Number(value)
-
-  return Number.isInteger(number) ? number : null
-}
-
-const hasPositiveInteger = (value) => {
-  const number = Number(value)
-
-  return Number.isInteger(number) && number > 0
-}
 
 const isNonNegativeInteger = (value) => {
   if (value === '' || value === null || value === undefined) {
@@ -210,7 +194,7 @@ const isNonNegativeInteger = (value) => {
   return Number.isInteger(number) && number >= 0
 }
 
-const fieldError = (field) => validationErrors.value[field]?.[0] ?? ''
+const fieldError = (field) => firstFieldError(validationErrors.value, field)
 
 watch(
   () => route.fullPath,
