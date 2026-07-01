@@ -9,11 +9,13 @@ import {
   mdiChevronRight,
   mdiChevronUp,
   mdiClose,
+  mdiDownload,
   mdiEyeOutline,
   mdiPencil,
   mdiPlus,
   mdiRefresh,
   mdiTrashCanOutline,
+  mdiUpload,
   mdiWrenchOutline,
 } from '@mdi/js'
 import {
@@ -21,6 +23,7 @@ import {
   canCreateForAnyRole,
   canDeleteForAnyRole,
   canUpdateForAnyRole,
+  normalizePermissionRoles,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
 import { DEFAULT_PAGINATION_META } from '@/types/api.js'
@@ -34,6 +37,7 @@ import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import CardBox from '@/components/CardBox.vue'
 import CardBoxModal from '@/components/CardBoxModal.vue'
+import DataImportModal from '@/components/DataImportModal.vue'
 import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
@@ -74,15 +78,21 @@ const columns = computed(() => [
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
   'h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 dark:bg-slate-800'
+const workshopFileRoles = Object.freeze([ROLES.SUPER_ADMIN, ROLES.ADMIN])
+const importAccept =
+  '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
 
 const workshops = ref([])
 const vehicleSystems = ref([])
 const pagination = ref({ ...DEFAULT_PAGINATION_META })
 const loading = ref(false)
+const exporting = ref(false)
+const importing = ref(false)
 const deleting = ref(false)
 const errorMessage = ref('')
 const vehicleSystemsError = ref('')
 const deleteModalOpen = ref(false)
+const importModalOpen = ref(false)
 const workshopToDelete = ref(null)
 const filtersExpanded = ref(false)
 const filters = reactive({ ...EMPTY_FILTERS })
@@ -90,6 +100,12 @@ const filters = reactive({ ...EMPTY_FILTERS })
 const canCreateWorkshop = computed(() => canCreateForAnyRole(authStore.roles, RESOURCES.WORKSHOPS))
 const canUpdateWorkshop = computed(() => canUpdateForAnyRole(authStore.roles, RESOURCES.WORKSHOPS))
 const canDeleteWorkshop = computed(() => canDeleteForAnyRole(authStore.roles, RESOURCES.WORKSHOPS))
+const canExportWorkshops = computed(() =>
+  normalizePermissionRoles(authStore.roles).some((role) => workshopFileRoles.includes(role)),
+)
+const canImportWorkshops = computed(() =>
+  normalizePermissionRoles(authStore.roles).some((role) => workshopFileRoles.includes(role)),
+)
 const hasActiveFilters = computed(() =>
   Object.values(filters).some((value) => value !== ''),
 )
@@ -104,6 +120,12 @@ const deleteMessage = computed(() => {
 
   return t('workshops.delete.confirmMessage', { name: workshopToDelete.value.name })
 })
+const importSummaryFields = computed(() => [
+  { key: 'processed_rows', label: t('workshops.import.processedRows') },
+  { key: 'rows_with_errors', label: t('workshops.import.rowsWithErrors') },
+  { key: 'created_records', label: t('workshops.import.createdRecords') },
+  { key: 'updated_records', label: t('workshops.import.updatedRecords') },
+])
 
 const getStringQuery = (value) => {
   if (Array.isArray(value)) {
@@ -305,6 +327,10 @@ const askDelete = (workshop) => {
   deleteModalOpen.value = true
 }
 
+const openImportModal = () => {
+  importModalOpen.value = true
+}
+
 const deleteWorkshop = async () => {
   if (!workshopToDelete.value) {
     return
@@ -327,6 +353,27 @@ const deleteWorkshop = async () => {
   } finally {
     deleting.value = false
   }
+}
+
+const exportWorkshops = async () => {
+  exporting.value = true
+  errorMessage.value = ''
+
+  try {
+    await workshopsApi.exportWorkshops()
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    exporting.value = false
+  }
+}
+
+const importWorkshops = (file) => workshopsApi.importWorkshops(file)
+
+const refreshAfterImport = () => fetchWorkshops()
+
+const setImporting = (value) => {
+  importing.value = value
 }
 
 const formatValue = (value) =>
@@ -380,6 +427,24 @@ watch(
       :icon="mdiWrenchOutline"
     >
       <template #actions>
+        <BaseButton
+          v-if="canImportWorkshops"
+          color="whiteDark"
+          :icon="mdiUpload"
+          :title="importing ? t('workshops.actions.importing') : t('workshops.actions.importWorkshops')"
+          :aria-label="importing ? t('workshops.actions.importing') : t('workshops.actions.importWorkshops')"
+          :disabled="importing"
+          @click="openImportModal"
+        />
+        <BaseButton
+          v-if="canExportWorkshops"
+          color="whiteDark"
+          :icon="mdiDownload"
+          :title="exporting ? t('workshops.actions.exporting') : t('workshops.actions.exportWorkshops')"
+          :aria-label="exporting ? t('workshops.actions.exporting') : t('workshops.actions.exportWorkshops')"
+          :disabled="exporting"
+          @click="exportWorkshops"
+        />
         <BaseButton
           v-if="canCreateWorkshop"
           :to="{ name: 'operations-workshops-new' }"
@@ -662,6 +727,27 @@ watch(
         </CardBox>
       </template>
     </AppPage>
+
+    <DataImportModal
+      v-model="importModalOpen"
+      :title="t('workshops.import.title')"
+      :import-action="importWorkshops"
+      :summary-fields="importSummaryFields"
+      :accept="importAccept"
+      :file-label="t('workshops.import.fileLabel')"
+      :file-hint="t('workshops.import.fileHint')"
+      :import-label="t('workshops.actions.import')"
+      :importing-label="t('workshops.actions.importing')"
+      :done-label="t('common.actions.done')"
+      :select-file-message="t('workshops.import.selectFile')"
+      :waiting-message="t('workshops.import.waiting')"
+      :error-fallback="t('workshops.errors.import')"
+      :errors-title="t('workshops.import.errorsTitle')"
+      :row-label="t('workshops.import.rowNumber', { row: '{row}' })"
+      :no-row-errors-label="t('workshops.import.noRowErrors')"
+      @imported="refreshAfterImport"
+      @processing="setImporting"
+    />
 
     <CardBoxModal
       v-model="deleteModalOpen"

@@ -1,4 +1,5 @@
 import http, { unwrapApiData } from '@/api/http.js'
+import { downloadBlobResponse } from '@/api/files.js'
 import { buildIndexParams, normalizePaginatedData } from '@/api/query.js'
 import { t } from '@/i18n/index.js'
 
@@ -35,6 +36,24 @@ export const vehiclesApi = {
 
   async remove(id) {
     await http.delete(`${ENDPOINT}/${id}`)
+  },
+
+  async exportVehicles() {
+    const response = await http.get(`${ENDPOINT}/export`, {
+      responseType: 'blob',
+    })
+
+    downloadBlobResponse(response, 'vehicles.xlsx')
+  },
+
+  async importVehicles(file) {
+    const formData = new FormData()
+
+    formData.append('file', file)
+
+    const response = await http.post(`${ENDPOINT}/import`, formData)
+
+    return unwrapApiData(response.data, t('vehicles.errors.import'))
   },
 }
 

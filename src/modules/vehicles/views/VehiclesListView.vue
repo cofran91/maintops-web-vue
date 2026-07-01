@@ -10,20 +10,24 @@ import {
   mdiChevronRight,
   mdiChevronUp,
   mdiClose,
+  mdiDownload,
   mdiEyeOutline,
   mdiPencil,
   mdiPlus,
   mdiRefresh,
   mdiTrashCanOutline,
+  mdiUpload,
 } from '@mdi/js'
 import {
   RESOURCES,
   canCreateForAnyRole,
   canDeleteForAnyRole,
   canUpdateForAnyRole,
+  normalizePermissionRoles,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
 import { DEFAULT_PAGINATION_META } from '@/types/api.js'
+import { ROLES } from '@/types/auth.js'
 import vehiclesApi from '@/modules/vehicles/services/vehiclesService.js'
 import AppDataTable from '@/components/ui/AppDataTable.vue'
 import AppEmptyState from '@/components/ui/AppEmptyState.vue'
@@ -32,6 +36,7 @@ import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import CardBox from '@/components/CardBox.vue'
 import CardBoxModal from '@/components/CardBoxModal.vue'
+import DataImportModal from '@/components/DataImportModal.vue'
 import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
@@ -69,13 +74,19 @@ const columns = computed(() => [
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
   'h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 dark:bg-slate-800'
+const vehicleFileRoles = Object.freeze([ROLES.SUPER_ADMIN, ROLES.ADMIN])
+const importAccept =
+  '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
 
 const vehicles = ref([])
 const pagination = ref({ ...DEFAULT_PAGINATION_META })
 const loading = ref(false)
+const exporting = ref(false)
+const importing = ref(false)
 const deleting = ref(false)
 const errorMessage = ref('')
 const deleteModalOpen = ref(false)
+const importModalOpen = ref(false)
 const vehicleToDelete = ref(null)
 const filtersExpanded = ref(false)
 const filters = reactive({ ...EMPTY_FILTERS })
@@ -83,6 +94,12 @@ const filters = reactive({ ...EMPTY_FILTERS })
 const canCreateVehicle = computed(() => canCreateForAnyRole(authStore.roles, RESOURCES.VEHICLES))
 const canUpdateVehicle = computed(() => canUpdateForAnyRole(authStore.roles, RESOURCES.VEHICLES))
 const canDeleteVehicle = computed(() => canDeleteForAnyRole(authStore.roles, RESOURCES.VEHICLES))
+const canExportVehicles = computed(() =>
+  normalizePermissionRoles(authStore.roles).some((role) => vehicleFileRoles.includes(role)),
+)
+const canImportVehicles = computed(() =>
+  normalizePermissionRoles(authStore.roles).some((role) => vehicleFileRoles.includes(role)),
+)
 const hasActiveFilters = computed(() =>
   Object.values(filters).some((value) => value !== ''),
 )
@@ -102,6 +119,12 @@ const advancedFiltersLabel = computed(() =>
     ? t('vehicles.actions.hideAdvancedFilters')
     : t('vehicles.actions.showAdvancedFilters'),
 )
+const importSummaryFields = computed(() => [
+  { key: 'processed_rows', label: t('vehicles.import.processedRows') },
+  { key: 'rows_with_errors', label: t('vehicles.import.rowsWithErrors') },
+  { key: 'created_records', label: t('vehicles.import.createdRecords') },
+  { key: 'updated_records', label: t('vehicles.import.updatedRecords') },
+])
 
 const getStringQuery = (value) => {
   if (Array.isArray(value)) {
@@ -266,6 +289,10 @@ const askDelete = (vehicle) => {
   deleteModalOpen.value = true
 }
 
+const openImportModal = () => {
+  importModalOpen.value = true
+}
+
 const deleteVehicle = async () => {
   if (!vehicleToDelete.value) {
     return
@@ -288,6 +315,27 @@ const deleteVehicle = async () => {
   } finally {
     deleting.value = false
   }
+}
+
+const exportVehicles = async () => {
+  exporting.value = true
+  errorMessage.value = ''
+
+  try {
+    await vehiclesApi.exportVehicles()
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    exporting.value = false
+  }
+}
+
+const importVehicles = (file) => vehiclesApi.importVehicles(file)
+
+const refreshAfterImport = () => fetchVehicles()
+
+const setImporting = (value) => {
+  importing.value = value
 }
 
 const formatValue = (value) =>
@@ -338,6 +386,24 @@ watch(
       :icon="mdiCar"
     >
       <template #actions>
+        <BaseButton
+          v-if="canImportVehicles"
+          color="whiteDark"
+          :icon="mdiUpload"
+          :title="importing ? t('vehicles.actions.importing') : t('vehicles.actions.importVehicles')"
+          :aria-label="importing ? t('vehicles.actions.importing') : t('vehicles.actions.importVehicles')"
+          :disabled="importing"
+          @click="openImportModal"
+        />
+        <BaseButton
+          v-if="canExportVehicles"
+          color="whiteDark"
+          :icon="mdiDownload"
+          :title="exporting ? t('vehicles.actions.exporting') : t('vehicles.actions.exportVehicles')"
+          :aria-label="exporting ? t('vehicles.actions.exporting') : t('vehicles.actions.exportVehicles')"
+          :disabled="exporting"
+          @click="exportVehicles"
+        />
         <BaseButton
           v-if="canCreateVehicle"
           :to="{ name: 'operations-vehicles-new' }"
@@ -587,6 +653,27 @@ watch(
         </CardBox>
       </template>
     </AppPage>
+
+    <DataImportModal
+      v-model="importModalOpen"
+      :title="t('vehicles.import.title')"
+      :import-action="importVehicles"
+      :summary-fields="importSummaryFields"
+      :accept="importAccept"
+      :file-label="t('vehicles.import.fileLabel')"
+      :file-hint="t('vehicles.import.fileHint')"
+      :import-label="t('vehicles.actions.import')"
+      :importing-label="t('vehicles.actions.importing')"
+      :done-label="t('common.actions.done')"
+      :select-file-message="t('vehicles.import.selectFile')"
+      :waiting-message="t('vehicles.import.waiting')"
+      :error-fallback="t('vehicles.errors.import')"
+      :errors-title="t('vehicles.import.errorsTitle')"
+      :row-label="t('vehicles.import.rowNumber', { row: '{row}' })"
+      :no-row-errors-label="t('vehicles.import.noRowErrors')"
+      @imported="refreshAfterImport"
+      @processing="setImporting"
+    />
 
     <CardBoxModal
       v-model="deleteModalOpen"

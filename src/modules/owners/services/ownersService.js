@@ -1,5 +1,6 @@
 import http, { unwrapApiData } from '@/api/http.js'
 import { buildIndexParams, normalizePaginatedData } from '@/api/query.js'
+import { downloadBlobResponse } from '@/api/files.js'
 
 const ENDPOINT = '/owners'
 
@@ -34,6 +35,24 @@ export const ownersApi = {
 
   async remove(id) {
     await http.delete(`${ENDPOINT}/${id}`)
+  },
+
+  async exportOwners() {
+    const response = await http.get(`${ENDPOINT}/export`, {
+      responseType: 'blob',
+    })
+
+    downloadBlobResponse(response, 'owners.xlsx')
+  },
+
+  async importOwners(file) {
+    const formData = new FormData()
+
+    formData.append('file', file)
+
+    const response = await http.post(`${ENDPOINT}/import`, formData)
+
+    return unwrapApiData(response.data, 'Owners could not be imported.')
   },
 }
 

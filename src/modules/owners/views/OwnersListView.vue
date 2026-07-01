@@ -8,20 +8,24 @@ import {
   mdiChevronLeft,
   mdiChevronRight,
   mdiClose,
+  mdiDownload,
   mdiEyeOutline,
   mdiPencil,
   mdiPlus,
   mdiRefresh,
   mdiTrashCanOutline,
+  mdiUpload,
 } from '@mdi/js'
 import {
   RESOURCES,
   canCreateForAnyRole,
   canDeleteForAnyRole,
   canUpdateForAnyRole,
+  normalizePermissionRoles,
 } from '@/auth/permissions.js'
 import { normalizeApiError } from '@/api/errors.js'
 import { DEFAULT_PAGINATION_META } from '@/types/api.js'
+import { ROLES } from '@/types/auth.js'
 import ownersApi from '@/modules/owners/services/ownersService.js'
 import AppBadge from '@/components/ui/AppBadge.vue'
 import AppDataTable from '@/components/ui/AppDataTable.vue'
@@ -31,6 +35,7 @@ import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import CardBox from '@/components/CardBox.vue'
 import CardBoxModal from '@/components/CardBoxModal.vue'
+import DataImportModal from '@/components/DataImportModal.vue'
 import FormControl from '@/components/FormControl.vue'
 import FormField from '@/components/FormField.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
@@ -60,19 +65,31 @@ const columns = computed(() => [
 const perPageOptions = [10, 15, 25, 50]
 const inputClass =
   'h-12 w-full rounded-sm border border-gray-700 bg-white px-3 py-2 dark:bg-slate-800'
+const ownerFileRoles = Object.freeze([ROLES.SUPER_ADMIN, ROLES.ADMIN])
+const importAccept =
+  '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
 
 const owners = ref([])
 const pagination = ref({ ...DEFAULT_PAGINATION_META })
 const loading = ref(false)
+const exporting = ref(false)
+const importing = ref(false)
 const deleting = ref(false)
 const errorMessage = ref('')
 const deleteModalOpen = ref(false)
+const importModalOpen = ref(false)
 const ownerToDelete = ref(null)
 const filters = reactive({ ...EMPTY_FILTERS })
 
 const canCreateOwner = computed(() => canCreateForAnyRole(authStore.roles, RESOURCES.OWNERS))
 const canUpdateOwner = computed(() => canUpdateForAnyRole(authStore.roles, RESOURCES.OWNERS))
 const canDeleteOwner = computed(() => canDeleteForAnyRole(authStore.roles, RESOURCES.OWNERS))
+const canExportOwners = computed(() =>
+  normalizePermissionRoles(authStore.roles).some((role) => ownerFileRoles.includes(role)),
+)
+const canImportOwners = computed(() =>
+  normalizePermissionRoles(authStore.roles).some((role) => ownerFileRoles.includes(role)),
+)
 const hasActiveFilters = computed(() =>
   Object.values(filters).some((value) => value !== ''),
 )
@@ -87,6 +104,12 @@ const deleteMessage = computed(() => {
 
   return t('owners.delete.confirmMessage', { name: ownerToDelete.value.name })
 })
+const importSummaryFields = computed(() => [
+  { key: 'processed_rows', label: t('owners.import.processedRows') },
+  { key: 'rows_with_errors', label: t('owners.import.rowsWithErrors') },
+  { key: 'created_records', label: t('owners.import.createdRecords') },
+  { key: 'updated_records', label: t('owners.import.updatedRecords') },
+])
 
 const getStringQuery = (value) => {
   if (Array.isArray(value)) {
@@ -216,6 +239,10 @@ const askDelete = (owner) => {
   deleteModalOpen.value = true
 }
 
+const openImportModal = () => {
+  importModalOpen.value = true
+}
+
 const deleteOwner = async () => {
   if (!ownerToDelete.value) {
     return
@@ -238,6 +265,27 @@ const deleteOwner = async () => {
   } finally {
     deleting.value = false
   }
+}
+
+const exportOwners = async () => {
+  exporting.value = true
+  errorMessage.value = ''
+
+  try {
+    await ownersApi.exportOwners()
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    exporting.value = false
+  }
+}
+
+const importOwners = (file) => ownersApi.importOwners(file)
+
+const refreshAfterImport = () => fetchOwners()
+
+const setImporting = (value) => {
+  importing.value = value
 }
 
 const formatValue = (value) =>
@@ -276,6 +324,24 @@ watch(
       :icon="mdiAccountMultiple"
     >
       <template #actions>
+        <BaseButton
+          v-if="canImportOwners"
+          color="whiteDark"
+          :icon="mdiUpload"
+          :title="importing ? t('owners.actions.importing') : t('owners.actions.importOwners')"
+          :aria-label="importing ? t('owners.actions.importing') : t('owners.actions.importOwners')"
+          :disabled="importing"
+          @click="openImportModal"
+        />
+        <BaseButton
+          v-if="canExportOwners"
+          color="whiteDark"
+          :icon="mdiDownload"
+          :title="exporting ? t('owners.actions.exporting') : t('owners.actions.exportOwners')"
+          :aria-label="exporting ? t('owners.actions.exporting') : t('owners.actions.exportOwners')"
+          :disabled="exporting"
+          @click="exportOwners"
+        />
         <BaseButton
           v-if="canCreateOwner"
           :to="{ name: 'operations-owners-new' }"
@@ -477,6 +543,27 @@ watch(
         </CardBox>
       </template>
     </AppPage>
+
+    <DataImportModal
+      v-model="importModalOpen"
+      :title="t('owners.import.title')"
+      :import-action="importOwners"
+      :summary-fields="importSummaryFields"
+      :accept="importAccept"
+      :file-label="t('owners.import.fileLabel')"
+      :file-hint="t('owners.import.fileHint')"
+      :import-label="t('owners.actions.import')"
+      :importing-label="t('owners.actions.importing')"
+      :done-label="t('common.actions.done')"
+      :select-file-message="t('owners.import.selectFile')"
+      :waiting-message="t('owners.import.waiting')"
+      :error-fallback="t('owners.errors.import')"
+      :errors-title="t('owners.import.errorsTitle')"
+      :row-label="t('owners.import.rowNumber', { row: '{row}' })"
+      :no-row-errors-label="t('owners.import.noRowErrors')"
+      @imported="refreshAfterImport"
+      @processing="setImporting"
+    />
 
     <CardBoxModal
       v-model="deleteModalOpen"
