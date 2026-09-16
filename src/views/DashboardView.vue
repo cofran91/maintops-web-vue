@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
+import { useAuthStore } from '@/stores/auth'
 import {
   mdiAccountGroupOutline,
   mdiAlertOutline,
@@ -34,6 +35,7 @@ import {
 } from '@mdi/js'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const { mdAndDown } = useDisplay()
 const mobileDrawer = ref(false)
 
@@ -188,6 +190,16 @@ const todayLabel = computed(() => {
   return label.charAt(0).toUpperCase() + label.slice(1)
 })
 
+const userName = computed(() => authStore.user?.name || 'Juan Martínez')
+const userInitials = computed(() =>
+  userName.value
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase(),
+)
+
 const updateDrawer = (value: boolean) => {
   if (mdAndDown.value) {
     mobileDrawer.value = value
@@ -195,6 +207,7 @@ const updateDrawer = (value: boolean) => {
 }
 
 const signOut = async () => {
+  await authStore.logout()
   await router.push({ name: 'login' })
 }
 </script>
@@ -299,8 +312,8 @@ const signOut = async () => {
       <span class="topbar-divider" />
 
       <button class="profile-button" type="button">
-        <span class="profile-avatar">JM</span>
-        <span class="profile-copy"><strong>Juan Martínez</strong><small>Administrador</small></span>
+          <span class="profile-avatar">{{ userInitials }}</span>
+          <span class="profile-copy"><strong>{{ userName }}</strong><small>Administrador</small></span>
         <v-icon :icon="mdiChevronDown" size="17" />
       </button>
     </v-app-bar>
@@ -310,7 +323,7 @@ const signOut = async () => {
         <header class="page-header">
           <div>
             <span class="page-date">{{ todayLabel }}</span>
-            <h1>Buen día, Juan <span>👋</span></h1>
+            <h1>Buen día, {{ userName.split(' ')[0] }} <span>👋</span></h1>
             <p>Este es el estado general de tu operación de mantenimiento.</p>
           </div>
           <div class="page-actions">

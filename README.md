@@ -17,6 +17,8 @@ docker compose up -d --build
 
 La aplicación queda disponible en <http://localhost:5173>.
 
+El login usa `POST /auth/login`, conserva la sesión según la opción seleccionada y protege la ruta `/dashboard`. El dashboard continúa mostrando datos simulados mientras se implementan los servicios de negocio.
+
 ```bash
 docker compose logs -f frontend
 docker compose down

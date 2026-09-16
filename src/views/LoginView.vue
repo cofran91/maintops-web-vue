@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertCircleOutline,
   mdiArrowRight,
@@ -15,18 +15,69 @@ import {
   mdiShieldCheckOutline,
   mdiWrenchCogOutline,
 } from '@mdi/js'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
 const showPassword = ref(false)
 const rememberSession = ref(true)
+const fieldErrors = reactive({
+  email: '',
+  password: '',
+})
 
 const credentials = reactive({
   email: '',
   password: '',
 })
 
+const formError = computed(() => authStore.error?.message ?? '')
+const redirectTo = computed(() => {
+  const redirect = route.query.redirect
+
+  return typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+    ? redirect
+    : '/dashboard'
+})
+
+const clearErrors = () => {
+  fieldErrors.email = ''
+  fieldErrors.password = ''
+  authStore.clearError()
+}
+
+const validateForm = () => {
+  clearErrors()
+
+  if (!credentials.email.trim()) {
+    fieldErrors.email = 'Ingresa tu correo electrónico.'
+  }
+
+  if (!credentials.password) {
+    fieldErrors.password = 'Ingresa tu contraseña.'
+  }
+
+  return !fieldErrors.email && !fieldErrors.password
+}
+
 const enterDashboard = async () => {
-  await router.push({ name: 'dashboard' })
+  if (!validateForm()) {
+    return
+  }
+
+  try {
+    await authStore.login({
+      email: credentials.email.trim(),
+      password: credentials.password,
+      remember: rememberSession.value,
+    })
+    await router.push(redirectTo.value)
+  } catch {
+    const errors = authStore.error?.errors
+    fieldErrors.email = errors?.email?.[0] ?? ''
+    fieldErrors.password = errors?.password?.[0] ?? ''
+  }
 }
 </script>
 
@@ -48,6 +99,15 @@ const enterDashboard = async () => {
             <p>Ingresa para gestionar la operación de mantenimiento de tu flota.</p>
           </div>
 
+          <v-alert
+            v-if="formError"
+            class="login-alert"
+            density="comfortable"
+            :text="formError"
+            type="error"
+            variant="tonal"
+          />
+
           <v-form class="login-form" @submit.prevent="enterDashboard">
             <div class="field-group">
               <label for="email">Correo electrónico</label>
@@ -57,7 +117,8 @@ const enterDashboard = async () => {
                 :prepend-inner-icon="mdiEmailOutline"
                 autocomplete="email"
                 base-color="#c8d0de"
-                hide-details
+                :error-messages="fieldErrors.email"
+                hide-details="auto"
                 name="email"
                 placeholder="nombre@empresa.com"
                 type="email"
@@ -77,7 +138,8 @@ const enterDashboard = async () => {
                 :type="showPassword ? 'text' : 'password'"
                 autocomplete="current-password"
                 base-color="#c8d0de"
-                hide-details
+                :error-messages="fieldErrors.password"
+                hide-details="auto"
                 name="password"
                 placeholder="Ingresa tu contraseña"
                 @click:append-inner="showPassword = !showPassword"
@@ -97,7 +159,9 @@ const enterDashboard = async () => {
               block
               class="login-button"
               color="primary"
+              :disabled="authStore.loading"
               height="54"
+              :loading="authStore.loading"
               size="large"
               type="submit"
             >
@@ -107,7 +171,7 @@ const enterDashboard = async () => {
 
             <div class="demo-note">
               <v-icon :icon="mdiShieldCheckOutline" color="success" size="18" />
-              <span>Vista de demostración: puedes ingresar sin credenciales.</span>
+              <span>Usa las credenciales de tu cuenta MaintOps.</span>
             </div>
           </v-form>
         </div>
@@ -331,6 +395,12 @@ const enterDashboard = async () => {
   color: #71809a;
   font-size: 15px;
   line-height: 1.65;
+}
+
+.login-alert {
+  margin-bottom: 21px;
+  border-radius: 12px;
+  font-size: 12px;
 }
 
 .login-form {
