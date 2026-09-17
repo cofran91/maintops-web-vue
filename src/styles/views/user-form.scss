@@ -45,6 +45,10 @@
   margin-top: 16px;
 }
 
+.user-form-field--wide {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 620px) {
   .user-form-breadcrumbs {
     margin-bottom: 12px;

@@ -8,6 +8,9 @@ import {
   mdiCalendarOutline,
   mdiClockOutline,
   mdiEmailOutline,
+  mdiFileDocumentOutline,
+  mdiGarageVariant,
+  mdiMapMarkerOutline,
   mdiPencilOutline,
   mdiPhoneOutline,
   mdiRefresh,
@@ -70,6 +73,9 @@ const initials = (name: string) =>
     .join('')
     .slice(0, 2)
     .toUpperCase()
+const workshopLabel = computed(() =>
+  user.value?.workshop?.name || user.value?.workshop?.code || 'Sin taller asignado',
+)
 
 const confirmDelete = async () => {
   const deleted = await deleteUser()
@@ -192,6 +198,18 @@ const signOut = async () => {
                 <div><dt>Nombre completo</dt><dd>{{ user.name }}</dd></div>
                 <div><dt>Rol operativo</dt><dd>{{ roleLabel }}</dd></div>
                 <div><dt>Estado</dt><dd>{{ statusLabel }}</dd></div>
+                <div>
+                  <dt><v-icon :icon="mdiFileDocumentOutline" size="14" /> Documento</dt>
+                  <dd>{{ user.document_number || 'Sin registrar' }}</dd>
+                </div>
+                <div>
+                  <dt><v-icon :icon="mdiMapMarkerOutline" size="14" /> Dirección</dt>
+                  <dd>{{ user.address || 'Sin registrar' }}</dd>
+                </div>
+                <div>
+                  <dt><v-icon :icon="mdiGarageVariant" size="14" /> Taller asignado</dt>
+                  <dd>{{ workshopLabel }}</dd>
+                </div>
               </dl>
             </article>
 

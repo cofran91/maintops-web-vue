@@ -116,6 +116,10 @@ const initials = (name: string) =>
     .slice(0, 2)
     .toUpperCase()
 const phoneLabel = (user: User) => user.phone || 'Sin teléfono registrado'
+const workshopLabel = (user: User) =>
+  user.workshop?.name ||
+  user.workshop?.code ||
+  (user.workshop_id ? `Taller #${user.workshop_id}` : 'Sin taller asignado')
 
 const deleteMessage = computed(() =>
   userToDelete.value
@@ -295,6 +299,7 @@ const signOut = async () => {
                   <th>Usuario</th>
                   <th>Contacto</th>
                   <th>Rol</th>
+                  <th>Taller</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
@@ -302,7 +307,7 @@ const signOut = async () => {
               <tbody>
                 <template v-if="loading && users.length === 0">
                   <tr v-for="row in 6" :key="row" class="users-skeleton-row">
-                    <td v-for="cell in 4" :key="cell"><v-skeleton-loader type="text" /></td>
+                    <td v-for="cell in 5" :key="cell"><v-skeleton-loader type="text" /></td>
                   </tr>
                 </template>
 
@@ -329,6 +334,10 @@ const signOut = async () => {
                     </td>
                     <td><span class="user-muted">{{ roleLabel(user) }}</span></td>
                     <td>
+                      <strong class="user-workshop">{{ workshopLabel(user) }}</strong>
+                      <small class="user-secondary">{{ user.workshop?.city || 'Asignación operativa' }}</small>
+                    </td>
+                    <td>
                       <v-chip label size="small" :color="statusColor(user)" variant="tonal">
                         {{ statusLabel(user) }}
                       </v-chip>
@@ -346,7 +355,7 @@ const signOut = async () => {
                 </template>
 
                 <tr v-if="!loading && users.length === 0">
-                  <td class="users-empty" colspan="5">
+                  <td class="users-empty" colspan="6">
                     <v-icon :icon="mdiAlertOutline" size="28" />
                     <strong>No encontramos usuarios</strong>
                     <span>Prueba con otros filtros o limpia la búsqueda para ver todo el equipo.</span>

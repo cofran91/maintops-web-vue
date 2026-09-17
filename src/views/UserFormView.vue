@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccountCircleOutline,
@@ -8,7 +8,10 @@ import {
   mdiCheckCircleOutline,
   mdiContentSaveOutline,
   mdiEmailOutline,
+  mdiFileDocumentOutline,
+  mdiGarageVariant,
   mdiLockOutline,
+  mdiMapMarkerOutline,
   mdiPhoneOutline,
   mdiPlus,
   mdiRefresh,
@@ -17,8 +20,10 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import { normalizeApiError, type ApiError } from '@/api/errors'
 import usersApi from '@/modules/users/services/usersService'
+import workshopsApi from '@/modules/workshops/services/workshopsService'
 import { useAuthStore } from '@/stores/auth'
-import type { User, UserPayload } from '@/types/user'
+import type { User, UserPayload, UserWorkshop } from '@/types/user'
+import type { Workshop } from '@/types/workshop'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,12 +33,19 @@ const loading = ref(false)
 const saving = ref(false)
 const loadError = ref('')
 const formError = ref('')
+const workshopLoadError = ref('')
 const validationErrors = ref<Record<string, string[]>>({})
+const loadingWorkshops = ref(false)
+const workshops = ref<Workshop[]>([])
+const selectedWorkshop = ref<UserWorkshop | null>(null)
 
 const form = reactive({
   name: '',
   email: '',
   phone: '',
+  document_number: '',
+  address: '',
+  workshop_id: null as number | null,
   role: '',
   password: '',
   password_confirmation: '',
@@ -41,7 +53,7 @@ const form = reactive({
 })
 
 const roleOptions = [
-  { title: 'Administrador', value: 'system_admin' },
+  { title: 'Administrador', value: 'admin' },
   { title: 'Asesor', value: 'advisor' },
   { title: 'Responsable de taller', value: 'workshop_manager' },
   { title: 'Técnico', value: 'technician' },
@@ -71,6 +83,28 @@ const userInitials = computed(() =>
     .slice(0, 2)
     .toUpperCase(),
 )
+const isSystemAdmin = computed(() =>
+  authStore.roles.some((role) => ['super_admin', 'admin', 'system_admin'].includes(role)),
+)
+const showWorkshopField = computed(
+  () => isSystemAdmin.value && form.role === 'technician',
+)
+const workshopOptions = computed(() => {
+  const options: Array<Workshop | UserWorkshop> = [...workshops.value]
+
+  if (
+    selectedWorkshop.value &&
+    !options.some((workshop) => workshop.id === selectedWorkshop.value?.id)
+  ) {
+    options.unshift(selectedWorkshop.value)
+  }
+
+  return options.map((workshop) => ({
+    ...workshop,
+    title: [workshop.code, workshop.name].filter(Boolean).join(' - '),
+    subtitle: workshop.city || 'Ciudad no registrada',
+  }))
+})
 
 const fieldError = (field: string) => validationErrors.value[field]?.[0] || ''
 
@@ -78,6 +112,10 @@ const resetForm = () => {
   form.name = ''
   form.email = ''
   form.phone = ''
+  form.document_number = ''
+  form.address = ''
+  form.workshop_id = null
+  selectedWorkshop.value = null
   form.role = ''
   form.password = ''
   form.password_confirmation = ''
@@ -87,6 +125,7 @@ const resetForm = () => {
 const resetErrors = () => {
   loadError.value = ''
   formError.value = ''
+  workshopLoadError.value = ''
   validationErrors.value = {}
 }
 
@@ -94,10 +133,29 @@ const fillForm = (user: User) => {
   form.name = user.name || ''
   form.email = user.email || ''
   form.phone = user.phone || ''
+  form.document_number = user.document_number || ''
+  form.address = user.address || ''
+  form.workshop_id = user.workshop_id ?? null
+  selectedWorkshop.value = user.workshop ?? null
   form.role = user.role || user.roles?.[0] || ''
   form.password = ''
   form.password_confirmation = ''
   form.is_active = user.is_active
+}
+
+const loadWorkshops = async () => {
+  loadingWorkshops.value = true
+  workshopLoadError.value = ''
+
+  try {
+    workshops.value = (
+      await workshopsApi.index({ is_active: true, page: 1, per_page: 100 })
+    ).items
+  } catch (error) {
+    workshopLoadError.value = normalizeApiError(error).message
+  } finally {
+    loadingWorkshops.value = false
+  }
 }
 
 const fetchUser = async () => {
@@ -164,12 +222,16 @@ const buildPayload = (): UserPayload => {
     name: form.name.trim(),
     email: form.email.trim().toLowerCase(),
     phone: nullableText(form.phone),
+    document_number: nullableText(form.document_number),
+    address: nullableText(form.address),
+    workshop_id: showWorkshopField.value ? form.workshop_id : null,
     role: form.role,
     is_active: form.is_active,
   }
 
   if (form.password.trim()) {
     payload.password = form.password.trim()
+    payload.password_confirmation = form.password_confirmation.trim()
   }
 
   return payload
@@ -216,6 +278,22 @@ watch(
   },
   { immediate: true },
 )
+
+watch(
+  () => form.role,
+  (role) => {
+    if (role !== 'technician') {
+      form.workshop_id = null
+      selectedWorkshop.value = null
+    }
+  },
+)
+
+onMounted(() => {
+  if (isSystemAdmin.value) {
+    void loadWorkshops()
+  }
+})
 </script>
 
 <template>
@@ -255,6 +333,16 @@ watch(
             <v-btn v-if="loadError && !saving" size="small" variant="text" @click="fetchUser">
               <v-icon :icon="mdiRefresh" class="mr-1" size="15" />
               Reintentar
+            </v-btn>
+          </template>
+        </v-alert>
+
+        <v-alert v-if="workshopLoadError" class="vehicle-form-alert" type="warning" variant="tonal">
+          <span>No fue posible cargar los talleres: {{ workshopLoadError }}</span>
+          <template #append>
+            <v-btn size="small" variant="text" @click="loadWorkshops">
+              <v-icon :icon="mdiRefresh" class="mr-1" size="15" />
+              Reintentar talleres
             </v-btn>
           </template>
         </v-alert>
@@ -304,6 +392,15 @@ watch(
                 :prepend-inner-icon="mdiPhoneOutline"
                 variant="outlined"
               />
+              <v-text-field
+                v-model="form.document_number"
+                :error-messages="fieldError('document_number')"
+                label="Documento"
+                maxlength="100"
+                placeholder="Ej. 1020304050"
+                :prepend-inner-icon="mdiFileDocumentOutline"
+                variant="outlined"
+              />
               <v-select
                 v-model="form.role"
                 :error-messages="fieldError('role')"
@@ -312,6 +409,36 @@ watch(
                 label="Rol operativo"
                 :items="roleOptions"
                 required
+                variant="outlined"
+              />
+              <v-autocomplete
+                v-if="showWorkshopField"
+                v-model="form.workshop_id"
+                :error-messages="fieldError('workshop_id')"
+                item-title="title"
+                item-value="id"
+                label="Taller asignado"
+                :items="workshopOptions"
+                :loading="loadingWorkshops"
+                placeholder="Selecciona el taller del técnico"
+                :prepend-inner-icon="mdiGarageVariant"
+                clearable
+                variant="outlined"
+              >
+                <template #item="{ props, item }">
+                  <v-list-item v-bind="props" :subtitle="item.raw.subtitle" />
+                </template>
+              </v-autocomplete>
+              <v-textarea
+                v-model="form.address"
+                :error-messages="fieldError('address')"
+                class="user-form-field--wide"
+                label="Dirección"
+                maxlength="500"
+                placeholder="Dirección de residencia o contacto"
+                :prepend-inner-icon="mdiMapMarkerOutline"
+                rows="2"
+                auto-grow
                 variant="outlined"
               />
             </div>
@@ -373,6 +500,7 @@ watch(
             <ul>
               <li>El correo se normaliza en minúsculas.</li>
               <li>La contraseña debe tener al menos 8 caracteres.</li>
+              <li>Los técnicos pueden quedar asociados a un taller activo.</li>
               <li>Los usuarios inactivos no podrán iniciar sesión.</li>
             </ul>
             <span class="vehicle-form-aside__footer">

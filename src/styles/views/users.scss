@@ -82,6 +82,7 @@
 
 .users-list-table {
   @extend .owners-list-table;
+  min-width: 900px;
 }
 
 .user-identity {
@@ -100,6 +101,15 @@
 
 .user-muted {
   @extend .owner-muted;
+}
+
+.user-workshop {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  color: #4f5d76;
+  font-weight: 610;
+  text-overflow: ellipsis;
 }
 
 .users-actions-cell {
