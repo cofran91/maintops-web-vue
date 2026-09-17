@@ -20,6 +20,8 @@ const isCanceledRequest = (error: unknown) => {
 export const useOwnerDetail = (ownerId: Ref<string>) => {
   const owner = ref<Owner | null>(null)
   const loading = ref(false)
+  const deleting = ref(false)
+  const deleteDialogOpen = ref(false)
   const errorMessage = ref('')
   let controller: AbortController | null = null
 
@@ -54,6 +56,26 @@ export const useOwnerDetail = (ownerId: Ref<string>) => {
     }
   }
 
+  const deleteOwner = async () => {
+    if (!owner.value) {
+      return false
+    }
+
+    deleting.value = true
+    errorMessage.value = ''
+
+    try {
+      await ownersApi.remove(owner.value.id)
+      deleteDialogOpen.value = false
+      return true
+    } catch (error) {
+      errorMessage.value = normalizeApiError(error).message
+      return false
+    } finally {
+      deleting.value = false
+    }
+  }
+
   watch(ownerId, () => void fetchOwner(), { immediate: true })
 
   onBeforeUnmount(() => {
@@ -64,7 +86,10 @@ export const useOwnerDetail = (ownerId: Ref<string>) => {
   return {
     owner,
     loading,
+    deleting,
+    deleteDialogOpen,
     errorMessage,
     fetchOwner,
+    deleteOwner,
   }
 }

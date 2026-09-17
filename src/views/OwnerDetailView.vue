@@ -12,6 +12,7 @@ import {
   mdiPencilOutline,
   mdiPhoneOutline,
   mdiRefresh,
+  mdiTrashCanOutline,
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -24,7 +25,15 @@ const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const ownerId = computed(() => String(route.params.id ?? ''))
 
-const { errorMessage, fetchOwner, loading, owner } = useOwnerDetail(ownerId)
+const {
+  deleteDialogOpen,
+  deleteOwner,
+  deleting,
+  errorMessage,
+  fetchOwner,
+  loading,
+  owner,
+} = useOwnerDetail(ownerId)
 
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() =>
@@ -39,6 +48,14 @@ const userInitials = computed(() =>
 const ownerTitle = computed(() => owner.value?.name || 'Detalle de propietario')
 const statusLabel = computed(() => (owner.value?.is_active ? 'Activo' : 'Inactivo'))
 const statusColor = computed(() => (owner.value?.is_active ? '#239878' : '#7c8ba6'))
+
+const confirmDelete = async () => {
+  const deleted = await deleteOwner()
+
+  if (deleted) {
+    await router.replace({ name: 'owners' })
+  }
+}
 
 const formatDateTime = (value?: string | null) => {
   if (!value) {
@@ -95,6 +112,16 @@ const signOut = async () => {
             >
               <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
               Editar propietario
+            </v-btn>
+            <v-btn
+              v-if="owner"
+              color="error"
+              height="42"
+              variant="tonal"
+              @click="deleteDialogOpen = true"
+            >
+              <v-icon :icon="mdiTrashCanOutline" class="mr-2" size="17" />
+              Eliminar
             </v-btn>
           </div>
         </header>
@@ -182,6 +209,20 @@ const signOut = async () => {
         </template>
       </div>
     </v-main>
+
+    <v-dialog v-model="deleteDialogOpen" max-width="430">
+      <v-card class="owner-delete-dialog">
+        <v-card-title>¿Eliminar este propietario?</v-card-title>
+        <v-card-text>
+          {{ owner?.name }} dejará de estar disponible para nuevas asignaciones. Esta acción no se puede deshacer desde la plataforma.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="deleting" @click="deleteDialogOpen = false">Cancelar</v-btn>
+          <v-btn color="error" :loading="deleting" @click="confirmDelete">Eliminar propietario</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 

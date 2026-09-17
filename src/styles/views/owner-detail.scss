@@ -55,6 +55,32 @@
   margin-left: 0;
 }
 
+.owner-delete-dialog {
+  border: 1px solid #e8ecf2;
+}
+
+.owner-delete-dialog .v-card-title {
+  padding: 22px 22px 10px;
+  color: #25334c;
+  font-size: 16px;
+  font-weight: 730;
+}
+
+.owner-delete-dialog .v-card-text {
+  padding: 0 22px 15px;
+  color: #73809a;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.owner-delete-dialog .v-card-actions {
+  padding: 10px 17px 17px;
+}
+
+.owner-delete-dialog .v-btn {
+  font-size: 10.5px;
+}
+
 .owner-detail-loading,
 .owner-detail-empty,
 .owner-detail-hero,

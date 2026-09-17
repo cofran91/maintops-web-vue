@@ -46,6 +46,10 @@ export const ownersApi = {
 
     return unwrapApiData<Owner>(response.data)
   },
+
+  async remove(id: string | number) {
+    await http.delete(`/owners/${id}`)
+  },
 }
 
 export default ownersApi
