@@ -39,6 +39,13 @@
   font-size: 12.5px;
 }
 
+.owners-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .owners-refresh {
   color: #5d6b83 !important;
   background: #ffffff !important;
@@ -371,6 +378,15 @@
 
   .owners-refresh {
     width: 100%;
+  }
+
+  .owners-header__actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .owners-header__actions .v-btn {
+    flex: 1;
   }
 
   .owners-summary__scope {

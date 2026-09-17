@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from 'axios'
 import http, { unwrapApiData } from '@/api/http'
-import type { Owner, OwnerPage } from '@/types/owner'
+import type { Owner, OwnerPage, OwnerPayload } from '@/types/owner'
 
 interface ApiResponse<T> {
   data: T
@@ -31,6 +31,18 @@ export const ownersApi = {
 
   async show(id: string | number, config: AxiosRequestConfig = {}) {
     const response = await http.get<ApiResponse<Owner>>(`/owners/${id}`, config)
+
+    return unwrapApiData<Owner>(response.data)
+  },
+
+  async create(payload: OwnerPayload) {
+    const response = await http.post<ApiResponse<Owner>>('/owners', payload)
+
+    return unwrapApiData<Owner>(response.data)
+  },
+
+  async update(id: string | number, payload: OwnerPayload) {
+    const response = await http.put<ApiResponse<Owner>>(`/owners/${id}`, payload)
 
     return unwrapApiData<Owner>(response.data)
   },

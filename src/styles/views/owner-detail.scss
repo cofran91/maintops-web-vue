@@ -43,6 +43,13 @@
   font-size: 12.5px;
 }
 
+.owner-detail-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .owner-detail-alert {
   margin-right: 0;
   margin-left: 0;
@@ -311,6 +318,15 @@
 
   .owner-detail-header .owners-refresh {
     width: 100%;
+  }
+
+  .owner-detail-header__actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .owner-detail-header__actions .v-btn {
+    flex: 1;
   }
 
   .owner-detail-hero,

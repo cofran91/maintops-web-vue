@@ -9,6 +9,7 @@ import {
   mdiClockOutline,
   mdiEmailOutline,
   mdiMapMarkerOutline,
+  mdiPencilOutline,
   mdiPhoneOutline,
   mdiRefresh,
 } from '@mdi/js'
@@ -81,10 +82,21 @@ const signOut = async () => {
             <h1>{{ ownerTitle }}</h1>
             <p>Consulta los datos de contacto y disponibilidad del propietario.</p>
           </div>
-          <v-btn :to="{ name: 'owners' }" class="owners-refresh" height="42" variant="outlined">
-            <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
-            Volver al listado
-          </v-btn>
+          <div class="owner-detail-header__actions">
+            <v-btn :to="{ name: 'owners' }" class="owners-refresh" height="42" variant="outlined">
+              <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
+              Volver al listado
+            </v-btn>
+            <v-btn
+              v-if="owner"
+              color="primary"
+              height="42"
+              :to="{ name: 'owners-edit', params: { id: owner.id } }"
+            >
+              <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
+              Editar propietario
+            </v-btn>
+          </div>
         </header>
 
         <v-alert v-if="errorMessage" class="owners-alert owner-detail-alert" type="error" variant="tonal">

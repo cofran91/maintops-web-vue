@@ -5,6 +5,7 @@ import {
   mdiAccountGroupOutline,
   mdiAlertOutline,
   mdiMagnify,
+  mdiPlus,
   mdiRefresh,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -100,16 +101,22 @@ const signOut = async () => {
             <p>Administra los contactos asociados a los vehículos de la flota.</p>
           </div>
 
-          <v-btn
-            :loading="loading"
-            class="owners-refresh"
-            height="42"
-            variant="outlined"
-            @click="fetchOwners"
-          >
-            <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
-            Actualizar
-          </v-btn>
+          <div class="owners-header__actions">
+            <v-btn color="primary" height="42" :to="{ name: 'owners-new' }">
+              <v-icon :icon="mdiPlus" class="mr-2" size="18" />
+              Nuevo propietario
+            </v-btn>
+            <v-btn
+              :loading="loading"
+              class="owners-refresh"
+              height="42"
+              variant="outlined"
+              @click="fetchOwners"
+            >
+              <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
+              Actualizar
+            </v-btn>
+          </div>
         </header>
 
         <section class="owners-summary" aria-label="Resumen de propietarios">

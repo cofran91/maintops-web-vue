@@ -26,3 +26,12 @@ export interface OwnerFilters {
   search: string
   status: string
 }
+
+export interface OwnerPayload {
+  name: string
+  email: string
+  is_active: boolean
+  phone: string | null
+  document_number: string | null
+  address: string | null
+}

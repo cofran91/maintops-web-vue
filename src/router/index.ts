@@ -54,12 +54,30 @@ const router = createRouter({
       },
     },
     {
+      path: '/owners/new',
+      name: 'owners-new',
+      component: () => import('@/views/OwnerFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Nuevo propietario',
+      },
+    },
+    {
       path: '/owners/:id(\\d+)',
       name: 'owners-detail',
       component: () => import('@/views/OwnerDetailView.vue'),
       meta: {
         requiresAuth: true,
         title: 'Detalle de propietario',
+      },
+    },
+    {
+      path: '/owners/:id(\\d+)/edit',
+      name: 'owners-edit',
+      component: () => import('@/views/OwnerFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Editar propietario',
       },
     },
     {
