@@ -3,6 +3,7 @@ import http, { unwrapApiData } from '@/api/http'
 import type {
   MaintenanceOrderFilters,
   MaintenanceOrder,
+  MaintenanceOrderItemStatus,
   MaintenanceOrderPage,
 } from '@/types/maintenanceOrder'
 import type { MaintenanceOrderAction } from '@/modules/maintenance-orders/utils/orderStatusRules'
@@ -39,6 +40,12 @@ export const maintenanceOrdersApi = {
     })
 
     return unwrapApiData<MaintenanceOrder>(response.data)
+  },
+
+  async updateItemStatus(id: string | number, status: MaintenanceOrderItemStatus) {
+    const response = await http.patch(`/maintenance-order-items/${id}`, { status })
+
+    return unwrapApiData(response.data)
   },
 }
 

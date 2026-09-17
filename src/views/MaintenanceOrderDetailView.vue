@@ -12,6 +12,7 @@ import {
   mdiCheckCircleOutline,
   mdiClockOutline,
   mdiMapMarkerOutline,
+  mdiPlayCircleOutline,
   mdiRefresh,
   mdiTuneVariant,
   mdiTruckDeliveryOutline,
@@ -24,12 +25,15 @@ import { useAuthStore } from '@/stores/auth'
 import { useMaintenanceOrderDetail } from '@/modules/maintenance-orders/composables/useMaintenanceOrderDetail'
 import {
   ORDER_STATUS_LABELS,
+  ORDER_ITEM_STATUS_LABELS,
   type MaintenanceOrder,
   type MaintenanceOrderItem,
 } from '@/types/maintenanceOrder'
 import {
+  orderItemStatusActions,
   orderStatusActions,
   type MaintenanceOrderAction,
+  type MaintenanceOrderItemAction,
 } from '@/modules/maintenance-orders/utils/orderStatusRules'
 
 const route = useRoute()
@@ -43,6 +47,7 @@ const {
   fetchOrder,
   loading,
   order,
+  updateItemStatus,
   updateOrderStatus,
   updatingStatus,
 } = useMaintenanceOrderDetail(orderId)
@@ -65,39 +70,62 @@ const availableActions = computed(() =>
     : [],
 )
 
-const selectedAction = ref<MaintenanceOrderAction | null>(null)
+type SelectedTransition =
+  | { type: 'order'; action: MaintenanceOrderAction }
+  | { type: 'item'; action: MaintenanceOrderItemAction; itemId: number }
+
+const selectedTransition = ref<SelectedTransition | null>(null)
 const actionDialog = ref(false)
 
-const actionLabels: Record<MaintenanceOrderAction, string> = {
+const actionLabels: Record<MaintenanceOrderAction | MaintenanceOrderItemAction, string> = {
   approved: 'Aprobar orden',
   rejected: 'Rechazar orden',
   cancelled: 'Cancelar orden',
   delivered: 'Marcar como entregada',
+  in_progress: 'Iniciar actividad',
+  completed: 'Completar actividad',
 }
 
-const actionDescriptions: Record<MaintenanceOrderAction, string> = {
+const actionDescriptions: Record<MaintenanceOrderAction | MaintenanceOrderItemAction, string> = {
   approved: 'La orden quedará aprobada y podrá continuar con su proceso operativo.',
   rejected: 'La orden quedará rechazada y no continuará al siguiente paso.',
   cancelled: 'La orden quedará cancelada y esta acción no se puede deshacer.',
   delivered: 'La orden quedará registrada como entregada al propietario.',
+  in_progress: 'La actividad comenzará y quedará marcada como trabajo en curso.',
+  completed: 'La actividad quedará registrada como finalizada.',
 }
 
-const actionIcons: Record<MaintenanceOrderAction, string> = {
+const actionIcons: Record<MaintenanceOrderAction | MaintenanceOrderItemAction, string> = {
   approved: mdiCheckCircleOutline,
   rejected: mdiCancel,
   cancelled: mdiCancel,
   delivered: mdiTruckDeliveryOutline,
+  in_progress: mdiPlayCircleOutline,
+  completed: mdiClipboardCheckOutline,
 }
 
-const actionColors: Record<MaintenanceOrderAction, string> = {
+const actionColors: Record<MaintenanceOrderAction | MaintenanceOrderItemAction, string> = {
   approved: 'success',
   rejected: 'error',
   cancelled: 'error',
   delivered: 'primary',
+  in_progress: 'primary',
+  completed: 'success',
 }
 
 const requestStatusChange = (action: MaintenanceOrderAction) => {
-  selectedAction.value = action
+  selectedTransition.value = { type: 'order', action }
+  actionDialog.value = true
+  errorMessage.value = ''
+}
+
+const availableItemActions = (item: MaintenanceOrderItem) =>
+  order.value
+    ? orderItemStatusActions(item, order.value, authStore.user?.roles ?? [], authStore.user)
+    : []
+
+const requestItemStatusChange = (action: MaintenanceOrderItemAction, item: MaintenanceOrderItem) => {
+  selectedTransition.value = { type: 'item', action, itemId: item.id }
   actionDialog.value = true
   errorMessage.value = ''
 }
@@ -105,21 +133,24 @@ const requestStatusChange = (action: MaintenanceOrderAction) => {
 const closeActionDialog = () => {
   if (!updatingStatus.value) {
     actionDialog.value = false
-    selectedAction.value = null
+    selectedTransition.value = null
   }
 }
 
 const confirmStatusChange = async () => {
-  if (!selectedAction.value) {
+  if (!selectedTransition.value) {
     return
   }
 
-  const action = selectedAction.value
-  const updated = await updateOrderStatus(action)
+  const transition = selectedTransition.value
+  const updated =
+    transition.type === 'order'
+      ? await updateOrderStatus(transition.action)
+      : await updateItemStatus(transition.itemId, transition.action)
 
   if (updated) {
     actionDialog.value = false
-    selectedAction.value = null
+    selectedTransition.value = null
   }
 }
 
@@ -143,7 +174,9 @@ const workshopName = (currentOrder: MaintenanceOrder) =>
 
 const statusLabel = (status?: string | null) =>
   status
-    ? ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || 'Estado actualizado'
+    ? ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] ||
+      ORDER_ITEM_STATUS_LABELS[status as keyof typeof ORDER_ITEM_STATUS_LABELS] ||
+      'Estado actualizado'
     : 'Sin estado'
 
 const statusColor = (status?: string | null) => {
@@ -381,6 +414,7 @@ const signOut = async () => {
                     <th>Estado</th>
                     <th>Duración</th>
                     <th>Programada</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -395,6 +429,24 @@ const signOut = async () => {
                     </td>
                     <td><span class="detail-table-muted">{{ itemDuration(item) }}</span></td>
                     <td><span class="detail-table-muted">{{ formatDateTime(item.scheduled_at) }}</span></td>
+                    <td>
+                      <div v-if="availableItemActions(item).length" class="item-actions">
+                        <v-btn
+                          v-for="action in availableItemActions(item)"
+                          :key="action"
+                          :aria-label="actionLabels[action]"
+                          :color="actionColors[action]"
+                          :disabled="updatingStatus"
+                          icon
+                          size="x-small"
+                          variant="tonal"
+                          @click="requestItemStatusChange(action, item)"
+                        >
+                          <v-icon :icon="actionIcons[action]" size="15" />
+                        </v-btn>
+                      </div>
+                      <span v-else class="detail-table-muted">—</span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -416,15 +468,17 @@ const signOut = async () => {
 
     <v-dialog v-model="actionDialog" max-width="430" @update:model-value="closeActionDialog">
       <v-card class="status-dialog">
-        <v-card-title>¿{{ selectedAction ? actionLabels[selectedAction] : 'Actualizar orden' }}?</v-card-title>
+        <v-card-title>
+          ¿{{ selectedTransition ? actionLabels[selectedTransition.action] : 'Actualizar orden' }}?
+        </v-card-title>
         <v-card-text>
-          {{ selectedAction ? actionDescriptions[selectedAction] : '' }}
+          {{ selectedTransition ? actionDescriptions[selectedTransition.action] : '' }}
         </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" :disabled="updatingStatus" @click="closeActionDialog">Cancelar</v-btn>
           <v-btn
-            :color="selectedAction ? actionColors[selectedAction] : 'primary'"
+            :color="selectedTransition ? actionColors[selectedTransition.action] : 'primary'"
             :loading="updatingStatus"
             @click="confirmStatusChange"
           >

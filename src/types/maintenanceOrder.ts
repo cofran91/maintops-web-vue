@@ -13,6 +13,26 @@ export const MAINTENANCE_ORDER_STATUSES = [
 
 export type MaintenanceOrderStatus = (typeof MAINTENANCE_ORDER_STATUSES)[number]
 
+export const MAINTENANCE_ORDER_ITEM_STATUSES = [
+  'pending_owner_approval',
+  'scheduled',
+  'in_progress',
+  'completed',
+  'rejected',
+  'cancelled',
+] as const
+
+export type MaintenanceOrderItemStatus = (typeof MAINTENANCE_ORDER_ITEM_STATUSES)[number]
+
+export const ORDER_ITEM_STATUS_LABELS: Record<MaintenanceOrderItemStatus, string> = {
+  pending_owner_approval: 'Por aprobar',
+  scheduled: 'Programada',
+  in_progress: 'En proceso',
+  completed: 'Finalizada',
+  rejected: 'Rechazada',
+  cancelled: 'Cancelada',
+}
+
 export const ORDER_STATUS_LABELS: Record<MaintenanceOrderStatus, string> = {
   created: 'Creada',
   pending_owner_approval: 'Por aprobar',

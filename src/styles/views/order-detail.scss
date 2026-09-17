@@ -379,7 +379,7 @@
 
 .detail-items-table {
   width: 100%;
-  min-width: 820px;
+  min-width: 920px;
   border-collapse: collapse;
 }
 
@@ -442,6 +442,16 @@
 
 .detail-table-muted {
   color: #71809a;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.item-actions .v-btn {
+  font-size: 8px;
 }
 
 .detail-items-empty {
