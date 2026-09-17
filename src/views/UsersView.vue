@@ -18,6 +18,7 @@ import type { User } from '@/types/user'
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
+const canCreateUser = computed(() => authStore.canUseResource('users', 'create'))
 
 const {
   applyFilters,
@@ -129,7 +130,7 @@ const signOut = async () => {
           </div>
 
           <div class="users-header__actions">
-            <v-btn color="primary" height="42" :to="{ name: 'users-new' }">
+            <v-btn v-if="canCreateUser" color="primary" height="42" :to="{ name: 'users-new' }">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nuevo usuario
             </v-btn>

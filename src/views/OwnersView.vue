@@ -18,6 +18,7 @@ import type { Owner } from '@/types/owner'
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
+const canCreateOwner = computed(() => authStore.canUseResource('owners', 'create'))
 
 const {
   applyFilters,
@@ -102,7 +103,7 @@ const signOut = async () => {
           </div>
 
           <div class="owners-header__actions">
-            <v-btn color="primary" height="42" :to="{ name: 'owners-new' }">
+            <v-btn v-if="canCreateOwner" color="primary" height="42" :to="{ name: 'owners-new' }">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nuevo propietario
             </v-btn>

@@ -18,6 +18,7 @@ import type { Workshop } from '@/types/workshop'
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
+const canCreateWorkshop = computed(() => authStore.canUseResource('workshops', 'create'))
 
 const {
   applyFilters,
@@ -124,7 +125,7 @@ const signOut = async () => {
           </div>
 
           <div class="workshops-header__actions">
-            <v-btn color="primary" height="42" :to="{ name: 'workshops-new' }">
+            <v-btn v-if="canCreateWorkshop" color="primary" height="42" :to="{ name: 'workshops-new' }">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nuevo taller
             </v-btn>

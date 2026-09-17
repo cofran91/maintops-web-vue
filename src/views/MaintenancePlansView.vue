@@ -18,6 +18,7 @@ import type { MaintenancePlan } from '@/types/maintenancePlan'
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
+const canCreatePlan = computed(() => authStore.canUseResource('maintenance-plans', 'create'))
 
 const {
   applyFilters,
@@ -101,7 +102,7 @@ const signOut = async () => {
             <p>Define las rutinas preventivas que mantienen la flota lista para operar.</p>
           </div>
           <div class="maintenance-plans-header__actions">
-            <v-btn color="primary" height="42" :to="{ name: 'maintenance-plans-new' }">
+            <v-btn v-if="canCreatePlan" color="primary" height="42" :to="{ name: 'maintenance-plans-new' }">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nuevo plan
             </v-btn>

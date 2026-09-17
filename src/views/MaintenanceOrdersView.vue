@@ -23,6 +23,7 @@ import {
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
+const canCreateOrder = computed(() => authStore.canUseResource('orders', 'create'))
 
 const {
   applyFilters,
@@ -162,7 +163,7 @@ const signOut = async () => {
           </div>
 
           <div class="orders-header__actions">
-            <v-btn :to="{ name: 'orders-new' }" color="primary" height="42">
+            <v-btn v-if="canCreateOrder" :to="{ name: 'orders-new' }" color="primary" height="42">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nueva orden
             </v-btn>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useRoute, useRouter } from 'vue-router'
+import { canAccessRoute } from '@/auth/permissions'
+import { useAuthStore } from '@/stores/auth'
 import {
   mdiAccountGroupOutline,
   mdiCalendarClockOutline,
@@ -32,6 +35,7 @@ const emit = defineEmits<{
 const { mdAndDown } = useDisplay()
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 
 const navigation = [
   { label: 'Inicio', icon: mdiViewDashboardOutline, route: 'dashboard' },
@@ -50,6 +54,13 @@ const analysisNavigation = [
   { label: 'Reportes', icon: mdiCalendarMonthOutline, route: 'reports' },
   { label: 'Auditoría', icon: mdiHistory, route: 'access-audit' },
 ]
+
+const visibleNavigation = computed(() =>
+  navigation.filter((item) => canAccessRoute(item.route, authStore.user?.roles)),
+)
+const visibleAnalysisNavigation = computed(() =>
+  analysisNavigation.filter((item) => canAccessRoute(item.route, authStore.user?.roles)),
+)
 
 const closeOnMobile = () => {
   if (mdAndDown.value) {
@@ -94,7 +105,7 @@ const isActive = (routeName?: string) => routeName === route.name
       <nav class="sidebar-nav" aria-label="Navegación principal">
         <span class="nav-section-label">Operación</span>
         <button
-          v-for="item in navigation"
+          v-for="item in visibleNavigation"
           :key="item.label"
           :class="['nav-item', { 'nav-item--active': isActive(item.route) }]"
           type="button"
@@ -107,7 +118,7 @@ const isActive = (routeName?: string) => routeName === route.name
 
         <span class="nav-section-label nav-section-label--spaced">Análisis</span>
         <button
-          v-for="item in analysisNavigation"
+          v-for="item in visibleAnalysisNavigation"
           :key="item.label"
           :class="['nav-item', { 'nav-item--active': isActive(item.route) }]"
           type="button"

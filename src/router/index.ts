@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { canAccessRoute } from '@/auth/permissions'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,15 @@ const router = createRouter({
       component: () => import('@/views/ResetPasswordView.vue'),
       meta: {
         title: 'Restablecer contraseña',
+      },
+    },
+    {
+      path: '/forbidden',
+      name: 'forbidden',
+      component: () => import('@/views/ForbiddenView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Acceso no autorizado',
       },
     },
     {
@@ -312,6 +322,13 @@ router.beforeEach(async (to) => {
       query: {
         redirect: to.fullPath,
       },
+    }
+  }
+
+  if (to.meta.requiresAuth && to.name !== 'forbidden' && !canAccessRoute(String(to.name ?? ''), authStore.user?.roles)) {
+    return {
+      name: 'forbidden',
+      query: { resource: String(to.meta.title ?? 'esta sección') },
     }
   }
 

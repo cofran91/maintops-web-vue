@@ -10,6 +10,7 @@ import {
   setStoredToken,
 } from '@/api/http'
 import { normalizeApiError, type ApiError } from '@/api/errors'
+import { canAccessRoute, canUseResource, type PermissionAction } from '@/auth/permissions'
 import {
   fetchCurrentUser,
   login as loginRequest,
@@ -80,6 +81,10 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => Boolean(state.token && state.user),
+    roles: (state) => state.user?.roles ?? [],
+    canAccessRoute: (state) => (routeName: string) => canAccessRoute(routeName, state.user?.roles),
+    canUseResource: (state) => (resource: string, action: PermissionAction) =>
+      canUseResource(resource, action, state.user?.roles),
   },
 
   actions: {

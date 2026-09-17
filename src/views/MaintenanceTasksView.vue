@@ -25,6 +25,7 @@ import { MAINTENANCE_TASK_STATUS_LABELS, MAINTENANCE_TASK_STATUSES, type Mainten
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
+const canCreateTask = computed(() => authStore.canUseResource('maintenance-tasks', 'create'))
 const vehicleSystems = ref<{ id: number; code: string; name: string }[]>([])
 const loadingSystems = ref(false)
 const systemsError = ref('')
@@ -115,7 +116,7 @@ onMounted(() => void fetchVehicleSystems())
 
     <v-main class="tasks-main">
       <div class="tasks-content">
-        <header class="tasks-header"><div><span class="page-date">{{ todayLabel }}</span><h1>Catálogo de tareas</h1><p>Administra las actividades reutilizables que componen tus rutinas de mantenimiento.</p></div><div class="tasks-header__actions"><v-btn color="primary" height="42" :to="{ name: 'maintenance-tasks-new' }"><v-icon :icon="mdiPlus" class="mr-2" size="18" />Nueva tarea</v-btn><v-btn class="tasks-refresh" height="42" :loading="loading" variant="outlined" @click="fetchTasks"><v-icon :icon="mdiRefresh" class="mr-2" size="17" />Actualizar</v-btn></div></header>
+        <header class="tasks-header"><div><span class="page-date">{{ todayLabel }}</span><h1>Catálogo de tareas</h1><p>Administra las actividades reutilizables que componen tus rutinas de mantenimiento.</p></div><div class="tasks-header__actions"><v-btn v-if="canCreateTask" color="primary" height="42" :to="{ name: 'maintenance-tasks-new' }"><v-icon :icon="mdiPlus" class="mr-2" size="18" />Nueva tarea</v-btn><v-btn class="tasks-refresh" height="42" :loading="loading" variant="outlined" @click="fetchTasks"><v-icon :icon="mdiRefresh" class="mr-2" size="17" />Actualizar</v-btn></div></header>
 
         <section class="tasks-summary-grid" aria-label="Resumen del catálogo"><article><span class="tasks-summary__icon tasks-summary__icon--blue"><v-icon :icon="mdiWrenchOutline" size="19" /></span><div><strong>{{ pagination.total }}</strong><span>Tareas registradas</span><small>En el catálogo operativo</small></div></article><article><span class="tasks-summary__icon tasks-summary__icon--teal"><v-icon :icon="mdiCheckCircleOutline" size="19" /></span><div><strong>{{ activeCount }}</strong><span>Disponibles ahora</span><small>De la página actual</small></div></article><article><span class="tasks-summary__icon tasks-summary__icon--amber"><v-icon :icon="mdiCarMultiple" size="19" /></span><div><strong>{{ reusableCount }}</strong><span>Reutilizables</span><small>Sin vehículo específico</small></div></article><article><span class="tasks-summary__icon tasks-summary__icon--slate"><v-icon :icon="mdiClockOutline" size="19" /></span><div><strong>{{ formatDuration(totalDuration) }}</strong><span>Duración visible</span><small>Acumulado de la página</small></div></article></section>
 

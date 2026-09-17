@@ -18,6 +18,7 @@ import type { Vehicle } from '@/types/vehicle'
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
+const canCreateVehicle = computed(() => authStore.canUseResource('vehicles', 'create'))
 
 const {
   applyFilters,
@@ -115,7 +116,7 @@ const signOut = async () => {
           </div>
 
           <div class="vehicles-header__actions">
-            <v-btn color="primary" height="42" :to="{ name: 'vehicles-new' }">
+            <v-btn v-if="canCreateVehicle" color="primary" height="42" :to="{ name: 'vehicles-new' }">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nuevo vehículo
             </v-btn>
