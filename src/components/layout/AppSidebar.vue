@@ -37,7 +37,7 @@ const navigation = [
   { label: 'Vehículos', icon: mdiCarMultiple, route: 'vehicles' },
   { label: 'Propietarios', icon: mdiAccountGroupOutline, route: 'owners' },
   { label: 'Planes de mantenimiento', icon: mdiCalendarClockOutline },
-  { label: 'Talleres', icon: mdiGarageVariant },
+  { label: 'Talleres', icon: mdiGarageVariant, route: 'workshops' },
   { label: 'Usuarios', icon: mdiAccountGroupOutline },
 ]
 

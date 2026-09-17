@@ -54,6 +54,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/workshops',
+      name: 'workshops',
+      component: () => import('@/views/WorkshopsView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Talleres',
+      },
+    },
+    {
       path: '/owners/new',
       name: 'owners-new',
       component: () => import('@/views/OwnerFormView.vue'),
