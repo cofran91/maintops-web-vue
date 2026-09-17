@@ -213,7 +213,13 @@ const signOut = async () => {
                       <div class="workshop-identity">
                         <span class="workshop-identity__icon"><v-icon :icon="mdiGarageVariant" size="17" /></span>
                         <span>
-                          <strong>{{ workshop.name }}</strong>
+                          <router-link
+                            class="workshop-number"
+                            :to="{ name: 'workshops-detail', params: { id: workshop.id } }"
+                            @click.stop
+                          >
+                            {{ workshop.name }}
+                          </router-link>
                           <small>{{ workshop.code }}</small>
                         </span>
                       </div>

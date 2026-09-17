@@ -63,6 +63,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/workshops/:id(\\d+)',
+      name: 'workshops-detail',
+      component: () => import('@/views/WorkshopDetailView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Detalle de taller',
+      },
+    },
+    {
       path: '/owners/new',
       name: 'owners-new',
       component: () => import('@/views/OwnerFormView.vue'),
