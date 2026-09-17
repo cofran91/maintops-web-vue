@@ -43,8 +43,8 @@ const navigation = [
 ]
 
 const analysisNavigation = [
-  { label: 'Analítica', icon: mdiChartBoxOutline },
-  { label: 'Reportes', icon: mdiCalendarMonthOutline },
+  { label: 'Analítica', icon: mdiChartBoxOutline, route: 'analytics' },
+  { label: 'Reportes', icon: mdiCalendarMonthOutline, route: 'reports' },
 ]
 
 const closeOnMobile = () => {
@@ -105,9 +105,9 @@ const isActive = (routeName?: string) => routeName === route.name
         <button
           v-for="item in analysisNavigation"
           :key="item.label"
-          class="nav-item"
+          :class="['nav-item', { 'nav-item--active': isActive(item.route) }]"
           type="button"
-          @click="closeOnMobile"
+          @click="navigate(item.route)"
         >
           <v-icon :icon="item.icon" size="20" />
           <span>{{ item.label }}</span>

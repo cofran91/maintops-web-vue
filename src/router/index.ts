@@ -27,6 +27,24 @@ const router = createRouter({
       },
     },
     {
+      path: '/analytics',
+      name: 'analytics',
+      component: () => import('@/views/AnalyticsView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Analítica operativa',
+      },
+    },
+    {
+      path: '/reports',
+      name: 'reports',
+      component: () => import('@/views/ReportsView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Reportes operativos',
+      },
+    },
+    {
       path: '/orders',
       name: 'orders',
       component: () => import('@/views/MaintenanceOrdersView.vue'),
