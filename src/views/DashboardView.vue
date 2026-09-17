@@ -270,6 +270,10 @@ const signOut = async () => {
   await authStore.logout()
   await router.push({ name: 'login' })
 }
+
+const openOrders = () => {
+  void router.push({ name: 'orders' })
+}
 </script>
 
 <template>
@@ -341,7 +345,7 @@ const signOut = async () => {
           </section>
 
           <section class="content-grid">
-            <RecentOrdersTable :orders="recentOrders" />
+            <RecentOrdersTable :orders="recentOrders" @view-all="openOrders" />
             <UpcomingServices :tasks="upcomingTasks" />
           </section>
         </template>

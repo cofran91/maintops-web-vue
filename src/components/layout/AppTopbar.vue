@@ -6,10 +6,13 @@ import {
   mdiMenu,
 } from '@mdi/js'
 
-defineProps<{
+withDefaults(defineProps<{
   userName: string
   userInitials: string
-}>()
+  context?: string
+}>(), {
+  context: 'Panel de operación',
+})
 
 const emit = defineEmits<{
   (event: 'openMenu'): void
@@ -28,7 +31,7 @@ const emit = defineEmits<{
 
     <div class="topbar-context">
       <small>MaintOps</small>
-      <span>Panel de operación</span>
+      <span>{{ context }}</span>
     </div>
 
     <v-spacer />

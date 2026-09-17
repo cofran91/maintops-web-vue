@@ -5,6 +5,10 @@ import type { RecentOrder } from '@/types/dashboard'
 defineProps<{
   orders: RecentOrder[]
 }>()
+
+const emit = defineEmits<{
+  (event: 'viewAll'): void
+}>()
 </script>
 
 <template>
@@ -14,7 +18,7 @@ defineProps<{
         <h2>Órdenes recientes</h2>
         <p>Últimas actualizaciones de la operación</p>
       </div>
-      <button class="see-all" type="button">
+      <button class="see-all" type="button" @click="emit('viewAll')">
         Ver todas <v-icon :icon="mdiArrowRight" size="17" />
       </button>
     </div>

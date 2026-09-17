@@ -27,6 +27,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/orders',
+      name: 'orders',
+      component: () => import('@/views/MaintenanceOrdersView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Órdenes de mantenimiento',
+      },
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/login',
     },

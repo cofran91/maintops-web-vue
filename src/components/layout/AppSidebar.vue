@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useDisplay } from 'vuetify'
+import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccountGroupOutline,
   mdiCalendarClockOutline,
@@ -27,10 +28,12 @@ const emit = defineEmits<{
 }>()
 
 const { mdAndDown } = useDisplay()
+const route = useRoute()
+const router = useRouter()
 
 const navigation = [
-  { label: 'Inicio', icon: mdiViewDashboardOutline, active: true },
-  { label: 'Órdenes de mantenimiento', icon: mdiClipboardTextOutline, badge: '12' },
+  { label: 'Inicio', icon: mdiViewDashboardOutline, route: 'dashboard' },
+  { label: 'Órdenes de mantenimiento', icon: mdiClipboardTextOutline, route: 'orders', badge: '12' },
   { label: 'Vehículos', icon: mdiCarMultiple },
   { label: 'Planes de mantenimiento', icon: mdiCalendarClockOutline },
   { label: 'Talleres', icon: mdiGarageVariant },
@@ -47,6 +50,16 @@ const closeOnMobile = () => {
     emit('close')
   }
 }
+
+const navigate = (routeName?: string) => {
+  closeOnMobile()
+
+  if (routeName) {
+    void router.push({ name: routeName })
+  }
+}
+
+const isActive = (routeName?: string) => routeName === route.name
 </script>
 
 <template>
@@ -77,9 +90,9 @@ const closeOnMobile = () => {
         <button
           v-for="item in navigation"
           :key="item.label"
-          :class="['nav-item', { 'nav-item--active': item.active }]"
+          :class="['nav-item', { 'nav-item--active': isActive(item.route) }]"
           type="button"
-          @click="closeOnMobile"
+          @click="navigate(item.route)"
         >
           <v-icon :icon="item.icon" size="20" />
           <span>{{ item.label }}</span>
