@@ -36,7 +36,7 @@ const navigation = [
   { label: 'Órdenes de mantenimiento', icon: mdiClipboardTextOutline, route: 'orders', badge: '12' },
   { label: 'Vehículos', icon: mdiCarMultiple, route: 'vehicles' },
   { label: 'Propietarios', icon: mdiAccountGroupOutline, route: 'owners' },
-  { label: 'Planes de mantenimiento', icon: mdiCalendarClockOutline },
+  { label: 'Planes de mantenimiento', icon: mdiCalendarClockOutline, route: 'maintenance-plans' },
   { label: 'Talleres', icon: mdiGarageVariant, route: 'workshops' },
   { label: 'Usuarios', icon: mdiAccountGroupOutline, route: 'users' },
 ]

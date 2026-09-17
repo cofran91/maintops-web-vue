@@ -1,0 +1,26 @@
+@use './vehicle-form.scss';
+
+.maintenance-plan-form-breadcrumbs { display: flex; align-items: center; gap: 7px; margin-bottom: 16px; color: #8b97aa; font-size: 9.5px; }
+.maintenance-plan-form-breadcrumbs a { color: #3158e7; font-weight: 650; }
+.maintenance-plan-form-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-top: 3px; border-top: 1px solid #edf0f4; }
+.maintenance-plan-form-section-heading h3 { margin: 17px 0 4px; color: #2d3a53; font-size: 12px; font-weight: 730; }
+.maintenance-plan-form-section-heading p { margin: 0; color: #929dae; font-size: 9px; line-height: 1.5; }
+.maintenance-plan-form-section-heading .v-btn { margin-top: 14px; font-size: 9.5px; }
+.maintenance-plan-form-error { margin: -11px 0 0; color: #c53939; font-size: 9px; }
+.maintenance-plan-task-editor { display: grid; gap: 12px; }
+.maintenance-plan-task-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) 30px; gap: 11px; padding: 15px; background: #f8faff; border: 1px solid #e6ebf5; border-radius: 12px; }
+.maintenance-plan-task-row__number { display: grid; width: 25px; height: 25px; color: #3158e7; font-size: 9px; font-weight: 720; background: #eaf0ff; border-radius: 7px; place-items: center; }
+.maintenance-plan-task-row__fields { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(120px, .65fr) minmax(160px, .9fr) minmax(120px, .55fr); gap: 12px; }
+.maintenance-plan-task-row__fields .v-textarea { grid-column: 1 / -1; }
+.maintenance-plan-task-row__fields .v-field { border-radius: 10px; }
+.maintenance-plan-task-row__fields .v-label, .maintenance-plan-task-row__fields .v-field__input { font-size: 10px; }
+.maintenance-plan-task-row__remove { align-self: start; }
+@media (max-width: 960px) { .maintenance-plan-task-row__fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) {
+  .maintenance-plan-form-breadcrumbs { margin-bottom: 12px; }
+  .maintenance-plan-form-section-heading { align-items: stretch; flex-direction: column; }
+  .maintenance-plan-form-section-heading .v-btn { align-self: flex-start; margin-top: 9px; }
+  .maintenance-plan-task-row { grid-template-columns: 28px minmax(0, 1fr) 30px; padding: 12px; }
+  .maintenance-plan-task-row__fields { grid-template-columns: 1fr; grid-column: 2 / -1; }
+  .maintenance-plan-task-row__fields .v-textarea { grid-column: auto; }
+}

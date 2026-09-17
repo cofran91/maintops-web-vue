@@ -1,0 +1,48 @@
+@use './users.scss';
+
+.maintenance-plans-shell { @extend .users-shell; }
+.maintenance-plans-main { @extend .users-main; }
+.maintenance-plans-content { @extend .users-content; }
+.maintenance-plans-header { @extend .users-header; }
+.maintenance-plans-header__actions { @extend .users-header__actions; }
+.maintenance-plans-refresh { @extend .users-refresh; }
+.maintenance-plans-summary { @extend .users-summary; }
+.maintenance-plans-summary__icon { @extend .users-summary__icon; }
+.maintenance-plans-summary__scope { @extend .users-summary__scope; }
+.maintenance-plans-panel { @extend .users-panel; }
+.maintenance-plans-panel__heading { @extend .users-panel__heading; }
+.maintenance-plans-filters {
+  @extend .users-filters;
+  grid-template-columns: minmax(250px, 1.5fr) minmax(180px, 0.7fr) auto;
+}
+.maintenance-plans-filters__actions { @extend .users-filters__actions; }
+.maintenance-plans-alert { @extend .users-alert; }
+.maintenance-plans-table-wrap { @extend .users-table-wrap; }
+.maintenance-plans-list-table { @extend .users-list-table; min-width: 920px; }
+.maintenance-plans-list-table th,
+.maintenance-plans-list-table td { @extend .users-list-table; }
+.maintenance-plans-list-table td:nth-child(3) { display: grid; gap: 4px; }
+.maintenance-plan-identity { display: flex; align-items: center; gap: 9px; }
+.maintenance-plan-identity__icon { display: grid; width: 31px; height: 31px; color: #3158e7; background: #eaf0ff; border-radius: 8px; place-items: center; }
+.maintenance-plan-identity > span:last-child { display: grid; gap: 4px; }
+.maintenance-plan-number { color: #3158e7; font-size: 9.5px; font-weight: 700; }
+.maintenance-plan-identity small,
+.maintenance-plan-secondary { color: #9aa4b4; font-size: 8px; }
+.maintenance-plan-muted { color: #71809a; font-size: 9.5px; }
+.maintenance-plan-task-count { color: #34415a; font-size: 10px; font-weight: 700; }
+.maintenance-plans-list-table .v-chip { font-size: 8.5px; font-weight: 680; }
+.maintenance-plans-skeleton-row td { height: 68px; }
+.maintenance-plans-skeleton-row .v-skeleton-loader__bone { width: 70px; height: 10px; }
+.maintenance-plans-empty { @extend .users-empty; }
+.maintenance-plans-pagination { @extend .users-pagination; }
+.maintenance-plans-pagination__controls { @extend .users-pagination__controls; }
+
+@media (max-width: 960px) {
+  .maintenance-plans-filters { grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.7fr); }
+  .maintenance-plans-filters__actions { grid-column: 1 / -1; justify-content: flex-end; }
+}
+
+@media (max-width: 620px) {
+  .maintenance-plans-filters { grid-template-columns: 1fr; }
+  .maintenance-plans-filters__actions { grid-column: auto; justify-content: stretch; }
+}

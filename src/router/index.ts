@@ -36,6 +36,30 @@ const router = createRouter({
       },
     },
     {
+      path: '/maintenance-plans',
+      name: 'maintenance-plans',
+      component: () => import('@/views/MaintenancePlansView.vue'),
+      meta: { requiresAuth: true, title: 'Planes de mantenimiento' },
+    },
+    {
+      path: '/maintenance-plans/new',
+      name: 'maintenance-plans-new',
+      component: () => import('@/views/MaintenancePlanFormView.vue'),
+      meta: { requiresAuth: true, title: 'Nuevo plan' },
+    },
+    {
+      path: '/maintenance-plans/:id(\\d+)',
+      name: 'maintenance-plans-detail',
+      component: () => import('@/views/MaintenancePlanDetailView.vue'),
+      meta: { requiresAuth: true, title: 'Detalle de plan' },
+    },
+    {
+      path: '/maintenance-plans/:id(\\d+)/edit',
+      name: 'maintenance-plans-edit',
+      component: () => import('@/views/MaintenancePlanFormView.vue'),
+      meta: { requiresAuth: true, title: 'Editar plan' },
+    },
+    {
       path: '/vehicles',
       name: 'vehicles',
       component: () => import('@/views/VehiclesView.vue'),
