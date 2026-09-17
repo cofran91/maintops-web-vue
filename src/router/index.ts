@@ -45,12 +45,30 @@ const router = createRouter({
       },
     },
     {
+      path: '/vehicles/new',
+      name: 'vehicles-new',
+      component: () => import('@/views/VehicleFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Nuevo vehículo',
+      },
+    },
+    {
       path: '/vehicles/:id(\\d+)',
       name: 'vehicles-detail',
       component: () => import('@/views/VehicleDetailView.vue'),
       meta: {
         requiresAuth: true,
         title: 'Detalle de vehículo',
+      },
+    },
+    {
+      path: '/vehicles/:id(\\d+)/edit',
+      name: 'vehicles-edit',
+      component: () => import('@/views/VehicleFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Editar vehículo',
       },
     },
     {

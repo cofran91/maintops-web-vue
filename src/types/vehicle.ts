@@ -39,3 +39,13 @@ export interface VehicleFilters {
   model: string
   year: string
 }
+
+export interface VehiclePayload {
+  owner_id: number
+  license_plate: string
+  brand: string | null
+  model: string | null
+  year: number | null
+  color: string | null
+  odometer_km: number
+}

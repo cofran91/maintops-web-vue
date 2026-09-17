@@ -10,6 +10,7 @@ import {
   mdiClockOutline,
   mdiEmailOutline,
   mdiMapMarkerOutline,
+  mdiPencilOutline,
   mdiPhoneOutline,
   mdiRefresh,
   mdiSpeedometer,
@@ -101,6 +102,15 @@ const signOut = async () => {
           >
             <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
             Volver al listado
+          </v-btn>
+          <v-btn
+            v-if="vehicle"
+            color="primary"
+            height="42"
+            :to="{ name: 'vehicles-edit', params: { id: vehicle.id } }"
+          >
+            <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
+            Editar vehículo
           </v-btn>
         </header>
 

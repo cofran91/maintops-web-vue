@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from 'axios'
 import http, { unwrapApiData } from '@/api/http'
-import type { Vehicle, VehicleFilters, VehiclePage } from '@/types/vehicle'
+import type { Vehicle, VehicleFilters, VehiclePage, VehiclePayload } from '@/types/vehicle'
 
 interface ApiResponse<T> {
   data: T
@@ -31,6 +31,18 @@ export const vehiclesApi = {
 
   async show(id: string | number, config: AxiosRequestConfig = {}) {
     const response = await http.get<ApiResponse<Vehicle>>(`/vehicles/${id}`, config)
+
+    return unwrapApiData<Vehicle>(response.data)
+  },
+
+  async create(payload: VehiclePayload) {
+    const response = await http.post<ApiResponse<Vehicle>>('/vehicles', payload)
+
+    return unwrapApiData<Vehicle>(response.data)
+  },
+
+  async update(id: string | number, payload: VehiclePayload) {
+    const response = await http.put<ApiResponse<Vehicle>>(`/vehicles/${id}`, payload)
 
     return unwrapApiData<Vehicle>(response.data)
   },

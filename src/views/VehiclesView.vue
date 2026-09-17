@@ -5,6 +5,7 @@ import {
   mdiAlertOutline,
   mdiCarMultiple,
   mdiMagnify,
+  mdiPlus,
   mdiRefresh,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -113,16 +114,22 @@ const signOut = async () => {
             <p>Consulta la flota disponible para los procesos de mantenimiento.</p>
           </div>
 
-          <v-btn
-            :loading="loading"
-            class="vehicles-refresh"
-            height="42"
-            variant="outlined"
-            @click="fetchVehicles"
-          >
-            <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
-            Actualizar
-          </v-btn>
+          <div class="vehicles-header__actions">
+            <v-btn color="primary" height="42" :to="{ name: 'vehicles-new' }">
+              <v-icon :icon="mdiPlus" class="mr-2" size="18" />
+              Nuevo vehículo
+            </v-btn>
+            <v-btn
+              :loading="loading"
+              class="vehicles-refresh"
+              height="42"
+              variant="outlined"
+              @click="fetchVehicles"
+            >
+              <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
+              Actualizar
+            </v-btn>
+          </div>
         </header>
 
         <section class="vehicles-summary" aria-label="Resumen de vehículos">
