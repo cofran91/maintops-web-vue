@@ -45,6 +45,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/vehicles/:id(\\d+)',
+      name: 'vehicles-detail',
+      component: () => import('@/views/VehicleDetailView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Detalle de vehículo',
+      },
+    },
+    {
       path: '/orders/new',
       name: 'orders-new',
       component: () => import('@/views/MaintenanceOrderFormView.vue'),

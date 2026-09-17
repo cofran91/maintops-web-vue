@@ -210,7 +210,13 @@ const signOut = async () => {
                           <v-icon :icon="mdiCarMultiple" size="17" />
                         </span>
                         <span>
-                          <strong>{{ vehicle.license_plate }}</strong>
+                          <router-link
+                            class="vehicle-number"
+                            :to="{ name: 'vehicles-detail', params: { id: vehicle.id } }"
+                            @click.stop
+                          >
+                            {{ vehicle.license_plate }}
+                          </router-link>
                           <small>{{ vehicleName(vehicle) }}</small>
                         </span>
                       </div>
