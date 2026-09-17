@@ -128,7 +128,7 @@ const enterDashboard = async () => {
             <div class="field-group">
               <div class="field-label-row">
                 <label for="password">Contraseña</label>
-                <button class="text-action" type="button">¿Olvidaste tu contraseña?</button>
+                <router-link class="text-action" :to="{ name: 'forgot-password' }">¿Olvidaste tu contraseña?</router-link>
               </div>
               <v-text-field
                 id="password"

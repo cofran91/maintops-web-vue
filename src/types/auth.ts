@@ -17,3 +17,14 @@ export interface LoginResponse {
   token_type?: string
   user: AuthUser
 }
+
+export interface PasswordResetRequest {
+  email: string
+}
+
+export interface PasswordResetPayload {
+  token: string
+  email: string
+  password: string
+  password_confirmation: string
+}
