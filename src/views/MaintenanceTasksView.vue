@@ -5,6 +5,8 @@ import {
   mdiAlertOutline,
   mdiCarMultiple,
   mdiCheckCircleOutline,
+  mdiChevronDown,
+  mdiChevronUp,
   mdiClockOutline,
   mdiMagnify,
   mdiPencilOutline,
@@ -32,6 +34,7 @@ const systemsError = ref('')
 const deleteDialogOpen = ref(false)
 const taskToDelete = ref<MaintenanceTask | null>(null)
 const deleting = ref(false)
+const filtersExpanded = ref(false)
 
 const {
   applyFilters,
@@ -39,6 +42,7 @@ const {
   errorMessage,
   fetchTasks,
   filters,
+  hasActiveFilters,
   loading,
   pagination,
   perPage,
@@ -121,7 +125,25 @@ onMounted(() => void fetchVehicleSystems())
         <section class="tasks-summary-grid" aria-label="Resumen del catálogo"><article><span class="tasks-summary__icon tasks-summary__icon--blue"><v-icon :icon="mdiWrenchOutline" size="19" /></span><div><strong>{{ pagination.total }}</strong><span>Tareas registradas</span><small>En el catálogo operativo</small></div></article><article><span class="tasks-summary__icon tasks-summary__icon--teal"><v-icon :icon="mdiCheckCircleOutline" size="19" /></span><div><strong>{{ activeCount }}</strong><span>Disponibles ahora</span><small>De la página actual</small></div></article><article><span class="tasks-summary__icon tasks-summary__icon--amber"><v-icon :icon="mdiCarMultiple" size="19" /></span><div><strong>{{ reusableCount }}</strong><span>Reutilizables</span><small>Sin vehículo específico</small></div></article><article><span class="tasks-summary__icon tasks-summary__icon--slate"><v-icon :icon="mdiClockOutline" size="19" /></span><div><strong>{{ formatDuration(totalDuration) }}</strong><span>Duración visible</span><small>Acumulado de la página</small></div></article></section>
 
         <section class="tasks-panel"><div class="tasks-panel__heading"><div><span class="tasks-panel__eyebrow">Biblioteca operativa</span><h2>Actividades de mantenimiento</h2><p>Busca por nombre, código o sistema y mantén las tareas listas para tus planes.</p></div><v-icon :icon="mdiTuneVariant" color="#8290aa" size="21" /></div>
-          <form class="tasks-filters" @submit.prevent="applyFilters"><v-text-field v-model="filters.search" clearable hide-details label="Buscar tarea" placeholder="Nombre, código o sistema" :prepend-inner-icon="mdiMagnify" /><v-select v-model="filters.vehicle_system_id" clearable hide-details item-title="title" item-value="value" label="Sistema" :items="vehicleSystems.map((system) => ({ title: system.name, value: String(system.id) }))" :loading="loadingSystems" /><v-select v-model="filters.status" clearable hide-details item-title="title" item-value="value" label="Estado" :items="statusOptions" /><v-select v-model="filters.is_active" clearable hide-details item-title="title" item-value="value" label="Disponibilidad" :items="activeOptions" /><div class="tasks-filters__actions"><v-btn color="primary" type="submit">Aplicar</v-btn><v-btn variant="text" type="button" @click="clearFilters">Limpiar</v-btn></div></form>
+          <form class="tasks-filters" @submit.prevent="applyFilters">
+            <v-text-field v-model="filters.search" clearable hide-details label="Buscar tarea" placeholder="Nombre, código o sistema" :prepend-inner-icon="mdiMagnify" />
+            <v-text-field v-model="filters.code" clearable hide-details label="Código" placeholder="Ej. ACEITE-001" />
+            <v-select v-model="filters.vehicle_system_id" clearable hide-details item-title="title" item-value="value" label="Sistema" :items="vehicleSystems.map((system) => ({ title: system.name, value: String(system.id) }))" :loading="loadingSystems" />
+            <div class="tasks-filters__actions"><v-btn color="primary" type="submit">Aplicar</v-btn><v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn><v-btn class="tasks-advanced-toggle" size="small" type="button" variant="text" @click="filtersExpanded = !filtersExpanded"><v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" class="mr-1" size="15" />{{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}</v-btn></div>
+          </form>
+          <v-expand-transition>
+            <div v-if="filtersExpanded" class="tasks-filters__advanced">
+              <v-text-field v-model="filters.name" clearable hide-details label="Nombre exacto" placeholder="Nombre de la actividad" />
+              <v-select v-model="filters.status" clearable hide-details item-title="title" item-value="value" label="Estado" :items="statusOptions" />
+              <v-select v-model="filters.is_active" clearable hide-details item-title="title" item-value="value" label="Disponibilidad" :items="activeOptions" />
+              <v-text-field v-model="filters.estimated_duration_from" clearable hide-details label="Duración desde (min)" min="1" type="number" />
+              <v-text-field v-model="filters.estimated_duration_to" clearable hide-details label="Duración hasta (min)" min="1" type="number" />
+              <v-text-field v-model="filters.vehicle_id" clearable hide-details :disabled="filters.without_vehicle" label="ID del vehículo" min="1" type="number" />
+              <v-checkbox v-model="filters.without_vehicle" class="tasks-reusable-filter" color="primary" hide-details label="Solo tareas reutilizables" />
+              <v-text-field v-model="filters.created_from" clearable hide-details label="Creada desde" type="date" />
+              <v-text-field v-model="filters.created_to" clearable hide-details label="Creada hasta" type="date" />
+            </div>
+          </v-expand-transition>
           <v-alert v-if="systemsError" class="tasks-alert" type="warning" variant="tonal">{{ systemsError }}</v-alert><v-progress-linear v-if="loading" color="primary" indeterminate /><v-alert v-if="errorMessage" class="tasks-alert" type="error" variant="tonal"><span>{{ errorMessage }}</span><template #append><v-btn size="small" variant="text" @click="fetchTasks">Reintentar</v-btn></template></v-alert>
           <div class="tasks-table-wrap"><table class="tasks-table"><thead><tr><th>Tarea</th><th>Sistema</th><th>Alcance</th><th>Duración</th><th>Estado</th><th>Actualizada</th><th /></tr></thead><tbody><template v-if="loading && !tasks.length"><tr v-for="row in 6" :key="row" class="tasks-skeleton-row"><td v-for="cell in 7" :key="cell"><v-skeleton-loader type="text" /></td></tr></template><template v-else><tr v-for="task in tasks" :key="task.id"><td><div class="task-identity"><span class="task-identity__icon"><v-icon :icon="mdiWrenchOutline" size="16" /></span><span><router-link :to="{ name: 'maintenance-tasks-detail', params: { id: task.id } }">{{ task.name }}</router-link><small>{{ task.code }}</small></span></div></td><td><span class="task-muted">{{ systemName(task) }}</span><small class="task-secondary">{{ task.vehicle_system?.code || 'Sistema general' }}</small></td><td><span :class="['task-scope', { 'task-scope--specific': task.vehicle_id }]" >{{ vehicleName(task) }}</span></td><td><span class="task-muted">{{ formatDuration(task.estimated_duration_minutes) }}</span></td><td><v-chip label size="small" :color="taskStatusColor(task.status)" variant="tonal">{{ taskStatusLabel(task.status) }}</v-chip></td><td><span class="task-muted">{{ formatDate(task.updated_at) }}</span></td><td><div class="task-row-actions"><v-btn aria-label="Editar tarea" icon size="small" variant="text" :to="{ name: 'maintenance-tasks-edit', params: { id: task.id } }"><v-icon :icon="mdiPencilOutline" size="17" /></v-btn><v-btn aria-label="Eliminar tarea" color="error" icon size="small" variant="text" @click="askDelete(task)"><v-icon :icon="mdiTrashCanOutline" size="17" /></v-btn></div></td></tr></template><tr v-if="!loading && !tasks.length"><td class="tasks-empty" colspan="7"><v-icon :icon="mdiAlertOutline" size="28" /><strong>No encontramos tareas</strong><span>Prueba con otros filtros o registra una nueva actividad.</span></td></tr></tbody></table></div>
           <footer class="tasks-pagination"><span>Mostrando {{ pagination.from ?? 0 }}–{{ pagination.to ?? 0 }} de {{ pagination.total }}</span><div class="tasks-pagination__controls"><v-select hide-details density="compact" item-title="title" item-value="value" label="Por página" :items="pageSizeOptions" :model-value="perPage" variant="outlined" @update:model-value="updatePerPage" /><v-pagination density="comfortable" :length="pagination.last_page" :model-value="pagination.current_page" :total-visible="5" @update:model-value="updatePage" /></div></footer>

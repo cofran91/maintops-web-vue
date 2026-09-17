@@ -1,15 +1,34 @@
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { normalizeApiError } from '@/api/errors'
 import maintenanceTasksApi from '@/modules/maintenance-tasks/services/maintenanceTasksService'
+import { buildListQuery, getNumberQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
 import type { MaintenanceTask, MaintenanceTaskFilters, MaintenanceTaskPage, MaintenanceTaskPagination } from '@/types/maintenanceTask'
+
+const DEFAULT_PER_PAGE = 15
 
 const DEFAULT_PAGINATION: MaintenanceTaskPagination = {
   current_page: 1,
   last_page: 1,
-  per_page: 15,
+  per_page: DEFAULT_PER_PAGE,
   total: 0,
   from: null,
   to: null,
+}
+
+const EMPTY_FILTERS: MaintenanceTaskFilters = {
+  search: '',
+  code: '',
+  vehicle_system_id: '',
+  status: '',
+  name: '',
+  is_active: '',
+  estimated_duration_from: '',
+  estimated_duration_to: '',
+  vehicle_id: '',
+  without_vehicle: false,
+  created_from: '',
+  created_to: '',
 }
 
 const isCanceledRequest = (error: unknown) => {
@@ -19,23 +38,64 @@ const isCanceledRequest = (error: unknown) => {
 }
 
 export const useMaintenanceTasks = () => {
+  const route = useRoute()
+  const router = useRouter()
   const tasks = ref<MaintenanceTask[]>([])
-  const filters = reactive<MaintenanceTaskFilters>({ search: '', vehicle_system_id: '', status: '', is_active: '' })
+  const filters = reactive<MaintenanceTaskFilters>({ ...EMPTY_FILTERS })
   const pagination = ref<MaintenanceTaskPagination>({ ...DEFAULT_PAGINATION })
-  const perPage = ref(15)
+  const perPage = ref(DEFAULT_PER_PAGE)
   const loading = ref(false)
   const errorMessage = ref('')
+  const hasActiveFilters = computed(() => Object.values(filters).some((value) => value !== '' && value !== false))
   let controller: AbortController | null = null
 
-  const fetchTasks = async (page = 1) => {
+  const syncFiltersFromQuery = () => {
+    syncQueryFilters(filters, route.query, EMPTY_FILTERS)
+
+    if (!['', 'created', 'scheduled', 'started', 'cancelled', 'completed', 'rejected'].includes(filters.status)) {
+      filters.status = ''
+    }
+
+    if (!['', 'active', 'inactive'].includes(filters.is_active)) {
+      filters.is_active = ''
+    }
+  }
+
+  const pushListQuery = (page: number, nextPerPage: number) => router.push({
+    name: 'maintenance-tasks',
+    query: buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE),
+  })
+
+  const fetchTasks = async (page = getNumberQuery(route.query.page, 1)) => {
     controller?.abort()
     const nextController = new AbortController()
     controller = nextController
+    const currentPerPage = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+    perPage.value = currentPerPage
     loading.value = true
     errorMessage.value = ''
 
     try {
-      const data: MaintenanceTaskPage = await maintenanceTasksApi.index({ ...filters, page, per_page: perPage.value }, { signal: nextController.signal })
+      const data: MaintenanceTaskPage = await maintenanceTasksApi.index(
+        {
+          search: filters.search.trim(),
+          code: filters.code.trim(),
+          name: filters.name.trim(),
+          vehicle_system_id: filters.vehicle_system_id.trim(),
+          status: filters.status,
+          is_active: filters.is_active,
+          estimated_duration_from: filters.estimated_duration_from.trim(),
+          estimated_duration_to: filters.estimated_duration_to.trim(),
+          vehicle_id: filters.vehicle_id.trim(),
+          without_vehicle: filters.without_vehicle,
+          created_from: filters.created_from,
+          created_to: filters.created_to,
+          page,
+          per_page: currentPerPage,
+        },
+        { signal: nextController.signal },
+      )
+
       tasks.value = data.items
       pagination.value = data.pagination
       perPage.value = data.pagination.per_page
@@ -49,22 +109,27 @@ export const useMaintenanceTasks = () => {
     }
   }
 
-  const applyFilters = () => void fetchTasks(1)
+  const applyFilters = () => void pushListQuery(1, perPage.value)
   const clearFilters = () => {
-    filters.search = ''
-    filters.vehicle_system_id = ''
-    filters.status = ''
-    filters.is_active = ''
+    Object.assign(filters, EMPTY_FILTERS)
     applyFilters()
   }
-  const updatePage = (page: number) => void fetchTasks(page)
-  const updatePerPage = (value: number) => {
-    perPage.value = Number(value)
-    void fetchTasks(1)
-  }
+  const updatePage = (page: number) => void pushListQuery(page, perPage.value)
+  const updatePerPage = (value: number) => void pushListQuery(1, Number(value))
 
-  onMounted(() => void fetchTasks())
-  onBeforeUnmount(() => controller?.abort())
+  watch(
+    () => route.query,
+    () => {
+      syncFiltersFromQuery()
+      void fetchTasks()
+    },
+    { immediate: true },
+  )
 
-  return { tasks, filters, pagination, perPage, loading, errorMessage, fetchTasks, applyFilters, clearFilters, updatePage, updatePerPage }
+  onBeforeUnmount(() => {
+    controller?.abort()
+    controller = null
+  })
+
+  return { tasks, filters, pagination, perPage, loading, errorMessage, hasActiveFilters, fetchTasks, applyFilters, clearFilters, updatePage, updatePerPage }
 }

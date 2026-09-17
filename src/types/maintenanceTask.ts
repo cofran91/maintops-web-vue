@@ -66,9 +66,17 @@ export interface MaintenanceTaskPage {
 
 export interface MaintenanceTaskFilters {
   search: string
+  code: string
   vehicle_system_id: string
   status: string
+  name: string
   is_active: string
+  estimated_duration_from: string
+  estimated_duration_to: string
+  vehicle_id: string
+  without_vehicle: boolean
+  created_from: string
+  created_to: string
 }
 
 export interface MaintenanceTaskPayload {

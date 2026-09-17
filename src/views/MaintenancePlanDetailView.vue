@@ -50,8 +50,8 @@ const statusColor = computed(() => (plan.value?.is_active ? '#239878' : '#7c8ba6
 const intervalLabel = computed(() => {
   if (!plan.value) return 'Sin intervalo definido'
   const parts = []
-  if (plan.value.interval_km) parts.push(`${plan.value.interval_km.toLocaleString('es-CO')} km`)
-  if (plan.value.interval_months) parts.push(`${plan.value.interval_months} ${plan.value.interval_months === 1 ? 'mes' : 'meses'}`)
+  if (plan.value.recommended_interval_days) parts.push(`${plan.value.recommended_interval_days} días`)
+  if (plan.value.recommended_interval_km) parts.push(`${plan.value.recommended_interval_km.toLocaleString('es-CO')} km`)
   return parts.join(' · ') || 'Sin intervalo definido'
 })
 const taskCount = computed(() => plan.value?.tasks_count ?? plan.value?.tasks?.length ?? 0)
@@ -147,8 +147,8 @@ const signOut = async () => {
             <article class="maintenance-plan-detail-card">
               <div class="maintenance-plan-detail-card__heading"><span class="maintenance-plan-detail-card__icon maintenance-plan-detail-card__icon--teal"><v-icon :icon="mdiWrenchOutline" size="18" /></span><div><h2>Resumen operativo</h2><p>Actividades incluidas en la rutina</p></div></div>
               <div class="maintenance-plan-detail-summary"><strong>{{ taskCount }}</strong><span>actividades de mantenimiento</span></div>
-              <div class="maintenance-plan-detail-summary"><strong>{{ plan.interval_km ? `${plan.interval_km.toLocaleString('es-CO')} km` : '—' }}</strong><span>intervalo por kilometraje</span></div>
-              <div class="maintenance-plan-detail-summary"><strong>{{ plan.interval_months ? `${plan.interval_months} meses` : '—' }}</strong><span>intervalo por tiempo</span></div>
+              <div class="maintenance-plan-detail-summary"><strong>{{ plan.recommended_interval_km ? `${plan.recommended_interval_km.toLocaleString('es-CO')} km` : '—' }}</strong><span>intervalo por kilometraje</span></div>
+              <div class="maintenance-plan-detail-summary"><strong>{{ plan.recommended_interval_days ? `${plan.recommended_interval_days} días` : '—' }}</strong><span>intervalo por tiempo</span></div>
             </article>
           </section>
 
@@ -159,7 +159,7 @@ const signOut = async () => {
                 <thead><tr><th>#</th><th>Actividad</th><th>Sistema</th><th>Duración estimada</th></tr></thead>
                 <tbody>
                   <tr v-for="(task, index) in plan.tasks || []" :key="task.id || task.code">
-                    <td><span class="maintenance-plan-task-order">{{ task.sequence || index + 1 }}</span></td>
+                    <td><span class="maintenance-plan-task-order">{{ index + 1 }}</span></td>
                     <td><strong>{{ task.name }}</strong><small>{{ task.code }}{{ task.description ? ` · ${task.description}` : '' }}</small></td>
                     <td><span class="maintenance-plan-muted">{{ taskSystem(task) }}</span></td>
                     <td><span class="maintenance-plan-muted">{{ formatDuration(task.estimated_duration_minutes) }}</span></td>

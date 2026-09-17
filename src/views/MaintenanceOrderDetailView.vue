@@ -195,7 +195,7 @@ const planOptions = computed(() =>
   plans.value.map((maintenancePlan) => ({
     ...maintenancePlan,
     title: [maintenancePlan.code, maintenancePlan.name].filter(Boolean).join(' · '),
-    subtitle: `${maintenancePlan.tasks?.length ?? maintenancePlan.tasks_count ?? 0} actividades · ${maintenancePlan.interval_km ? `${maintenancePlan.interval_km.toLocaleString('es-CO')} km` : 'frecuencia definida'}`,
+    subtitle: `${maintenancePlan.tasks?.length ?? maintenancePlan.tasks_count ?? 0} actividades · ${maintenancePlan.recommended_interval_km ? `${maintenancePlan.recommended_interval_km.toLocaleString('es-CO')} km` : 'frecuencia definida'}`,
   })),
 )
 
@@ -315,7 +315,7 @@ const loadActivityOptions = async () => {
   loadingActivityOptions.value = true
   activityError.value = ''
   try {
-    plans.value = (await maintenancePlansApi.index({ status: 'active', page: 1, per_page: 100 })).items
+    plans.value = (await maintenancePlansApi.index({ is_active: 'active', page: 1, per_page: 100 })).items
   } catch (error) {
     activityError.value = normalizeApiError(error).message
   } finally {

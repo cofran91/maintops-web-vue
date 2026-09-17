@@ -23,8 +23,17 @@ export const maintenancePlansApi = {
       ...config,
       params: {
         search: query.search || undefined,
+        name: query.name || undefined,
+        code: query.code || undefined,
         is_active:
-          query.status === 'active' ? true : query.status === 'inactive' ? false : undefined,
+          query.is_active === 'active' ? true : query.is_active === 'inactive' ? false : undefined,
+        task_id: query.task_id || undefined,
+        recommended_interval_days_from: query.recommended_interval_days_from || undefined,
+        recommended_interval_days_to: query.recommended_interval_days_to || undefined,
+        recommended_interval_km_from: query.recommended_interval_km_from || undefined,
+        recommended_interval_km_to: query.recommended_interval_km_to || undefined,
+        created_from: query.created_from || undefined,
+        created_to: query.created_to || undefined,
         page: query.page || 1,
         per_page: query.per_page || 15,
       },

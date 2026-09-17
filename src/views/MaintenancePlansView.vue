@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
   mdiCalendarClockOutline,
+  mdiChevronDown,
+  mdiChevronUp,
   mdiMagnify,
   mdiPlus,
   mdiRefresh,
@@ -11,6 +13,7 @@ import {
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import MaintenanceTaskCombobox from '@/modules/maintenance-tasks/components/MaintenanceTaskCombobox.vue'
 import { useMaintenancePlans } from '@/modules/maintenance-plans/composables/useMaintenancePlans'
 import { useAuthStore } from '@/stores/auth'
 import type { MaintenancePlan } from '@/types/maintenancePlan'
@@ -26,6 +29,7 @@ const {
   errorMessage,
   fetchPlans,
   filters,
+  hasActiveFilters,
   loading,
   pagination,
   perPage,
@@ -34,6 +38,7 @@ const {
   plans,
 } = useMaintenancePlans()
 
+const filtersExpanded = ref(false)
 const statusOptions = [
   { title: 'Todos los estados', value: '' },
   { title: 'Activos', value: 'active' },
@@ -68,8 +73,8 @@ const statusColor = (plan: MaintenancePlan) => (plan.is_active ? '#239878' : '#7
 const taskCount = (plan: MaintenancePlan) => plan.tasks_count ?? plan.tasks?.length ?? 0
 const intervalLabel = (plan: MaintenancePlan) => {
   const parts = []
-  if (plan.interval_km) parts.push(`${plan.interval_km.toLocaleString('es-CO')} km`)
-  if (plan.interval_months) parts.push(`${plan.interval_months} ${plan.interval_months === 1 ? 'mes' : 'meses'}`)
+  if (plan.recommended_interval_days) parts.push(`${plan.recommended_interval_days} días`)
+  if (plan.recommended_interval_km) parts.push(`${plan.recommended_interval_km.toLocaleString('es-CO')} km`)
   return parts.join(' · ') || 'Sin intervalo definido'
 }
 const formatDate = (value?: string | null) => {
@@ -141,8 +146,9 @@ const signOut = async () => {
               placeholder="Código o nombre del plan"
               :prepend-inner-icon="mdiMagnify"
             />
+            <v-text-field v-model="filters.code" hide-details label="Código" placeholder="Ej. PM-10000" />
             <v-select
-              v-model="filters.status"
+              v-model="filters.is_active"
               hide-details
               item-title="title"
               item-value="value"
@@ -151,9 +157,31 @@ const signOut = async () => {
             />
             <div class="maintenance-plans-filters__actions">
               <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
-              <v-btn variant="text" type="button" @click="clearFilters">Limpiar</v-btn>
+              <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn>
+              <v-btn class="maintenance-plans-advanced-toggle" size="small" type="button" variant="text" @click="filtersExpanded = !filtersExpanded">
+                <v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" class="mr-1" size="15" />
+                {{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}
+              </v-btn>
             </div>
           </form>
+
+          <v-expand-transition>
+            <div v-if="filtersExpanded" class="maintenance-plans-filters__advanced">
+              <v-text-field v-model="filters.name" hide-details label="Nombre exacto" placeholder="Nombre del plan" />
+              <MaintenanceTaskCombobox
+                :model-value="filters.task_id"
+                label="Actividad incluida"
+                placeholder="Busca una tarea del catálogo"
+                @update:model-value="filters.task_id = $event ? String($event) : ''"
+              />
+              <v-text-field v-model="filters.recommended_interval_days_from" hide-details label="Días desde" min="1" type="number" />
+              <v-text-field v-model="filters.recommended_interval_days_to" hide-details label="Días hasta" min="1" type="number" />
+              <v-text-field v-model="filters.recommended_interval_km_from" hide-details label="Kilómetros desde" min="1" type="number" />
+              <v-text-field v-model="filters.recommended_interval_km_to" hide-details label="Kilómetros hasta" min="1" type="number" />
+              <v-text-field v-model="filters.created_from" hide-details label="Creado desde" type="date" />
+              <v-text-field v-model="filters.created_to" hide-details label="Creado hasta" type="date" />
+            </div>
+          </v-expand-transition>
 
           <v-progress-linear v-if="loading" color="primary" indeterminate />
           <v-alert v-if="errorMessage" class="maintenance-plans-alert" type="error" variant="tonal">

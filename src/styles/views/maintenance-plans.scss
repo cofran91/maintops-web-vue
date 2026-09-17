@@ -13,9 +13,26 @@
 .maintenance-plans-panel__heading { @extend .users-panel__heading; }
 .maintenance-plans-filters {
   @extend .users-filters;
-  grid-template-columns: minmax(250px, 1.5fr) minmax(180px, 0.7fr) auto;
+  grid-template-columns: minmax(220px, 1.35fr) minmax(160px, .7fr) minmax(170px, .7fr) auto;
 }
 .maintenance-plans-filters__actions { @extend .users-filters__actions; }
+.maintenance-plans-filters__actions { flex-wrap: wrap; justify-content: flex-end; }
+.maintenance-plans-advanced-toggle { color: #60708a !important; }
+.maintenance-plans-filters__advanced {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+  padding: 0 22px 19px;
+  border-top: 1px dashed #e8ecf2;
+  padding-top: 16px;
+}
+.maintenance-plans-filters__advanced .v-field,
+.maintenance-plans-filters .v-field { border-radius: 10px; }
+.maintenance-plans-filters__advanced .v-label,
+.maintenance-plans-filters__advanced .v-field__input,
+.maintenance-plans-filters .v-label,
+.maintenance-plans-filters .v-field__input,
+.maintenance-plans-filters .v-select__selection-text { font-size: 10px; }
 .maintenance-plans-alert { @extend .users-alert; }
 .maintenance-plans-table-wrap { @extend .users-table-wrap; }
 .maintenance-plans-list-table { @extend .users-list-table; min-width: 920px; }
@@ -38,11 +55,13 @@
 .maintenance-plans-pagination__controls { @extend .users-pagination__controls; }
 
 @media (max-width: 960px) {
-  .maintenance-plans-filters { grid-template-columns: minmax(220px, 1fr) minmax(180px, 0.7fr); }
+  .maintenance-plans-filters { grid-template-columns: minmax(220px, 1fr) minmax(160px, .7fr); }
   .maintenance-plans-filters__actions { grid-column: 1 / -1; justify-content: flex-end; }
+  .maintenance-plans-filters__advanced { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
 }
 
 @media (max-width: 620px) {
   .maintenance-plans-filters { grid-template-columns: 1fr; }
   .maintenance-plans-filters__actions { grid-column: auto; justify-content: stretch; }
+  .maintenance-plans-filters__advanced { grid-template-columns: 1fr; padding-right: 15px; padding-left: 15px; }
 }

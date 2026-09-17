@@ -1,4 +1,7 @@
 import type { MaintenanceOrderPagination } from '@/types/maintenanceOrder'
+import type { MaintenanceTask } from '@/types/maintenanceTask'
+
+export type { MaintenanceTask } from '@/types/maintenanceTask'
 
 export interface MaintenancePlanVehicleSystem {
   id: number
@@ -6,25 +9,14 @@ export interface MaintenancePlanVehicleSystem {
   name?: string | null
 }
 
-export interface MaintenanceTask {
-  id: number
-  code: string
-  name: string
-  description?: string | null
-  vehicle_system_id?: number | null
-  vehicle_system?: MaintenancePlanVehicleSystem | null
-  estimated_duration_minutes?: number | null
-  sequence?: number | null
-  is_active?: boolean
-}
-
 export interface MaintenancePlan {
   id: number
   code: string
   name: string
   description?: string | null
-  interval_km?: number | null
-  interval_months?: number | null
+  recommended_interval_days?: number | null
+  recommended_interval_km?: number | null
+  task_ids?: number[]
   is_active: boolean
   tasks?: MaintenanceTask[]
   tasks_count?: number
@@ -39,25 +31,24 @@ export interface MaintenancePlanPage {
 
 export interface MaintenancePlanFilters {
   search: string
-  status: string
-}
-
-export interface MaintenanceTaskPayload {
-  id?: number
   code: string
+  is_active: string
   name: string
-  description: string | null
-  vehicle_system_id: number | null
-  estimated_duration_minutes: number | null
-  sequence: number
+  task_id: string
+  recommended_interval_days_from: string
+  recommended_interval_days_to: string
+  recommended_interval_km_from: string
+  recommended_interval_km_to: string
+  created_from: string
+  created_to: string
 }
 
 export interface MaintenancePlanPayload {
   code: string
   name: string
   description: string | null
-  interval_km: number | null
-  interval_months: number | null
+  recommended_interval_days: number | null
+  recommended_interval_km: number | null
+  task_ids: number[]
   is_active: boolean
-  tasks: MaintenanceTaskPayload[]
 }
