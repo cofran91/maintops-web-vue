@@ -363,6 +363,55 @@
   padding: 33px clamp(20px, 2.7vw, 44px) 46px;
 }
 
+.dashboard-alert {
+  align-items: center;
+  margin-bottom: 17px;
+  border-radius: 13px;
+  font-size: 11px;
+}
+
+.dashboard-alert .v-alert__content {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-alert .v-btn {
+  font-size: 10px;
+}
+
+.dashboard-state {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  padding: 76px 24px;
+  color: #7f8ba0;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #e8ecf2;
+  border-radius: 15px;
+  box-shadow: 0 5px 16px rgba(27, 41, 70, 0.025);
+}
+
+.dashboard-state strong {
+  color: #32405a;
+  font-size: 14px;
+}
+
+.dashboard-state span {
+  max-width: 310px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.dashboard-state .v-btn {
+  margin-top: 7px;
+  font-size: 11px;
+}
+
+.dashboard-state--loading strong {
+  margin-top: 6px;
+}
+
 .page-header {
   display: flex;
   align-items: flex-end;
@@ -891,6 +940,13 @@
   border-bottom: 0;
 }
 
+.table-empty {
+  height: 84px !important;
+  color: #8d98aa !important;
+  font-size: 10px !important;
+  text-align: center;
+}
+
 .orders-table tbody tr {
   transition: background 150ms ease;
 }
@@ -1011,6 +1067,13 @@
   display: grid;
   gap: 2px;
   margin-top: 17px;
+}
+
+.schedule-empty {
+  margin: 16px 0 10px;
+  color: #8d98aa;
+  font-size: 9px;
+  text-align: center;
 }
 
 .schedule-item {

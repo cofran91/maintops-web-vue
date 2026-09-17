@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
@@ -9,7 +9,11 @@ import MetricCard from '@/components/dashboard/MetricCard.vue'
 import OrderStatusChart from '@/components/dashboard/OrderStatusChart.vue'
 import RecentOrdersTable from '@/components/dashboard/RecentOrdersTable.vue'
 import UpcomingServices from '@/components/dashboard/UpcomingServices.vue'
+import { useDashboardOverview } from '@/modules/dashboard/composables/useDashboardOverview'
 import type {
+  DashboardUser,
+  DashboardVehicle,
+  DashboardWorkshop,
   DashboardStat,
   RecentOrder,
   StatusBreakdown,
@@ -28,44 +32,13 @@ import {
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
+const { errorMessage, fetchSummary, loading, summary } = useDashboardOverview()
 
-const stats: DashboardStat[] = [
-  {
-    label: 'Órdenes activas',
-    value: '24',
-    detail: 'vs. 21 el mes pasado',
-    change: '+12%',
-    icon: mdiWrenchOutline,
-    tone: 'blue',
-    points: '1,27 17,25 32,18 48,21 63,12 79,15 99,5',
-  },
-  {
-    label: 'Programadas hoy',
-    value: '18',
-    detail: '4 próximas a iniciar',
-    change: 'Hoy',
-    icon: mdiCalendarCheckOutline,
-    tone: 'teal',
-    points: '1,25 17,18 32,21 48,13 63,16 79,8 99,10',
-  },
-  {
-    label: 'Por aprobación',
-    value: '7',
-    detail: '2 requieren atención',
-    change: 'Pendiente',
-    icon: mdiClipboardTextOutline,
-    tone: 'amber',
-    points: '1,17 17,20 32,14 48,18 63,10 79,13 99,7',
-  },
-  {
-    label: 'Fuera de plazo',
-    value: '3',
-    detail: '2 menos esta semana',
-    change: '-2',
-    icon: mdiAlertOutline,
-    tone: 'red',
-    points: '1,9 17,13 32,8 48,17 63,15 79,23 99,20',
-  },
+const chartPoints = [
+  '1,27 17,25 32,18 48,21 63,12 79,15 99,5',
+  '1,25 17,18 32,21 48,13 63,16 79,8 99,10',
+  '1,17 17,20 32,14 48,18 63,10 79,13 99,7',
+  '1,9 17,13 32,8 48,17 63,15 79,23 99,20',
 ]
 
 const weekActivity: WeekActivity[] = [
@@ -78,84 +51,6 @@ const weekActivity: WeekActivity[] = [
   { day: 'Dom', planned: 32, completed: 24 },
 ]
 
-const statusBreakdown: StatusBreakdown[] = [
-  { label: 'En proceso', value: 42, count: 24, color: '#3158e7' },
-  { label: 'Programadas', value: 28, count: 16, color: '#14a694' },
-  { label: 'Finalizadas', value: 21, count: 12, color: '#8090ad' },
-  { label: 'En pausa', value: 9, count: 5, color: '#f1a13c' },
-]
-
-const recentOrders: RecentOrder[] = [
-  {
-    id: 'OT-1048',
-    vehicle: 'Toyota Hilux',
-    plate: 'KLM 482',
-    workshop: 'Taller Norte',
-    technician: 'Carlos M.',
-    initials: 'CM',
-    date: 'Hoy, 10:30',
-    status: 'En proceso',
-    statusKey: 'progress',
-  },
-  {
-    id: 'OT-1047',
-    vehicle: 'Renault Duster',
-    plate: 'JRP 910',
-    workshop: 'Taller Central',
-    technician: 'Diana R.',
-    initials: 'DR',
-    date: 'Hoy, 09:15',
-    status: 'Finalizada',
-    statusKey: 'done',
-  },
-  {
-    id: 'OT-1046',
-    vehicle: 'Chevrolet NHR',
-    plate: 'UXT 235',
-    workshop: 'Taller Sur',
-    technician: 'Andrés P.',
-    initials: 'AP',
-    date: 'Hoy, 08:40',
-    status: 'Programada',
-    statusKey: 'scheduled',
-  },
-  {
-    id: 'OT-1045',
-    vehicle: 'Mazda CX-30',
-    plate: 'LNS 604',
-    workshop: 'Taller Central',
-    technician: 'Laura G.',
-    initials: 'LG',
-    date: 'Ayer, 16:20',
-    status: 'Por aprobar',
-    statusKey: 'pending',
-  },
-]
-
-const upcomingTasks: UpcomingTask[] = [
-  {
-    time: '09:30',
-    title: 'Cambio de aceite y filtros',
-    vehicle: 'Chevrolet NHR · UXT 235',
-    location: 'Taller Sur',
-    tone: 'blue',
-  },
-  {
-    time: '11:15',
-    title: 'Revisión sistema de frenos',
-    vehicle: 'Renault Duster · JRP 910',
-    location: 'Taller Central',
-    tone: 'teal',
-  },
-  {
-    time: '14:00',
-    title: 'Alineación y balanceo',
-    vehicle: 'Toyota Hilux · KLM 482',
-    location: 'Taller Norte',
-    tone: 'amber',
-  },
-]
-
 const todayLabel = computed(() => {
   const label = new Intl.DateTimeFormat('es-CO', {
     weekday: 'long',
@@ -166,6 +61,197 @@ const todayLabel = computed(() => {
   return label.charAt(0).toUpperCase() + label.slice(1)
 })
 
+const metricValue = (key: string) => Number(summary.value?.metrics[key] ?? 0)
+
+const totalOrders = computed(() => {
+  const reportedTotal = metricValue('total_orders')
+
+  if (reportedTotal > 0) {
+    return reportedTotal
+  }
+
+  return Object.values(summary.value?.orders_by_status ?? {}).reduce(
+    (total, count) => total + Number(count),
+    0,
+  )
+})
+
+const stats = computed<DashboardStat[]>(() => [
+  {
+    label: 'Órdenes activas',
+    value: String(metricValue('active_orders')),
+    detail: `${summary.value?.activities.active ?? 0} actividades en curso`,
+    change: 'Actual',
+    icon: mdiWrenchOutline,
+    tone: 'blue',
+    points: chartPoints[0] ?? '',
+  },
+  {
+    label: 'Programadas hoy',
+    value: String(summary.value?.today_schedules.length ?? 0),
+    detail: `${summary.value?.upcoming_schedules.length ?? 0} próximas a iniciar`,
+    change: 'Hoy',
+    icon: mdiCalendarCheckOutline,
+    tone: 'teal',
+    points: chartPoints[1] ?? '',
+  },
+  {
+    label: 'Por aprobación',
+    value: String(metricValue('awaiting_owner_approval')),
+    detail: 'Requieren revisión',
+    change: 'Atención',
+    icon: mdiClipboardTextOutline,
+    tone: 'amber',
+    points: chartPoints[2] ?? '',
+  },
+  {
+    label: 'Fuera de plazo',
+    value: String(metricValue('overdue_activities')),
+    detail: 'Seguimiento requerido',
+    change: 'Revisar',
+    icon: mdiAlertOutline,
+    tone: 'red',
+    points: chartPoints[3] ?? '',
+  },
+])
+
+const rawStatusCount = (status: string) => Number(summary.value?.orders_by_status[status] ?? 0)
+
+const statusBreakdown = computed<StatusBreakdown[]>(() => {
+  const knownStatuses = [
+    { label: 'En proceso', count: rawStatusCount('in_progress'), color: '#3158e7' },
+    { label: 'Programadas', count: rawStatusCount('scheduled'), color: '#14a694' },
+    { label: 'Finalizadas', count: rawStatusCount('completed'), color: '#8090ad' },
+  ]
+  const knownCount = knownStatuses.reduce((total, status) => total + status.count, 0)
+  const pendingCount = Math.max(0, totalOrders.value - knownCount)
+  const statuses = [...knownStatuses, { label: 'Por gestionar', count: pendingCount, color: '#f1a13c' }]
+
+  let assignedPercentage = 0
+
+  return statuses.map((status, index) => {
+    const value =
+      index === statuses.length - 1
+        ? Math.max(0, 100 - assignedPercentage)
+        : totalOrders.value > 0
+          ? Math.round((status.count / totalOrders.value) * 100)
+          : 0
+
+    assignedPercentage += value
+
+    return {
+      ...status,
+      value,
+    }
+  })
+})
+
+const scheduleOrders = computed(() => {
+  const orders = [...(summary.value?.today_schedules ?? []), ...(summary.value?.upcoming_schedules ?? [])]
+  const uniqueOrders = new Map<number, (typeof orders)[number]>()
+
+  orders.forEach((order) => uniqueOrders.set(order.maintenance_order_id, order))
+
+  return [...uniqueOrders.values()]
+})
+
+const vehicleLabel = (vehicle?: DashboardVehicle | null) =>
+  vehicle ? [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || 'Vehículo' : 'Vehículo'
+
+const plateLabel = (vehicle?: DashboardVehicle | null) =>
+  vehicle?.license_plate || 'Sin placa'
+
+const workshopLabel = (workshop?: DashboardWorkshop | null) =>
+  workshop?.name || workshop?.code || 'Taller pendiente'
+
+const technicianLabel = (technician?: DashboardUser | null) =>
+  technician?.name || 'Sin asignar'
+
+const statusLabel = (status: string) => {
+  const labels: Record<string, string> = {
+    created: 'Creada',
+    pending_owner_approval: 'Por aprobar',
+    approved: 'Aprobada',
+    partially_approved: 'Parcialmente aprobada',
+    scheduled: 'Programada',
+    in_progress: 'En proceso',
+    completed: 'Finalizada',
+    rejected: 'Rechazada',
+    canceled: 'Cancelada',
+  }
+
+  return labels[status] ?? 'Actualizada'
+}
+
+const statusKey = (status: string): RecentOrder['statusKey'] => {
+  if (status === 'completed') {
+    return 'done'
+  }
+
+  if (status === 'in_progress') {
+    return 'progress'
+  }
+
+  if (status === 'scheduled') {
+    return 'scheduled'
+  }
+
+  return 'pending'
+}
+
+const dateLabel = (value?: string | null) => {
+  if (!value) {
+    return 'Sin fecha'
+  }
+
+  return new Intl.DateTimeFormat('es-CO', {
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+  }).format(new Date(value))
+}
+
+const timeLabel = (value?: string | null) => {
+  if (!value) {
+    return '--:--'
+  }
+
+  return new Intl.DateTimeFormat('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value))
+}
+
+const recentOrders = computed<RecentOrder[]>(() =>
+  scheduleOrders.value.slice(0, 4).map((order) => ({
+    id: `OT-${String(order.maintenance_order_id).padStart(4, '0')}`,
+    vehicle: vehicleLabel(order.vehicle),
+    plate: plateLabel(order.vehicle),
+    workshop: workshopLabel(order.workshop),
+    technician: technicianLabel(order.technician),
+    initials: technicianLabel(order.technician)
+      .split(' ')
+      .map((part) => part.charAt(0))
+      .join('')
+      .slice(0, 2)
+      .toUpperCase(),
+    date: dateLabel(order.scheduled_at),
+    status: statusLabel(order.status),
+    statusKey: statusKey(order.status),
+  })),
+)
+
+const upcomingTasks = computed<UpcomingTask[]>(() =>
+  scheduleOrders.value.slice(0, 3).map((order, index) => ({
+    time: timeLabel(order.scheduled_at),
+    title: order.status === 'in_progress' ? 'Mantenimiento en curso' : 'Mantenimiento programado',
+    vehicle: `${vehicleLabel(order.vehicle)} · ${plateLabel(order.vehicle)}`,
+    location: workshopLabel(order.workshop),
+    tone: (['blue', 'teal', 'amber'][index] ?? 'blue') as UpcomingTask['tone'],
+  })),
+)
+
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() =>
   userName.value
@@ -175,6 +261,10 @@ const userInitials = computed(() =>
     .slice(0, 2)
     .toUpperCase(),
 )
+
+onMounted(() => {
+  void fetchSummary()
+})
 
 const signOut = async () => {
   await authStore.logout()
@@ -212,19 +302,49 @@ const signOut = async () => {
           </div>
         </header>
 
-        <section class="stats-grid" aria-label="Indicadores principales">
-          <MetricCard v-for="stat in stats" :key="stat.label" :stat="stat" />
-        </section>
+        <v-alert
+          v-if="errorMessage"
+          class="dashboard-alert"
+          density="comfortable"
+          type="error"
+          variant="tonal"
+        >
+          <span>{{ errorMessage }}</span>
+          <template #append>
+            <v-btn :loading="loading" size="small" variant="text" @click="fetchSummary">
+              Reintentar
+            </v-btn>
+          </template>
+        </v-alert>
 
-        <section class="insight-grid">
-          <ActivityChart :data="weekActivity" />
-          <OrderStatusChart :statuses="statusBreakdown" />
-        </section>
+        <div v-if="loading && !summary" class="dashboard-state dashboard-state--loading">
+          <v-progress-circular color="primary" indeterminate size="34" width="3" />
+          <strong>Cargando el estado de la operación</strong>
+          <span>Estamos preparando tus indicadores.</span>
+        </div>
 
-        <section class="content-grid">
-          <RecentOrdersTable :orders="recentOrders" />
-          <UpcomingServices :tasks="upcomingTasks" />
-        </section>
+        <div v-else-if="!summary" class="dashboard-state">
+          <v-icon :icon="mdiAlertOutline" color="error" size="32" />
+          <strong>No fue posible cargar el dashboard</strong>
+          <span>Verifica la conexión con MaintOps e inténtalo nuevamente.</span>
+          <v-btn color="primary" :loading="loading" @click="fetchSummary">Reintentar</v-btn>
+        </div>
+
+        <template v-else>
+          <section class="stats-grid" aria-label="Indicadores principales">
+            <MetricCard v-for="stat in stats" :key="stat.label" :stat="stat" />
+          </section>
+
+          <section class="insight-grid">
+            <ActivityChart :data="weekActivity" />
+            <OrderStatusChart :statuses="statusBreakdown" :total="totalOrders" />
+          </section>
+
+          <section class="content-grid">
+            <RecentOrdersTable :orders="recentOrders" />
+            <UpcomingServices :tasks="upcomingTasks" />
+          </section>
+        </template>
       </div>
     </v-main>
   </div>

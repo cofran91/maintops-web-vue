@@ -59,6 +59,9 @@ defineProps<{
               </button>
             </td>
           </tr>
+          <tr v-if="orders.length === 0">
+            <td class="table-empty" colspan="7">No hay órdenes programadas para mostrar.</td>
+          </tr>
         </tbody>
       </table>
     </div>

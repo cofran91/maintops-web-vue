@@ -31,6 +31,7 @@ defineProps<{
           <small><v-icon :icon="mdiMapMarkerOutline" size="13" />{{ task.location }}</small>
         </div>
       </div>
+      <p v-if="tasks.length === 0" class="schedule-empty">No hay servicios próximos.</p>
     </div>
 
     <button class="schedule-footer" type="button">
