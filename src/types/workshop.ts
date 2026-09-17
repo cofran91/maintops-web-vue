@@ -58,3 +58,17 @@ export interface WorkshopFilters {
   city: string
   status: string
 }
+
+export interface WorkshopPayload {
+  manager_user_id: number
+  name: string
+  code: string
+  address: string | null
+  city: string | null
+  phone: string | null
+  email: string | null
+  weekly_schedule: Record<string, WorkshopScheduleEntry>
+  vehicle_system_ids: number[]
+  technician_user_ids: number[]
+  is_active: boolean
+}

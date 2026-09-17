@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from 'axios'
 import http, { unwrapApiData } from '@/api/http'
-import type { Workshop, WorkshopFilters, WorkshopPage } from '@/types/workshop'
+import type { Workshop, WorkshopFilters, WorkshopPage, WorkshopPayload } from '@/types/workshop'
 
 interface ApiResponse<T> {
   data: T
@@ -31,6 +31,18 @@ export const workshopsApi = {
 
   async show(id: string | number, config: AxiosRequestConfig = {}) {
     const response = await http.get<ApiResponse<Workshop>>(`/workshops/${id}`, config)
+
+    return unwrapApiData<Workshop>(response.data)
+  },
+
+  async create(payload: WorkshopPayload) {
+    const response = await http.post<ApiResponse<Workshop>>('/workshops', payload)
+
+    return unwrapApiData<Workshop>(response.data)
+  },
+
+  async update(id: string | number, payload: WorkshopPayload) {
+    const response = await http.put<ApiResponse<Workshop>>(`/workshops/${id}`, payload)
 
     return unwrapApiData<Workshop>(response.data)
   },

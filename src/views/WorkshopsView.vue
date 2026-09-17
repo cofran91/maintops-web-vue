@@ -5,6 +5,7 @@ import {
   mdiAlertOutline,
   mdiGarageVariant,
   mdiMagnify,
+  mdiPlus,
   mdiRefresh,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -122,16 +123,22 @@ const signOut = async () => {
             <p>Supervisa los centros responsables de atender la operación de mantenimiento.</p>
           </div>
 
-          <v-btn
-            :loading="loading"
-            class="workshops-refresh"
-            height="42"
-            variant="outlined"
-            @click="fetchWorkshops"
-          >
-            <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
-            Actualizar
-          </v-btn>
+          <div class="workshops-header__actions">
+            <v-btn color="primary" height="42" :to="{ name: 'workshops-new' }">
+              <v-icon :icon="mdiPlus" class="mr-2" size="18" />
+              Nuevo taller
+            </v-btn>
+            <v-btn
+              :loading="loading"
+              class="workshops-refresh"
+              height="42"
+              variant="outlined"
+              @click="fetchWorkshops"
+            >
+              <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
+              Actualizar
+            </v-btn>
+          </div>
         </header>
 
         <section class="workshops-summary" aria-label="Resumen de talleres">

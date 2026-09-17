@@ -1,0 +1,88 @@
+@use './vehicle-form.scss';
+
+.workshop-form-card .v-autocomplete .v-field,
+.workshop-form-card .v-textarea .v-field {
+  border-radius: 11px;
+}
+
+.workshop-form-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  padding-top: 4px;
+  border-top: 1px solid #edf0f4;
+}
+
+.workshop-form-section-heading h3 {
+  margin: 17px 0 4px;
+  color: #2d3a53;
+  font-size: 12px;
+  font-weight: 730;
+}
+
+.workshop-form-section-heading p {
+  margin: 0;
+  color: #929dae;
+  font-size: 9px;
+}
+
+.workshop-form-section-heading .v-icon {
+  margin-top: 17px;
+}
+
+.workshop-schedule-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.workshop-schedule-field {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  background: #f8faff;
+  border: 1px solid #e9eef9;
+  border-radius: 10px;
+}
+
+.workshop-schedule-field > strong {
+  color: #4d5b73;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.workshop-schedule-field > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.workshop-schedule-field .v-field {
+  border-radius: 8px;
+}
+
+.workshop-schedule-field .v-label,
+.workshop-schedule-field .v-field__input {
+  font-size: 9px;
+}
+
+.workshop-form-field-error {
+  margin: -10px 0 0;
+  color: #d34f63;
+  font-size: 9px;
+}
+
+.workshop-form-card .v-switch {
+  margin-top: -4px;
+}
+
+@media (max-width: 620px) {
+  .workshop-schedule-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .workshop-schedule-field > div {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -63,12 +63,30 @@ const router = createRouter({
       },
     },
     {
+      path: '/workshops/new',
+      name: 'workshops-new',
+      component: () => import('@/views/WorkshopFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Nuevo taller',
+      },
+    },
+    {
       path: '/workshops/:id(\\d+)',
       name: 'workshops-detail',
       component: () => import('@/views/WorkshopDetailView.vue'),
       meta: {
         requiresAuth: true,
         title: 'Detalle de taller',
+      },
+    },
+    {
+      path: '/workshops/:id(\\d+)/edit',
+      name: 'workshops-edit',
+      component: () => import('@/views/WorkshopFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Editar taller',
       },
     },
     {

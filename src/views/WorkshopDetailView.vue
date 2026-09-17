@@ -11,6 +11,7 @@ import {
   mdiEmailOutline,
   mdiGarageVariant,
   mdiMapMarkerOutline,
+  mdiPencilOutline,
   mdiPhoneOutline,
   mdiRefresh,
   mdiWrenchCogOutline,
@@ -106,10 +107,21 @@ const signOut = async () => {
             <h1>{{ workshopTitle }}</h1>
             <p>Consulta la capacidad operativa, contacto y horario de este taller.</p>
           </div>
-          <v-btn :to="{ name: 'workshops' }" class="workshops-refresh" height="42" variant="outlined">
-            <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
-            Volver al listado
-          </v-btn>
+          <div class="workshop-detail-header__actions">
+            <v-btn :to="{ name: 'workshops' }" class="workshops-refresh" height="42" variant="outlined">
+              <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
+              Volver al listado
+            </v-btn>
+            <v-btn
+              v-if="workshop"
+              color="primary"
+              height="42"
+              :to="{ name: 'workshops-edit', params: { id: workshop.id } }"
+            >
+              <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
+              Editar taller
+            </v-btn>
+          </div>
         </header>
 
         <v-alert v-if="errorMessage" class="workshops-alert workshop-detail-alert" type="error" variant="tonal">

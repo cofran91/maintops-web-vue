@@ -43,6 +43,13 @@
   font-size: 12.5px;
 }
 
+.workshop-detail-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .workshop-detail-alert {
   margin-right: 0;
   margin-left: 0;
@@ -388,6 +395,15 @@
 
   .workshop-detail-header .workshops-refresh {
     width: 100%;
+  }
+
+  .workshop-detail-header__actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .workshop-detail-header__actions .v-btn {
+    flex: 1;
   }
 
   .workshop-detail-hero,
