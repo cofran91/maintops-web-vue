@@ -6,6 +6,8 @@ export interface Owner {
   phone?: string | null
   document_number?: string | null
   address?: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 export interface OwnerPage {

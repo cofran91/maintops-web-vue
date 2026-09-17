@@ -188,7 +188,13 @@ const signOut = async () => {
                       <div class="owner-identity">
                         <span class="owner-identity__avatar">{{ owner.name.slice(0, 2).toUpperCase() }}</span>
                         <span>
-                          <strong>{{ owner.name }}</strong>
+                          <router-link
+                            class="owner-number"
+                            :to="{ name: 'owners-detail', params: { id: owner.id } }"
+                            @click.stop
+                          >
+                            {{ owner.name }}
+                          </router-link>
                           <small>Propietario #{{ owner.id }}</small>
                         </span>
                       </div>
