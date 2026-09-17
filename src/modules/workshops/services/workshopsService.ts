@@ -49,6 +49,10 @@ export const workshopsApi = {
     return unwrapApiData<Workshop>(response.data)
   },
 
+  async remove(id: string | number) {
+    await http.delete(`/workshops/${id}`)
+  },
+
   async exportWorkshops() {
     const response = await http.get('/workshops/export', { responseType: 'blob' })
 

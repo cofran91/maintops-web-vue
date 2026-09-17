@@ -14,7 +14,9 @@ import {
 import { normalizeApiError } from '@/api/errors'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import DataImportDialog from '@/components/common/DataImportDialog.vue'
+import ResourceRowActions from '@/components/common/ResourceRowActions.vue'
 import { useWorkshops } from '@/modules/workshops/composables/useWorkshops'
 import workshopsApi from '@/modules/workshops/services/workshopsService'
 import { useAuthStore } from '@/stores/auth'
@@ -27,9 +29,14 @@ const mobileDrawer = ref(false)
 const canCreateWorkshop = computed(() => authStore.canUseResource('workshops', 'create'))
 const canImportWorkshop = computed(() => authStore.canUseResource('workshops', 'import'))
 const canExportWorkshop = computed(() => authStore.canUseResource('workshops', 'export'))
+const canUpdateWorkshop = computed(() => authStore.canUseResource('workshops', 'update'))
+const canDeleteWorkshop = computed(() => authStore.canUseResource('workshops', 'delete'))
 const importing = ref(false)
 const exporting = ref(false)
 const importDialogOpen = ref(false)
+const deleting = ref(false)
+const deleteDialogOpen = ref(false)
+const workshopToDelete = ref<Workshop | null>(null)
 
 const {
   applyFilters,
@@ -136,6 +143,39 @@ const exportWorkshops = async () => {
     errorMessage.value = normalizeApiError(error).message
   } finally {
     exporting.value = false
+  }
+}
+
+const deleteMessage = computed(() =>
+  workshopToDelete.value
+    ? `¿Seguro que deseas eliminar el taller ${workshopToDelete.value.name}? Esta acción no se puede deshacer.`
+    : '',
+)
+
+const askDelete = (workshop: Workshop) => {
+  workshopToDelete.value = workshop
+  deleteDialogOpen.value = true
+}
+
+const deleteWorkshop = async () => {
+  if (!workshopToDelete.value) return
+
+  deleting.value = true
+  errorMessage.value = ''
+
+  try {
+    await workshopsApi.remove(workshopToDelete.value.id)
+    deleteDialogOpen.value = false
+    workshopToDelete.value = null
+    await fetchWorkshops()
+
+    if (workshops.value.length === 0 && pagination.value.current_page > 1) {
+      updatePage(pagination.value.current_page - 1)
+    }
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -269,6 +309,7 @@ const signOut = async () => {
                   <th>Sistemas atendidos</th>
                   <th>Estado</th>
                   <th>Actualizado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -310,11 +351,20 @@ const signOut = async () => {
                       </v-chip>
                     </td>
                     <td><span class="workshop-muted">{{ formatDate(workshop.updated_at) }}</span></td>
+                    <td class="workshops-actions-cell">
+                      <ResourceRowActions
+                        :can-delete="canDeleteWorkshop"
+                        :can-update="canUpdateWorkshop"
+                        :detail-to="{ name: 'workshops-detail', params: { id: workshop.id } }"
+                        :edit-to="{ name: 'workshops-edit', params: { id: workshop.id } }"
+                        @delete="askDelete(workshop)"
+                      />
+                    </td>
                   </tr>
                 </template>
 
                 <tr v-if="!loading && workshops.length === 0">
-                  <td class="workshops-empty" colspan="6">
+                  <td class="workshops-empty" colspan="7">
                     <v-icon :icon="mdiAlertOutline" size="28" />
                     <strong>No encontramos talleres</strong>
                     <span>Prueba con otros filtros o limpia la búsqueda para ver toda la red de servicio.</span>
@@ -359,6 +409,14 @@ const signOut = async () => {
         title="Importar talleres"
         @imported="refreshAfterImport"
         @processing="importing = $event"
+      />
+
+      <ConfirmDeleteDialog
+        v-model="deleteDialogOpen"
+        :message="deleteMessage"
+        :processing="deleting"
+        title="Eliminar taller"
+        @confirm="deleteWorkshop"
       />
     </v-main>
   </div>

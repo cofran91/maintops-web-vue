@@ -20,6 +20,8 @@ const isCanceledRequest = (error: unknown) => {
 export const useWorkshopDetail = (workshopId: Ref<string>) => {
   const workshop = ref<Workshop | null>(null)
   const loading = ref(false)
+  const deleting = ref(false)
+  const deleteDialogOpen = ref(false)
   const errorMessage = ref('')
   let controller: AbortController | null = null
 
@@ -54,6 +56,26 @@ export const useWorkshopDetail = (workshopId: Ref<string>) => {
     }
   }
 
+  const deleteWorkshop = async () => {
+    if (!workshop.value) {
+      return false
+    }
+
+    deleting.value = true
+    errorMessage.value = ''
+
+    try {
+      await workshopsApi.remove(workshop.value.id)
+      deleteDialogOpen.value = false
+      return true
+    } catch (error) {
+      errorMessage.value = normalizeApiError(error).message
+      return false
+    } finally {
+      deleting.value = false
+    }
+  }
+
   watch(workshopId, () => void fetchWorkshop(), { immediate: true })
 
   onBeforeUnmount(() => {
@@ -64,7 +86,10 @@ export const useWorkshopDetail = (workshopId: Ref<string>) => {
   return {
     workshop,
     loading,
+    deleting,
+    deleteDialogOpen,
     errorMessage,
     fetchWorkshop,
+    deleteWorkshop,
   }
 }

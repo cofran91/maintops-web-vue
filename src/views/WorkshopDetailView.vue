@@ -14,10 +14,12 @@ import {
   mdiPencilOutline,
   mdiPhoneOutline,
   mdiRefresh,
+  mdiTrashCanOutline,
   mdiWrenchCogOutline,
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import RealtimePresenceDot from '@/components/layout/RealtimePresenceDot.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useWorkshopDetail } from '@/modules/workshops/composables/useWorkshopDetail'
@@ -28,8 +30,18 @@ const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const workshopId = computed(() => String(route.params.id ?? ''))
+const canUpdateWorkshop = computed(() => authStore.canUseResource('workshops', 'update'))
+const canDeleteWorkshop = computed(() => authStore.canUseResource('workshops', 'delete'))
 
-const { errorMessage, fetchWorkshop, loading, workshop } = useWorkshopDetail(workshopId)
+const {
+  deleteDialogOpen,
+  deleteWorkshop,
+  deleting,
+  errorMessage,
+  fetchWorkshop,
+  loading,
+  workshop,
+} = useWorkshopDetail(workshopId)
 
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() =>
@@ -86,6 +98,12 @@ const signOut = async () => {
   await authStore.logout()
   await router.push({ name: 'login' })
 }
+
+const confirmDelete = async () => {
+  if (await deleteWorkshop()) {
+    await router.replace({ name: 'workshops' })
+  }
+}
 </script>
 
 <template>
@@ -119,13 +137,23 @@ const signOut = async () => {
               Volver al listado
             </v-btn>
             <v-btn
-              v-if="workshop"
+              v-if="workshop && canUpdateWorkshop"
               color="primary"
               height="42"
               :to="{ name: 'workshops-edit', params: { id: workshop.id } }"
             >
               <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
               Editar taller
+            </v-btn>
+            <v-btn
+              v-if="workshop && canDeleteWorkshop"
+              color="error"
+              height="42"
+              variant="tonal"
+              @click="deleteDialogOpen = true"
+            >
+              <v-icon :icon="mdiTrashCanOutline" class="mr-2" size="17" />
+              Eliminar
             </v-btn>
           </div>
         </header>
@@ -236,6 +264,14 @@ const signOut = async () => {
           </section>
         </template>
       </div>
+
+      <ConfirmDeleteDialog
+        v-model="deleteDialogOpen"
+        :message="workshop ? `¿Seguro que deseas eliminar el taller ${workshop.name}? Esta acción no se puede deshacer.` : ''"
+        :processing="deleting"
+        title="Eliminar taller"
+        @confirm="confirmDelete"
+      />
     </v-main>
   </div>
 </template>

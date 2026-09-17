@@ -14,7 +14,9 @@ import {
 import { normalizeApiError } from '@/api/errors'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import DataImportDialog from '@/components/common/DataImportDialog.vue'
+import ResourceRowActions from '@/components/common/ResourceRowActions.vue'
 import { useOwners } from '@/modules/owners/composables/useOwners'
 import ownersApi from '@/modules/owners/services/ownersService'
 import { useAuthStore } from '@/stores/auth'
@@ -27,9 +29,14 @@ const mobileDrawer = ref(false)
 const canCreateOwner = computed(() => authStore.canUseResource('owners', 'create'))
 const canImportOwner = computed(() => authStore.canUseResource('owners', 'import'))
 const canExportOwner = computed(() => authStore.canUseResource('owners', 'export'))
+const canUpdateOwner = computed(() => authStore.canUseResource('owners', 'update'))
+const canDeleteOwner = computed(() => authStore.canUseResource('owners', 'delete'))
 const importing = ref(false)
 const exporting = ref(false)
 const importDialogOpen = ref(false)
+const deleting = ref(false)
+const deleteDialogOpen = ref(false)
+const ownerToDelete = ref<Owner | null>(null)
 
 const {
   applyFilters,
@@ -113,6 +120,39 @@ const exportOwners = async () => {
     errorMessage.value = normalizeApiError(error).message
   } finally {
     exporting.value = false
+  }
+}
+
+const deleteMessage = computed(() =>
+  ownerToDelete.value
+    ? `¿Seguro que deseas eliminar a ${ownerToDelete.value.name}? Esta acción no se puede deshacer.`
+    : '',
+)
+
+const askDelete = (owner: Owner) => {
+  ownerToDelete.value = owner
+  deleteDialogOpen.value = true
+}
+
+const deleteOwner = async () => {
+  if (!ownerToDelete.value) return
+
+  deleting.value = true
+  errorMessage.value = ''
+
+  try {
+    await ownersApi.remove(ownerToDelete.value.id)
+    deleteDialogOpen.value = false
+    ownerToDelete.value = null
+    await fetchOwners()
+
+    if (owners.value.length === 0 && pagination.value.current_page > 1) {
+      updatePage(pagination.value.current_page - 1)
+    }
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -243,6 +283,7 @@ const signOut = async () => {
                   <th>Contacto</th>
                   <th>Documento</th>
                   <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -279,11 +320,20 @@ const signOut = async () => {
                         {{ statusLabel(owner) }}
                       </v-chip>
                     </td>
+                    <td class="owners-actions-cell">
+                      <ResourceRowActions
+                        :can-delete="canDeleteOwner"
+                        :can-update="canUpdateOwner"
+                        :detail-to="{ name: 'owners-detail', params: { id: owner.id } }"
+                        :edit-to="{ name: 'owners-edit', params: { id: owner.id } }"
+                        @delete="askDelete(owner)"
+                      />
+                    </td>
                   </tr>
                 </template>
 
                 <tr v-if="!loading && owners.length === 0">
-                  <td class="owners-empty" colspan="4">
+                  <td class="owners-empty" colspan="5">
                     <v-icon :icon="mdiAlertOutline" size="28" />
                     <strong>No encontramos propietarios</strong>
                     <span>Prueba con otros filtros o limpia la búsqueda para ver todos los contactos.</span>
@@ -328,6 +378,14 @@ const signOut = async () => {
         title="Importar propietarios"
         @imported="refreshAfterImport"
         @processing="importing = $event"
+      />
+
+      <ConfirmDeleteDialog
+        v-model="deleteDialogOpen"
+        :message="deleteMessage"
+        :processing="deleting"
+        title="Eliminar propietario"
+        @confirm="deleteOwner"
       />
     </v-main>
   </div>

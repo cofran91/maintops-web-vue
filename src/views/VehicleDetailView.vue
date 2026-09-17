@@ -26,6 +26,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const vehicleId = computed(() => String(route.params.id ?? ''))
+const canUpdateVehicle = computed(() => authStore.canUseResource('vehicles', 'update'))
+const canDeleteVehicle = computed(() => authStore.canUseResource('vehicles', 'delete'))
 
 const {
   deleteDialogOpen,
@@ -122,7 +124,7 @@ const signOut = async () => {
               Volver al listado
             </v-btn>
             <v-btn
-              v-if="vehicle"
+              v-if="vehicle && canUpdateVehicle"
               color="primary"
               height="42"
               :to="{ name: 'vehicles-edit', params: { id: vehicle.id } }"
@@ -131,7 +133,7 @@ const signOut = async () => {
               Editar vehículo
             </v-btn>
             <v-btn
-              v-if="vehicle"
+              v-if="vehicle && canDeleteVehicle"
               color="error"
               height="42"
               variant="tonal"

@@ -83,6 +83,11 @@
   @extend .owner-muted;
 }
 
+.users-actions-cell {
+  width: 72px;
+  text-align: right;
+}
+
 .users-empty {
   @extend .owners-empty;
 }

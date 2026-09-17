@@ -218,6 +218,11 @@
   white-space: nowrap;
 }
 
+.owners-actions-cell {
+  width: 72px;
+  text-align: right;
+}
+
 .owners-list-table tbody tr:hover {
   background: #fafbfe;
 }

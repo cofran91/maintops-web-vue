@@ -14,7 +14,9 @@ import {
 import { normalizeApiError } from '@/api/errors'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import DataImportDialog from '@/components/common/DataImportDialog.vue'
+import ResourceRowActions from '@/components/common/ResourceRowActions.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVehicles } from '@/modules/vehicles/composables/useVehicles'
 import vehiclesApi from '@/modules/vehicles/services/vehiclesService'
@@ -27,9 +29,14 @@ const mobileDrawer = ref(false)
 const canCreateVehicle = computed(() => authStore.canUseResource('vehicles', 'create'))
 const canImportVehicle = computed(() => authStore.canUseResource('vehicles', 'import'))
 const canExportVehicle = computed(() => authStore.canUseResource('vehicles', 'export'))
+const canUpdateVehicle = computed(() => authStore.canUseResource('vehicles', 'update'))
+const canDeleteVehicle = computed(() => authStore.canUseResource('vehicles', 'delete'))
 const importing = ref(false)
 const exporting = ref(false)
 const importDialogOpen = ref(false)
+const deleting = ref(false)
+const deleteDialogOpen = ref(false)
+const vehicleToDelete = ref<Vehicle | null>(null)
 
 const {
   applyFilters,
@@ -127,6 +134,39 @@ const exportVehicles = async () => {
     errorMessage.value = normalizeApiError(error).message
   } finally {
     exporting.value = false
+  }
+}
+
+const deleteMessage = computed(() =>
+  vehicleToDelete.value
+    ? `¿Seguro que deseas eliminar el vehículo ${vehicleToDelete.value.license_plate}? Esta acción no se puede deshacer.`
+    : '',
+)
+
+const askDelete = (vehicle: Vehicle) => {
+  vehicleToDelete.value = vehicle
+  deleteDialogOpen.value = true
+}
+
+const deleteVehicle = async () => {
+  if (!vehicleToDelete.value) return
+
+  deleting.value = true
+  errorMessage.value = ''
+
+  try {
+    await vehiclesApi.remove(vehicleToDelete.value.id)
+    deleteDialogOpen.value = false
+    vehicleToDelete.value = null
+    await fetchVehicles()
+
+    if (vehicles.value.length === 0 && pagination.value.current_page > 1) {
+      updatePage(pagination.value.current_page - 1)
+    }
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -261,6 +301,7 @@ const signOut = async () => {
                   <th>Color</th>
                   <th>Kilometraje</th>
                   <th>Actualizado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -300,11 +341,20 @@ const signOut = async () => {
                     <td><span class="vehicle-muted">{{ vehicle.color || 'Sin color' }}</span></td>
                     <td><span class="vehicle-muted">{{ formatKilometers(vehicle.odometer_km) }}</span></td>
                     <td><span class="vehicle-muted">{{ formatDate(vehicle.updated_at) }}</span></td>
+                    <td class="vehicles-actions-cell">
+                      <ResourceRowActions
+                        :can-delete="canDeleteVehicle"
+                        :can-update="canUpdateVehicle"
+                        :detail-to="{ name: 'vehicles-detail', params: { id: vehicle.id } }"
+                        :edit-to="{ name: 'vehicles-edit', params: { id: vehicle.id } }"
+                        @delete="askDelete(vehicle)"
+                      />
+                    </td>
                   </tr>
                 </template>
 
                 <tr v-if="!loading && vehicles.length === 0">
-                  <td class="vehicles-empty" colspan="6">
+                  <td class="vehicles-empty" colspan="7">
                     <v-icon :icon="mdiAlertOutline" size="28" />
                     <strong>No encontramos vehículos</strong>
                     <span>Prueba con otros filtros o limpia la búsqueda para ver toda la flota.</span>
@@ -349,6 +399,14 @@ const signOut = async () => {
         title="Importar vehículos"
         @imported="refreshAfterImport"
         @processing="importing = $event"
+      />
+
+      <ConfirmDeleteDialog
+        v-model="deleteDialogOpen"
+        :message="deleteMessage"
+        :processing="deleting"
+        title="Eliminar vehículo"
+        @confirm="deleteVehicle"
       />
     </v-main>
   </div>

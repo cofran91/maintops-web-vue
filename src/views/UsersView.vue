@@ -9,10 +9,14 @@ import {
   mdiRefresh,
   mdiTuneVariant,
 } from '@mdi/js'
+import { normalizeApiError } from '@/api/errors'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
+import ResourceRowActions from '@/components/common/ResourceRowActions.vue'
 import RealtimePresenceDot from '@/components/layout/RealtimePresenceDot.vue'
 import { useUsers } from '@/modules/users/composables/useUsers'
+import usersApi from '@/modules/users/services/usersService'
 import { useAuthStore } from '@/stores/auth'
 import type { User } from '@/types/user'
 
@@ -20,6 +24,11 @@ const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const canCreateUser = computed(() => authStore.canUseResource('users', 'create'))
+const canUpdateUser = computed(() => authStore.canUseResource('users', 'update'))
+const canDeleteUser = computed(() => authStore.canUseResource('users', 'delete'))
+const deleting = ref(false)
+const deleteDialogOpen = ref(false)
+const userToDelete = ref<User | null>(null)
 
 const {
   applyFilters,
@@ -103,6 +112,39 @@ const initials = (name: string) =>
     .slice(0, 2)
     .toUpperCase()
 const phoneLabel = (user: User) => user.phone || 'Sin teléfono registrado'
+
+const deleteMessage = computed(() =>
+  userToDelete.value
+    ? `¿Seguro que deseas eliminar a ${userToDelete.value.name}? Esta acción no se puede deshacer.`
+    : '',
+)
+
+const askDelete = (user: User) => {
+  userToDelete.value = user
+  deleteDialogOpen.value = true
+}
+
+const deleteUser = async () => {
+  if (!userToDelete.value) return
+
+  deleting.value = true
+  errorMessage.value = ''
+
+  try {
+    await usersApi.remove(userToDelete.value.id)
+    deleteDialogOpen.value = false
+    userToDelete.value = null
+    await fetchUsers()
+
+    if (users.value.length === 0 && pagination.value.current_page > 1) {
+      updatePage(pagination.value.current_page - 1)
+    }
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    deleting.value = false
+  }
+}
 
 const signOut = async () => {
   await authStore.logout()
@@ -217,6 +259,7 @@ const signOut = async () => {
                   <th>Contacto</th>
                   <th>Rol</th>
                   <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -253,11 +296,20 @@ const signOut = async () => {
                         {{ statusLabel(user) }}
                       </v-chip>
                     </td>
+                    <td class="users-actions-cell">
+                      <ResourceRowActions
+                        :can-delete="canDeleteUser"
+                        :can-update="canUpdateUser"
+                        :detail-to="{ name: 'users-detail', params: { id: user.id } }"
+                        :edit-to="{ name: 'users-edit', params: { id: user.id } }"
+                        @delete="askDelete(user)"
+                      />
+                    </td>
                   </tr>
                 </template>
 
                 <tr v-if="!loading && users.length === 0">
-                  <td class="users-empty" colspan="4">
+                  <td class="users-empty" colspan="5">
                     <v-icon :icon="mdiAlertOutline" size="28" />
                     <strong>No encontramos usuarios</strong>
                     <span>Prueba con otros filtros o limpia la búsqueda para ver todo el equipo.</span>
@@ -292,6 +344,14 @@ const signOut = async () => {
           </footer>
         </section>
       </div>
+
+      <ConfirmDeleteDialog
+        v-model="deleteDialogOpen"
+        :message="deleteMessage"
+        :processing="deleting"
+        title="Eliminar usuario"
+        @confirm="deleteUser"
+      />
     </v-main>
   </div>
 </template>

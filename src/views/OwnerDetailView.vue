@@ -24,6 +24,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const ownerId = computed(() => String(route.params.id ?? ''))
+const canUpdateOwner = computed(() => authStore.canUseResource('owners', 'update'))
+const canDeleteOwner = computed(() => authStore.canUseResource('owners', 'delete'))
 
 const {
   deleteDialogOpen,
@@ -105,7 +107,7 @@ const signOut = async () => {
               Volver al listado
             </v-btn>
             <v-btn
-              v-if="owner"
+              v-if="owner && canUpdateOwner"
               color="primary"
               height="42"
               :to="{ name: 'owners-edit', params: { id: owner.id } }"
@@ -114,7 +116,7 @@ const signOut = async () => {
               Editar propietario
             </v-btn>
             <v-btn
-              v-if="owner"
+              v-if="owner && canDeleteOwner"
               color="error"
               height="42"
               variant="tonal"

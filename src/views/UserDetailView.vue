@@ -25,6 +25,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const userId = computed(() => String(route.params.id ?? ''))
+const canUpdateUser = computed(() => authStore.canUseResource('users', 'update'))
+const canDeleteUser = computed(() => authStore.canUseResource('users', 'delete'))
 
 const {
   deleteDialogOpen,
@@ -124,11 +126,11 @@ const signOut = async () => {
               <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
               Volver al listado
             </v-btn>
-            <v-btn v-if="user" color="primary" height="42" :to="{ name: 'users-edit', params: { id: user.id } }">
+            <v-btn v-if="user && canUpdateUser" color="primary" height="42" :to="{ name: 'users-edit', params: { id: user.id } }">
               <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
               Editar usuario
             </v-btn>
-            <v-btn v-if="user" color="error" height="42" variant="tonal" @click="deleteDialogOpen = true">
+            <v-btn v-if="user && canDeleteUser" color="error" height="42" variant="tonal" @click="deleteDialogOpen = true">
               <v-icon :icon="mdiTrashCanOutline" class="mr-2" size="17" />
               Eliminar
             </v-btn>
