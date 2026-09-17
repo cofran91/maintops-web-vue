@@ -5,6 +5,7 @@ import {
   mdiMenu,
 } from '@mdi/js'
 import RealtimeActivityTray from '@/components/layout/RealtimeActivityTray.vue'
+import RealtimeStatusBadge from '@/components/layout/RealtimeStatusBadge.vue'
 
 withDefaults(defineProps<{
   userName: string
@@ -43,6 +44,8 @@ const emit = defineEmits<{
     </div>
 
     <RealtimeActivityTray />
+
+    <span class="topbar-realtime-status"><RealtimeStatusBadge /></span>
 
     <span class="topbar-divider" />
 

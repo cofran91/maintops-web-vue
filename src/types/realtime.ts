@@ -13,6 +13,15 @@ export interface RealtimeToken {
   expires_at: string
 }
 
+export type PresenceStatus = 'online' | 'offline'
+
+export interface PresenceUpdate {
+  user_id: string
+  workshop_id?: string
+  status: PresenceStatus
+  socket_count?: number
+}
+
 export interface OperationalEvent {
   event_id: string
   event_type: string

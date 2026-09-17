@@ -310,6 +310,12 @@
   background: #e6eaf0;
 }
 
+.topbar-realtime-status {
+  align-items: center;
+  display: inline-flex;
+  margin-right: 13px;
+}
+
 .profile-button {
   display: grid;
   grid-template-columns: 36px auto auto;

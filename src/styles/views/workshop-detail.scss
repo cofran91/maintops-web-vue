@@ -433,3 +433,18 @@
     gap: 10px;
   }
 }
+.workshop-technician-name {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.workshop-technician-name .realtime-presence-dot {
+  border-color: #fff;
+  bottom: auto;
+  display: inline-block;
+  height: 9px;
+  position: relative;
+  right: auto;
+  width: 9px;
+}

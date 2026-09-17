@@ -11,6 +11,7 @@ import {
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import RealtimePresenceDot from '@/components/layout/RealtimePresenceDot.vue'
 import { useUsers } from '@/modules/users/composables/useUsers'
 import { useAuthStore } from '@/stores/auth'
 import type { User } from '@/types/user'
@@ -229,7 +230,7 @@ const signOut = async () => {
                   <tr v-for="user in users" :key="user.id">
                     <td>
                       <div class="user-identity">
-                        <span class="user-identity__avatar">{{ initials(user.name) }}</span>
+                        <span class="user-identity__avatar-wrap"><span class="user-identity__avatar">{{ initials(user.name) }}</span><RealtimePresenceDot :user-id="user.id" /></span>
                         <span>
                           <router-link
                             class="user-number"

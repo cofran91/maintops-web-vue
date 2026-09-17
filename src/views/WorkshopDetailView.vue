@@ -18,8 +18,10 @@ import {
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import RealtimePresenceDot from '@/components/layout/RealtimePresenceDot.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useWorkshopDetail } from '@/modules/workshops/composables/useWorkshopDetail'
+import { isUserPresent } from '@/modules/realtime/services/realtimePresenceService'
 
 const route = useRoute()
 const router = useRouter()
@@ -75,6 +77,10 @@ const scheduleEntries = computed(() =>
 
 const systemName = (system: { id: number; code?: string | null; name?: string | null }) =>
   system.name || system.code || `Sistema ${system.id}`
+
+const onlineTechnicians = computed(() =>
+  (workshop.value?.technicians ?? []).filter((technician) => isUserPresent(technician.id)).length,
+)
 
 const signOut = async () => {
   await authStore.logout()
@@ -197,7 +203,7 @@ const signOut = async () => {
               <div v-else class="workshop-card-empty">No hay sistemas asignados.</div>
               <div class="workshop-technicians-summary">
                 <v-icon :icon="mdiAccountGroupOutline" size="17" />
-                <span><strong>{{ workshop.technicians?.length ?? 0 }}</strong> técnicos asignados</span>
+                <span><strong>{{ workshop.technicians?.length ?? 0 }}</strong> técnicos asignados · <strong>{{ onlineTechnicians }}</strong> en línea</span>
               </div>
             </article>
 
@@ -218,7 +224,7 @@ const signOut = async () => {
                 <div><h2>Equipo asignado</h2><p>Técnicos disponibles para la atención</p></div>
               </div>
               <div v-if="workshop.technicians?.length" class="workshop-technician-list">
-                <div v-for="technician in workshop.technicians" :key="technician.id"><strong>{{ technician.name || `Usuario ${technician.id}` }}</strong><span>{{ technician.email || 'Sin correo registrado' }}</span></div>
+                <div v-for="technician in workshop.technicians" :key="technician.id"><span class="workshop-technician-name"><RealtimePresenceDot :user-id="technician.id" /><strong>{{ technician.name || `Usuario ${technician.id}` }}</strong></span><span>{{ technician.email || 'Sin correo registrado' }}</span></div>
               </div>
               <div v-else class="workshop-card-empty">No hay técnicos asignados.</div>
             </article>

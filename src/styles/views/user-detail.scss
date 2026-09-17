@@ -61,6 +61,11 @@
   @extend .owner-detail-hero__avatar;
 }
 
+.user-detail-hero__avatar-wrap {
+  display: inline-flex;
+  position: relative;
+}
+
 .user-detail-overline {
   @extend .owner-detail-overline;
 }

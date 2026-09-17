@@ -7,11 +7,13 @@ import {
   parseOperationalEvent,
   publishOperationalEvent,
 } from '@/modules/realtime/services/operationalEventsService'
-import type { RealtimeConnectionStatus, RealtimeToken } from '@/types/realtime'
+import { recordPresenceUpdate } from '@/modules/realtime/services/realtimePresenceService'
+import type { PresenceStatus, RealtimeConnectionStatus, RealtimeToken } from '@/types/realtime'
 
 const RETRY_DELAY_MS = 5000
 const MINIMUM_RENEWAL_LEAD_MS = 5000
 const MAXIMUM_RENEWAL_LEAD_MS = 30000
+const PRESENCE_HEARTBEAT_MS = 30000
 
 const state = reactive<{
   status: RealtimeConnectionStatus
@@ -25,6 +27,7 @@ class RealtimeClient {
   private socket: Socket | null = null
   private retryTimer: ReturnType<typeof setTimeout> | null = null
   private renewalTimer: ReturnType<typeof setTimeout> | null = null
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null
   private active = false
   private sessionId = 0
 
@@ -50,6 +53,7 @@ class RealtimeClient {
     this.sessionId += 1
     this.clearTimer('retryTimer')
     this.clearTimer('renewalTimer')
+    this.clearHeartbeatTimer()
     this.socket?.removeAllListeners()
     this.socket?.disconnect()
     this.socket = null
@@ -106,19 +110,28 @@ class RealtimeClient {
       if (this.socket === socket && this.active) {
         state.status = 'connected'
         state.errorMessage = null
+        this.startHeartbeat(socket)
       }
     })
 
     socket.on('connect_error', (error) => {
       if (this.socket === socket && this.active) {
+        this.clearHeartbeatTimer()
         this.handleFailure(error, this.sessionId)
       }
     })
 
     socket.on('disconnect', (reason) => {
       if (this.socket === socket && this.active && reason !== 'io client disconnect') {
+        this.clearHeartbeatTimer()
         this.handleFailure(new Error(`Realtime disconnected: ${reason}`), this.sessionId)
       }
+    })
+
+    socket.on('presence.updated', (payload) => {
+      if (this.socket !== socket) return
+      const update = this.readPresencePayload(payload)
+      if (update) recordPresenceUpdate(update)
     })
 
     socket.onAny((eventName, payload) => {
@@ -182,6 +195,49 @@ class RealtimeClient {
     if (timer !== null) {
       clearTimeout(timer)
       this[timerName] = null
+    }
+  }
+
+  private startHeartbeat(socket: Socket) {
+    this.clearHeartbeatTimer()
+    socket.emit('presence.heartbeat')
+    this.heartbeatTimer = setInterval(() => {
+      if (this.socket === socket && socket.connected && this.active) {
+        socket.emit('presence.heartbeat')
+      }
+    }, PRESENCE_HEARTBEAT_MS)
+  }
+
+  private clearHeartbeatTimer() {
+    if (this.heartbeatTimer !== null) {
+      clearInterval(this.heartbeatTimer)
+      this.heartbeatTimer = null
+    }
+  }
+
+  private readPresencePayload(payload: unknown) {
+    if (typeof payload !== 'object' || payload === null) return null
+    const record = payload as Record<string, unknown>
+    const nested = typeof record.payload === 'object' && record.payload !== null
+      ? record.payload as Record<string, unknown>
+      : record
+    const userId = nested.user_id
+    const workshopId = nested.workshop_id
+    const status = nested.status ?? (typeof nested.online === 'boolean'
+      ? nested.online ? 'online' : 'offline'
+      : null)
+
+    if ((typeof userId !== 'string' && typeof userId !== 'number') ||
+      (workshopId !== undefined && typeof workshopId !== 'string' && typeof workshopId !== 'number') ||
+      (status !== 'online' && status !== 'offline')) {
+      return null
+    }
+
+    return {
+      user_id: String(userId),
+      ...(workshopId === undefined ? {} : { workshop_id: String(workshopId) }),
+      status: status as PresenceStatus,
+      ...(typeof nested.socket_count === 'number' ? { socket_count: nested.socket_count } : {}),
     }
   }
 

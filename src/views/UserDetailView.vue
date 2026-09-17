@@ -15,6 +15,7 @@ import {
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import RealtimePresenceDot from '@/components/layout/RealtimePresenceDot.vue'
 import { useUserDetail } from '@/modules/users/composables/useUserDetail'
 import { useAuthStore } from '@/stores/auth'
 import type { User } from '@/types/user'
@@ -158,7 +159,7 @@ const signOut = async () => {
         <template v-else>
           <section class="user-detail-hero">
             <div class="user-detail-hero__identity">
-              <span class="user-detail-hero__avatar">{{ initials(user.name) }}</span>
+              <span class="user-detail-hero__avatar-wrap"><span class="user-detail-hero__avatar">{{ initials(user.name) }}</span><RealtimePresenceDot :user-id="user.id" /></span>
               <div>
                 <span class="user-detail-overline">Perfil registrado</span>
                 <h2>{{ user.name }}</h2>
