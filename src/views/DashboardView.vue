@@ -225,6 +225,7 @@ const timeLabel = (value?: string | null) => {
 
 const recentOrders = computed<RecentOrder[]>(() =>
   scheduleOrders.value.slice(0, 4).map((order) => ({
+    orderId: order.maintenance_order_id,
     id: `OT-${String(order.maintenance_order_id).padStart(4, '0')}`,
     vehicle: vehicleLabel(order.vehicle),
     plate: plateLabel(order.vehicle),
@@ -273,6 +274,10 @@ const signOut = async () => {
 
 const openOrders = () => {
   void router.push({ name: 'orders' })
+}
+
+const openOrder = (orderId: number) => {
+  void router.push({ name: 'orders-detail', params: { id: orderId } })
 }
 </script>
 
@@ -345,7 +350,11 @@ const openOrders = () => {
           </section>
 
           <section class="content-grid">
-            <RecentOrdersTable :orders="recentOrders" @view-all="openOrders" />
+            <RecentOrdersTable
+              :orders="recentOrders"
+              @view-all="openOrders"
+              @view-order="openOrder"
+            />
             <UpcomingServices :tasks="upcomingTasks" />
           </section>
         </template>
@@ -353,5 +362,3 @@ const openOrders = () => {
     </v-main>
   </div>
 </template>
-
-<style src="@/styles/views/dashboard.scss" lang="scss"></style>

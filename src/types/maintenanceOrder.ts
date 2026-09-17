@@ -48,7 +48,24 @@ export interface MaintenanceOrderWorkshop {
 
 export interface MaintenanceOrderItem {
   id: number
+  maintenance_task_id?: number
+  maintenance_plan_id?: number | null
+  maintenance_task?: {
+    code?: string | null
+    name?: string | null
+    estimated_duration_minutes?: number | null
+    vehicle_system?: { name?: string | null } | null
+  } | null
+  maintenance_plan?: { code?: string | null; name?: string | null } | null
   status?: string | null
+  odometer_km?: number | null
+  planned_duration_minutes?: number | null
+  scheduled_at?: string | null
+  scheduled_ends_at?: string | null
+  started_at?: string | null
+  finished_at?: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 export interface MaintenanceOrder {

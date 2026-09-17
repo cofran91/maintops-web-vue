@@ -8,6 +8,7 @@ defineProps<{
 
 const emit = defineEmits<{
   (event: 'viewAll'): void
+  (event: 'viewOrder', orderId: number): void
 }>()
 </script>
 
@@ -38,7 +39,11 @@ const emit = defineEmits<{
         </thead>
         <tbody>
           <tr v-for="order in orders" :key="order.id">
-            <td><button class="order-link" type="button">{{ order.id }}</button></td>
+            <td>
+              <button class="order-link" type="button" @click="emit('viewOrder', order.orderId)">
+                {{ order.id }}
+              </button>
+            </td>
             <td>
               <div class="vehicle-cell">
                 <span><v-icon :icon="mdiCarMultiple" size="18" /></span>

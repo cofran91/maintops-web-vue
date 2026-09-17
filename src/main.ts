@@ -5,6 +5,7 @@ import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import router from './router'
 import './styles/main.css'
+import './styles/views/dashboard.scss'
 
 const app = createApp(App)
 

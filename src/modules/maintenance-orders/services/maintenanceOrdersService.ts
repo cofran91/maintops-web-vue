@@ -2,6 +2,7 @@ import type { AxiosRequestConfig } from 'axios'
 import http, { unwrapApiData } from '@/api/http'
 import type {
   MaintenanceOrderFilters,
+  MaintenanceOrder,
   MaintenanceOrderPage,
 } from '@/types/maintenanceOrder'
 
@@ -23,6 +24,12 @@ export const maintenanceOrdersApi = {
     })
 
     return unwrapApiData<MaintenanceOrderPage>(response.data)
+  },
+
+  async show(id: string | number, config: AxiosRequestConfig = {}) {
+    const response = await http.get<ApiResponse<MaintenanceOrder>>(`/maintenance-orders/${id}`, config)
+
+    return unwrapApiData<MaintenanceOrder>(response.data)
   },
 }
 

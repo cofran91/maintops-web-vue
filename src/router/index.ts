@@ -36,6 +36,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/orders/:id',
+      name: 'orders-detail',
+      component: () => import('@/views/MaintenanceOrderDetailView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Detalle de orden',
+      },
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/login',
     },

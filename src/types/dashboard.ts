@@ -66,6 +66,7 @@ export interface StatusBreakdown {
 }
 
 export interface RecentOrder {
+  orderId: number
   id: string
   vehicle: string
   plate: string

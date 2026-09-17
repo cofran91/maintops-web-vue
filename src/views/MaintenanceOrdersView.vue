@@ -249,7 +249,12 @@ const signOut = async () => {
                 <template v-else>
                   <tr v-for="order in orders" :key="order.id">
                     <td>
-                      <strong class="order-number">{{ orderNumber(order) }}</strong>
+                      <router-link
+                        class="order-number"
+                        :to="{ name: 'orders-detail', params: { id: order.id } }"
+                      >
+                        {{ orderNumber(order) }}
+                      </router-link>
                       <small>{{ formatDate(order.created_at) }}</small>
                     </td>
                     <td>
