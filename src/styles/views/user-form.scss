@@ -1,0 +1,52 @@
+@use './vehicle-form.scss';
+
+.user-form-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 16px;
+  color: #8b97aa;
+  font-size: 9.5px;
+}
+
+.user-form-breadcrumbs a {
+  color: #3158e7;
+  font-weight: 650;
+}
+
+.user-form-breadcrumbs__arrow {
+  transform: rotate(180deg);
+}
+
+.user-form-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 3px;
+  border-top: 1px solid #edf0f4;
+}
+
+.user-form-section-heading h3 {
+  margin: 17px 0 4px;
+  color: #2d3a53;
+  font-size: 12px;
+  font-weight: 730;
+}
+
+.user-form-section-heading p {
+  margin: 0;
+  color: #929dae;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.user-form-section-heading .v-icon {
+  margin-top: 16px;
+}
+
+@media (max-width: 620px) {
+  .user-form-breadcrumbs {
+    margin-bottom: 12px;
+  }
+}

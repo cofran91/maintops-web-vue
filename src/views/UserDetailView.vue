@@ -8,6 +8,7 @@ import {
   mdiCalendarOutline,
   mdiClockOutline,
   mdiEmailOutline,
+  mdiPencilOutline,
   mdiPhoneOutline,
   mdiRefresh,
 } from '@mdi/js'
@@ -100,10 +101,16 @@ const signOut = async () => {
             <h1>{{ userTitle }}</h1>
             <p>Consulta la información del perfil y su disponibilidad en la plataforma.</p>
           </div>
-          <v-btn class="user-detail-refresh" height="42" variant="outlined" :to="{ name: 'users' }">
-            <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
-            Volver al listado
-          </v-btn>
+          <div class="user-detail-header__actions">
+            <v-btn class="user-detail-refresh" height="42" variant="outlined" :to="{ name: 'users' }">
+              <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
+              Volver al listado
+            </v-btn>
+            <v-btn v-if="user" color="primary" height="42" :to="{ name: 'users-edit', params: { id: user.id } }">
+              <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
+              Editar usuario
+            </v-btn>
+          </div>
         </header>
 
         <v-alert v-if="errorMessage" class="user-detail-alert" type="error" variant="tonal">

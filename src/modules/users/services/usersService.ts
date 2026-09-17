@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from 'axios'
 import http, { unwrapApiData } from '@/api/http'
-import type { User, UserFilters, UserPage } from '@/types/user'
+import type { User, UserFilters, UserPage, UserPayload } from '@/types/user'
 
 interface ApiResponse<T> {
   data: T
@@ -35,6 +35,18 @@ export const usersApi = {
 
   async show(id: string | number, config: AxiosRequestConfig = {}) {
     const response = await http.get<ApiResponse<User>>(`/users/${id}`, config)
+
+    return unwrapApiData<User>(response.data)
+  },
+
+  async create(payload: UserPayload) {
+    const response = await http.post<ApiResponse<User>>('/users', payload)
+
+    return unwrapApiData<User>(response.data)
+  },
+
+  async update(id: string | number, payload: UserPayload) {
+    const response = await http.put<ApiResponse<User>>(`/users/${id}`, payload)
 
     return unwrapApiData<User>(response.data)
   },

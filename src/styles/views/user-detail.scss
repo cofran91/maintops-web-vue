@@ -29,6 +29,10 @@
   @extend .owners-refresh;
 }
 
+.user-detail-header__actions {
+  @extend .owner-detail-header__actions;
+}
+
 .user-detail-alert {
   @extend .owner-detail-alert;
 }

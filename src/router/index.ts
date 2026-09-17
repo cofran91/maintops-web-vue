@@ -63,12 +63,30 @@ const router = createRouter({
       },
     },
     {
+      path: '/users/new',
+      name: 'users-new',
+      component: () => import('@/views/UserFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Nuevo usuario',
+      },
+    },
+    {
       path: '/users/:id(\\d+)',
       name: 'users-detail',
       component: () => import('@/views/UserDetailView.vue'),
       meta: {
         requiresAuth: true,
         title: 'Detalle de usuario',
+      },
+    },
+    {
+      path: '/users/:id(\\d+)/edit',
+      name: 'users-edit',
+      component: () => import('@/views/UserFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Editar usuario',
       },
     },
     {

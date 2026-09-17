@@ -24,3 +24,12 @@ export interface UserFilters {
   role: string
   status: string
 }
+
+export interface UserPayload {
+  name: string
+  email: string
+  phone: string | null
+  role: string
+  password?: string | null
+  is_active: boolean
+}

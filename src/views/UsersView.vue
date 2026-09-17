@@ -5,6 +5,7 @@ import {
   mdiAccountGroupOutline,
   mdiAlertOutline,
   mdiMagnify,
+  mdiPlus,
   mdiRefresh,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -127,16 +128,22 @@ const signOut = async () => {
             <p>Administra los perfiles que participan en la operación de mantenimiento.</p>
           </div>
 
-          <v-btn
-            :loading="loading"
-            class="users-refresh"
-            height="42"
-            variant="outlined"
-            @click="fetchUsers"
-          >
-            <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
-            Actualizar
-          </v-btn>
+          <div class="users-header__actions">
+            <v-btn color="primary" height="42" :to="{ name: 'users-new' }">
+              <v-icon :icon="mdiPlus" class="mr-2" size="18" />
+              Nuevo usuario
+            </v-btn>
+            <v-btn
+              :loading="loading"
+              class="users-refresh"
+              height="42"
+              variant="outlined"
+              @click="fetchUsers"
+            >
+              <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
+              Actualizar
+            </v-btn>
+          </div>
         </header>
 
         <section class="users-summary" aria-label="Resumen de usuarios">
