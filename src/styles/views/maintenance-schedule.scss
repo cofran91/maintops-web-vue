@@ -1,0 +1,94 @@
+.maintenance-schedule-shell,
+.maintenance-schedule-main {
+  min-height: 100dvh;
+  color: #17223c;
+  background: #f4f7fb;
+}
+
+.maintenance-schedule-content { width: 100%; max-width: 1680px; margin: 0 auto; padding: 33px clamp(20px, 2.7vw, 44px) 46px; }
+.maintenance-schedule-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
+.maintenance-schedule-header h1 { margin: 0 0 6px; color: #17223c; font-size: clamp(25px, 2.2vw, 32px); font-weight: 750; letter-spacing: -1px; line-height: 1.2; }
+.maintenance-schedule-header p { margin: 0; color: #7b879b; font-size: 12.5px; }
+.maintenance-schedule-refresh { color: #5d6b83 !important; background: #fff !important; border-color: #dfe4ec !important; font-size: 11px; font-weight: 670; }
+
+.maintenance-schedule-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 17px; }
+.maintenance-schedule-metrics article { display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 14px 17px; background: #fff; border: 1px solid #e8ecf2; border-radius: 15px; box-shadow: 0 5px 16px rgba(27, 41, 70, .025); }
+.maintenance-schedule-metrics article div { display: grid; gap: 4px; }
+.maintenance-schedule-metrics strong { color: #273550; font-size: 18px; font-weight: 740; }
+.maintenance-schedule-metrics article div span { color: #8d98aa; font-size: 9.5px; }
+.maintenance-schedule-metric__icon { display: grid; width: 39px; height: 39px; border-radius: 11px; place-items: center; }
+.maintenance-schedule-metric__icon--blue { color: #3158e7; background: #eaf0ff; }
+.maintenance-schedule-metric__icon--teal { color: #149782; background: #e5f7f3; }
+.maintenance-schedule-metric__icon--amber { color: #d58930; background: #fff3e2; }
+
+.maintenance-schedule-panel { overflow: hidden; background: #fff; border: 1px solid #e8ecf2; border-radius: 15px; box-shadow: 0 5px 16px rgba(27, 41, 70, .025); }
+.maintenance-schedule-panel__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 22px 16px; }
+.maintenance-schedule-panel__heading h2 { margin: 0 0 4px; color: #24314a; font-size: 14px; font-weight: 730; }
+.maintenance-schedule-panel__heading p { margin: 0; color: #929dae; font-size: 9.5px; }
+.maintenance-schedule-filters { display: grid; grid-template-columns: minmax(250px, 1.5fr) minmax(180px, .7fr) minmax(180px, .8fr) auto; align-items: center; gap: 12px; padding: 0 22px 19px; }
+.maintenance-schedule-filters .v-field { border-radius: 11px; }
+.maintenance-schedule-filters .v-label, .maintenance-schedule-filters .v-field__input { font-size: 11px; }
+.maintenance-schedule-filters .v-btn { font-size: 10.5px; font-weight: 680; }
+.maintenance-schedule-alert { margin: 0 22px 16px; border-radius: 11px; font-size: 10px; }
+
+.maintenance-schedule-layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(280px, .72fr); gap: 17px; padding: 0 22px 20px; }
+.maintenance-schedule-calendar { min-width: 0; border: 1px solid #e8ecf2; border-radius: 13px; }
+.maintenance-schedule-calendar__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border-bottom: 1px solid #edf0f4; }
+.maintenance-schedule-calendar__toolbar > div { display: flex; align-items: center; gap: 5px; }
+.maintenance-schedule-calendar__toolbar strong { margin-left: 9px; color: #34415a; font-size: 13px; font-weight: 720; text-transform: capitalize; }
+.maintenance-schedule-calendar__toolbar button { display: grid; width: 27px; height: 27px; color: #71809a; background: #f4f7fb; border: 0; border-radius: 7px; cursor: pointer; place-items: center; }
+.maintenance-schedule-calendar__toolbar button:hover { color: #3158e7; background: #eaf0ff; }
+.maintenance-schedule-calendar__toolbar .v-btn { font-size: 9.5px; }
+.maintenance-schedule-weekdays, .maintenance-schedule-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.maintenance-schedule-weekdays span { padding: 10px 8px 8px; color: #929cad; font-size: 8px; font-weight: 700; letter-spacing: .3px; text-align: center; text-transform: uppercase; }
+.maintenance-schedule-day { position: relative; display: flex; min-height: 91px; flex-direction: column; align-items: stretch; gap: 3px; padding: 7px; color: #52617a; text-align: left; background: #fff; border: 0; border-top: 1px solid #edf0f4; border-right: 1px solid #edf0f4; cursor: pointer; }
+.maintenance-schedule-day:nth-child(7n) { border-right: 0; }
+.maintenance-schedule-day:hover { background: #fafbfe; }
+.maintenance-schedule-day--outside { color: #b5bdc9; background: #fbfcfe; }
+.maintenance-schedule-day--selected { background: #f1f5ff; box-shadow: inset 0 0 0 2px #91a8f5; }
+.maintenance-schedule-day__number { display: grid; align-self: flex-end; width: 22px; height: 22px; font-size: 9px; font-weight: 680; border-radius: 7px; place-items: center; }
+.maintenance-schedule-day--today .maintenance-schedule-day__number { color: #fff; background: #3158e7; }
+.maintenance-schedule-day--selected .maintenance-schedule-day__number { color: #3158e7; background: #dce5ff; }
+.maintenance-schedule-day__event { display: block; overflow: hidden; padding: 4px 5px; color: #5e6c83; font-size: 7.5px; text-overflow: ellipsis; white-space: nowrap; background: color-mix(in srgb, var(--event-color) 11%, white); border-left: 2px solid var(--event-color); border-radius: 4px; }
+.maintenance-schedule-day__event b { color: var(--event-color); font-weight: 740; }
+.maintenance-schedule-day__more { color: #3158e7; font-size: 7.5px; font-weight: 680; }
+
+.maintenance-schedule-day-panel { min-width: 0; background: linear-gradient(145deg, #fbfcff, #f7f9fd); border: 1px solid #e8ecf2; border-radius: 13px; }
+.maintenance-schedule-day-panel__heading { padding: 19px 18px 16px; border-bottom: 1px solid #e8ecf2; }
+.maintenance-schedule-day-panel__date { color: #3158e7; font-size: 8px; font-weight: 740; letter-spacing: .6px; text-transform: uppercase; }
+.maintenance-schedule-day-panel h2 { margin: 5px 0 4px; color: #2d3a53; font-size: 15px; font-weight: 730; text-transform: capitalize; }
+.maintenance-schedule-day-panel__heading p { margin: 0; color: #929dae; font-size: 9px; }
+.maintenance-schedule-events { display: grid; gap: 9px; padding: 14px; }
+.maintenance-schedule-event { display: grid; grid-template-columns: 37px minmax(0, 1fr) auto; align-items: start; gap: 9px; padding: 10px; background: #fff; border: 1px solid #e8ecf2; border-radius: 10px; }
+.maintenance-schedule-event:hover { border-color: #b9c8f7; box-shadow: 0 4px 12px rgba(49, 88, 231, .08); }
+.maintenance-schedule-event__time { color: #3158e7; font-size: 9px; font-weight: 740; }
+.maintenance-schedule-event__body { display: grid; min-width: 0; gap: 3px; }
+.maintenance-schedule-event__body strong { color: #34415a; font-size: 9px; }
+.maintenance-schedule-event__body span { overflow: hidden; color: #5d6b83; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.maintenance-schedule-event__body small { display: flex; align-items: center; gap: 3px; overflow: hidden; color: #9aa4b4; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.maintenance-schedule-event .v-chip { font-size: 7.5px; font-weight: 680; }
+.maintenance-schedule-day-panel__empty { display: grid; justify-items: center; gap: 8px; padding: 56px 20px; color: #9aa4b4; text-align: center; }
+.maintenance-schedule-day-panel__empty strong { color: #42506a; font-size: 11px; }
+.maintenance-schedule-day-panel__empty span { max-width: 190px; font-size: 9px; line-height: 1.5; }
+.maintenance-schedule-legend { display: flex; flex-wrap: wrap; gap: 18px; padding: 0 22px 19px; color: #8b97aa; font-size: 9px; }
+.maintenance-schedule-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.maintenance-schedule-legend i { display: inline-block; width: 8px; height: 8px; background: var(--legend-color); border-radius: 50%; }
+
+@media (max-width: 1100px) { .maintenance-schedule-layout { grid-template-columns: 1fr; } .maintenance-schedule-day-panel { min-height: 200px; } }
+@media (max-width: 800px) { .maintenance-schedule-filters { grid-template-columns: minmax(220px, 1fr) minmax(180px, .8fr); } .maintenance-schedule-filters .v-btn { justify-self: end; } }
+@media (max-width: 620px) {
+  .maintenance-schedule-content { padding-right: 14px; padding-left: 14px; }
+  .maintenance-schedule-header { align-items: flex-start; flex-direction: column; }
+  .maintenance-schedule-refresh { width: 100%; }
+  .maintenance-schedule-metrics { grid-template-columns: 1fr; }
+  .maintenance-schedule-panel__heading, .maintenance-schedule-filters { padding-right: 16px; padding-left: 16px; }
+  .maintenance-schedule-filters { grid-template-columns: 1fr; }
+  .maintenance-schedule-filters .v-btn { justify-self: start; }
+  .maintenance-schedule-alert { margin-right: 16px; margin-left: 16px; }
+  .maintenance-schedule-layout { padding-right: 16px; padding-left: 16px; }
+  .maintenance-schedule-day { min-height: 73px; padding: 5px; }
+  .maintenance-schedule-day__event { font-size: 0; }
+  .maintenance-schedule-day__event b { display: block; width: 5px; height: 5px; font-size: 0; background: var(--event-color); border-radius: 50%; }
+  .maintenance-schedule-day__more { font-size: 7px; }
+  .maintenance-schedule-legend { padding-right: 16px; padding-left: 16px; }
+}

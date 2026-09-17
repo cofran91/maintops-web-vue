@@ -48,6 +48,12 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Nuevo plan' },
     },
     {
+      path: '/maintenance-schedule',
+      name: 'maintenance-schedule',
+      component: () => import('@/views/MaintenanceScheduleView.vue'),
+      meta: { requiresAuth: true, title: 'Agenda operativa' },
+    },
+    {
       path: '/maintenance-plans/:id(\\d+)',
       name: 'maintenance-plans-detail',
       component: () => import('@/views/MaintenancePlanDetailView.vue'),
