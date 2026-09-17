@@ -1,6 +1,8 @@
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { normalizeApiError } from '@/api/errors'
 import ownersApi from '@/modules/owners/services/ownersService'
+import { buildListQuery, getNumberQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
 import type { Owner, OwnerFilters, OwnerPage } from '@/types/owner'
 
 const DEFAULT_PER_PAGE = 15
@@ -13,6 +15,8 @@ const DEFAULT_PAGINATION = {
   from: null as number | null,
   to: null as number | null,
 }
+
+const EMPTY_FILTERS: OwnerFilters = { search: '', status: '' }
 
 const isCanceledRequest = (error: unknown) => {
   if (typeof error !== 'object' || error === null) {
@@ -29,19 +33,38 @@ const isCanceledRequest = (error: unknown) => {
 }
 
 export const useOwners = () => {
+  const route = useRoute()
+  const router = useRouter()
   const owners = ref<Owner[]>([])
-  const filters = reactive<OwnerFilters>({ search: '', status: '' })
+  const filters = reactive<OwnerFilters>({ ...EMPTY_FILTERS })
   const pagination = ref({ ...DEFAULT_PAGINATION })
   const perPage = ref(DEFAULT_PER_PAGE)
   const loading = ref(false)
   const errorMessage = ref('')
+  const hasActiveFilters = computed(() => filters.search !== '' || filters.status !== '')
   let controller: AbortController | null = null
 
-  const fetchOwners = async (page = pagination.value.current_page) => {
+  const syncFiltersFromQuery = () => {
+    syncQueryFilters(filters, route.query, EMPTY_FILTERS)
+
+    if (!['', 'active', 'inactive'].includes(filters.status)) {
+      filters.status = ''
+    }
+  }
+
+  const pushListQuery = (page: number, nextPerPage: number) =>
+    router.push({
+      name: 'owners',
+      query: buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE),
+    })
+
+  const fetchOwners = async (page = getNumberQuery(route.query.page, 1)) => {
     controller?.abort()
 
     const nextController = new AbortController()
     controller = nextController
+    const currentPerPage = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+    perPage.value = currentPerPage
     loading.value = true
     errorMessage.value = ''
 
@@ -51,7 +74,7 @@ export const useOwners = () => {
           search: filters.search.trim(),
           is_active: filters.status === '' ? undefined : filters.status === 'active',
           page,
-          per_page: perPage.value,
+          per_page: currentPerPage,
         },
         { signal: nextController.signal },
       )
@@ -72,29 +95,30 @@ export const useOwners = () => {
   }
 
   const applyFilters = () => {
-    pagination.value = { ...pagination.value, current_page: 1 }
-    void fetchOwners(1)
+    void pushListQuery(1, perPage.value)
   }
 
   const clearFilters = () => {
-    filters.search = ''
-    filters.status = ''
+    Object.assign(filters, EMPTY_FILTERS)
     applyFilters()
   }
 
   const updatePage = (page: number) => {
-    void fetchOwners(page)
+    void pushListQuery(page, perPage.value)
   }
 
   const updatePerPage = (value: number) => {
-    perPage.value = Number(value)
-    pagination.value = { ...pagination.value, current_page: 1 }
-    void fetchOwners(1)
+    void pushListQuery(1, Number(value))
   }
 
-  onMounted(() => {
-    void fetchOwners(1)
-  })
+  watch(
+    () => route.query,
+    () => {
+      syncFiltersFromQuery()
+      void fetchOwners()
+    },
+    { immediate: true },
+  )
 
   onBeforeUnmount(() => {
     controller?.abort()
@@ -108,6 +132,7 @@ export const useOwners = () => {
     perPage,
     loading,
     errorMessage,
+    hasActiveFilters,
     fetchOwners,
     applyFilters,
     clearFilters,

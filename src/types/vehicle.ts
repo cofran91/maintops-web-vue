@@ -35,9 +35,14 @@ export interface VehiclePage {
 
 export interface VehicleFilters {
   search: string
+  license_plate: string
   brand: string
   model: string
   year: string
+  color: string
+  owner_id: string
+  created_from: string
+  created_to: string
 }
 
 export interface VehiclePayload {

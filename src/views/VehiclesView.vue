@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
   mdiCarMultiple,
+  mdiChevronDown,
+  mdiChevronUp,
   mdiDownload,
   mdiMagnify,
   mdiPlus,
@@ -37,6 +39,7 @@ const importDialogOpen = ref(false)
 const deleting = ref(false)
 const deleteDialogOpen = ref(false)
 const vehicleToDelete = ref<Vehicle | null>(null)
+const filtersExpanded = ref(false)
 
 const {
   applyFilters,
@@ -44,6 +47,7 @@ const {
   errorMessage,
   fetchVehicles,
   filters,
+  hasActiveFilters,
   loading,
   pagination,
   perPage,
@@ -278,8 +282,51 @@ const signOut = async () => {
             />
             <div class="vehicles-filters__actions">
               <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
-              <v-btn variant="text" type="button" @click="clearFilters">Limpiar</v-btn>
+              <v-btn
+                class="filters-advanced-toggle"
+                type="button"
+                variant="tonal"
+                @click="filtersExpanded = !filtersExpanded"
+              >
+                <v-icon
+                  :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown"
+                  class="mr-1"
+                  size="15"
+                />
+                Avanzados
+              </v-btn>
+              <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">
+                Limpiar
+              </v-btn>
             </div>
+            <v-expand-transition>
+              <div v-if="filtersExpanded" class="vehicles-filters__advanced">
+                <v-text-field v-model="filters.license_plate" clearable hide-details label="Placa exacta" />
+                <v-text-field v-model="filters.color" clearable hide-details label="Color" />
+                <v-text-field
+                  v-model="filters.owner_id"
+                  clearable
+                  hide-details
+                  label="ID del propietario"
+                  min="1"
+                  type="number"
+                />
+                <v-text-field
+                  v-model="filters.created_from"
+                  clearable
+                  hide-details
+                  label="Registrado desde"
+                  type="date"
+                />
+                <v-text-field
+                  v-model="filters.created_to"
+                  clearable
+                  hide-details
+                  label="Registrado hasta"
+                  type="date"
+                />
+              </div>
+            </v-expand-transition>
           </form>
 
           <v-progress-linear v-if="loading" color="primary" indeterminate />

@@ -19,6 +19,8 @@ export const usersApi = {
       params: {
         search: query.search || undefined,
         role: query.role || undefined,
+        workshop_id: query.workshop_id || undefined,
+        without_workshop: query.without_workshop || undefined,
         is_active:
           query.status === 'active' ? true : query.status === 'inactive' ? false : undefined,
         page: query.page || 1,

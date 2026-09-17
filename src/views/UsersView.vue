@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import {
   mdiAccountGroupOutline,
   mdiAlertOutline,
+  mdiChevronDown,
+  mdiChevronUp,
   mdiMagnify,
   mdiPlus,
   mdiRefresh,
@@ -29,6 +31,7 @@ const canDeleteUser = computed(() => authStore.canUseResource('users', 'delete')
 const deleting = ref(false)
 const deleteDialogOpen = ref(false)
 const userToDelete = ref<User | null>(null)
+const filtersExpanded = ref(false)
 
 const {
   applyFilters,
@@ -36,6 +39,7 @@ const {
   errorMessage,
   fetchUsers,
   filters,
+  hasActiveFilters,
   loading,
   pagination,
   perPage,
@@ -238,8 +242,41 @@ const signOut = async () => {
             />
             <div class="users-filters__actions">
               <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
-              <v-btn variant="text" type="button" @click="clearFilters">Limpiar</v-btn>
+              <v-btn
+                class="filters-advanced-toggle"
+                type="button"
+                variant="tonal"
+                @click="filtersExpanded = !filtersExpanded"
+              >
+                <v-icon
+                  :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown"
+                  class="mr-1"
+                  size="15"
+                />
+                Avanzados
+              </v-btn>
+              <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">
+                Limpiar
+              </v-btn>
             </div>
+            <v-expand-transition>
+              <div v-if="filtersExpanded" class="users-filters__advanced">
+                <v-text-field
+                  v-model="filters.workshop_id"
+                  clearable
+                  hide-details
+                  label="ID del taller"
+                  min="1"
+                  type="number"
+                />
+                <v-checkbox
+                  v-model="filters.without_workshop"
+                  color="primary"
+                  hide-details
+                  label="Sin taller asignado"
+                />
+              </div>
+            </v-expand-transition>
           </form>
 
           <v-progress-linear v-if="loading" color="primary" indeterminate />

@@ -55,8 +55,16 @@ export interface WorkshopPage {
 
 export interface WorkshopFilters {
   search: string
+  code: string
   city: string
   status: string
+  name: string
+  phone: string
+  email: string
+  manager_user_id: string
+  vehicle_system_id: string
+  created_from: string
+  created_to: string
 }
 
 export interface WorkshopPayload {

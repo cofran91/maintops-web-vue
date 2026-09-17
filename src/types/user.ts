@@ -23,6 +23,8 @@ export interface UserFilters {
   search: string
   role: string
   status: string
+  workshop_id: string
+  without_workshop: boolean
 }
 
 export interface UserPayload {

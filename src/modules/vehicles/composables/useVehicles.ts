@@ -1,6 +1,8 @@
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { normalizeApiError } from '@/api/errors'
 import vehiclesApi from '@/modules/vehicles/services/vehiclesService'
+import { buildListQuery, getNumberQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
 import type { Vehicle, VehicleFilters, VehiclePage, VehiclePagination } from '@/types/vehicle'
 
 const DEFAULT_PER_PAGE = 15
@@ -12,6 +14,18 @@ const DEFAULT_PAGINATION: VehiclePagination = {
   total: 0,
   from: null,
   to: null,
+}
+
+const EMPTY_FILTERS: VehicleFilters = {
+  search: '',
+  license_plate: '',
+  brand: '',
+  model: '',
+  year: '',
+  color: '',
+  owner_id: '',
+  created_from: '',
+  created_to: '',
 }
 
 const isCanceledRequest = (error: unknown) => {
@@ -29,24 +43,36 @@ const isCanceledRequest = (error: unknown) => {
 }
 
 export const useVehicles = () => {
+  const route = useRoute()
+  const router = useRouter()
   const vehicles = ref<Vehicle[]>([])
-  const filters = reactive<VehicleFilters>({
-    search: '',
-    brand: '',
-    model: '',
-    year: '',
-  })
+  const filters = reactive<VehicleFilters>({ ...EMPTY_FILTERS })
   const pagination = ref<VehiclePagination>({ ...DEFAULT_PAGINATION })
   const perPage = ref(DEFAULT_PER_PAGE)
   const loading = ref(false)
   const errorMessage = ref('')
+  const hasActiveFilters = computed(() =>
+    Object.values(filters).some((value) => value !== ''),
+  )
   let controller: AbortController | null = null
 
-  const fetchVehicles = async (page = pagination.value.current_page) => {
+  const syncFiltersFromQuery = () => {
+    syncQueryFilters(filters, route.query, EMPTY_FILTERS)
+  }
+
+  const pushListQuery = (page: number, nextPerPage: number) =>
+    router.push({
+      name: 'vehicles',
+      query: buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE),
+    })
+
+  const fetchVehicles = async (page = getNumberQuery(route.query.page, 1)) => {
     controller?.abort()
 
     const nextController = new AbortController()
     controller = nextController
+    const currentPerPage = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+    perPage.value = currentPerPage
     loading.value = true
     errorMessage.value = ''
 
@@ -54,11 +80,16 @@ export const useVehicles = () => {
       const data: VehiclePage = await vehiclesApi.index(
         {
           search: filters.search.trim(),
+          license_plate: filters.license_plate.trim(),
           brand: filters.brand.trim(),
           model: filters.model.trim(),
           year: filters.year.trim(),
+          color: filters.color.trim(),
+          owner_id: filters.owner_id.trim(),
+          created_from: filters.created_from,
+          created_to: filters.created_to,
           page,
-          per_page: perPage.value,
+          per_page: currentPerPage,
         },
         { signal: nextController.signal },
       )
@@ -79,31 +110,30 @@ export const useVehicles = () => {
   }
 
   const applyFilters = () => {
-    pagination.value = { ...pagination.value, current_page: 1 }
-    void fetchVehicles(1)
+    void pushListQuery(1, perPage.value)
   }
 
   const clearFilters = () => {
-    filters.search = ''
-    filters.brand = ''
-    filters.model = ''
-    filters.year = ''
+    Object.assign(filters, EMPTY_FILTERS)
     applyFilters()
   }
 
   const updatePage = (page: number) => {
-    void fetchVehicles(page)
+    void pushListQuery(page, perPage.value)
   }
 
   const updatePerPage = (value: number) => {
-    perPage.value = Number(value)
-    pagination.value = { ...pagination.value, current_page: 1 }
-    void fetchVehicles(1)
+    void pushListQuery(1, Number(value))
   }
 
-  onMounted(() => {
-    void fetchVehicles(1)
-  })
+  watch(
+    () => route.query,
+    () => {
+      syncFiltersFromQuery()
+      void fetchVehicles()
+    },
+    { immediate: true },
+  )
 
   onBeforeUnmount(() => {
     controller?.abort()
@@ -117,6 +147,7 @@ export const useVehicles = () => {
     perPage,
     loading,
     errorMessage,
+    hasActiveFilters,
     fetchVehicles,
     applyFilters,
     clearFilters,

@@ -1,6 +1,8 @@
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { normalizeApiError } from '@/api/errors'
 import usersApi from '@/modules/users/services/usersService'
+import { buildListQuery, getNumberQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
 import type { User, UserFilters, UserPage } from '@/types/user'
 
 const DEFAULT_PER_PAGE = 15
@@ -10,8 +12,16 @@ const DEFAULT_PAGINATION = {
   last_page: 1,
   per_page: DEFAULT_PER_PAGE,
   total: 0,
-  from: null,
-  to: null,
+  from: null as number | null,
+  to: null as number | null,
+}
+
+const EMPTY_FILTERS: UserFilters = {
+  search: '',
+  role: '',
+  status: '',
+  workshop_id: '',
+  without_workshop: false,
 }
 
 const isCanceledRequest = (error: unknown) => {
@@ -29,34 +39,60 @@ const isCanceledRequest = (error: unknown) => {
 }
 
 export const useUsers = () => {
+  const route = useRoute()
+  const router = useRouter()
   const users = ref<User[]>([])
-  const filters = reactive<UserFilters>({
-    search: '',
-    role: '',
-    status: '',
-  })
+  const filters = reactive<UserFilters>({ ...EMPTY_FILTERS })
   const pagination = ref<UserPage['pagination']>({ ...DEFAULT_PAGINATION })
   const perPage = ref(DEFAULT_PER_PAGE)
   const loading = ref(false)
   const errorMessage = ref('')
+  const hasActiveFilters = computed(() =>
+    Object.values(filters).some((value) => value !== '' && value !== false),
+  )
   let controller: AbortController | null = null
 
-  const fetchUsers = async (page = pagination.value.current_page) => {
+  const syncFiltersFromQuery = () => {
+    syncQueryFilters(filters, route.query, EMPTY_FILTERS)
+
+    if (!['', 'system_admin', 'admin', 'advisor', 'workshop_manager', 'technician'].includes(filters.role)) {
+      filters.role = ''
+    }
+
+    if (!['', 'active', 'inactive'].includes(filters.status)) {
+      filters.status = ''
+    }
+  }
+
+  const pushListQuery = (page: number, nextPerPage: number) =>
+    router.push({
+      name: 'users',
+      query: buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE),
+    })
+
+  const fetchUsers = async (page = getNumberQuery(route.query.page, 1)) => {
     controller?.abort()
 
     const nextController = new AbortController()
     controller = nextController
+    const currentPerPage = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+    perPage.value = currentPerPage
     loading.value = true
     errorMessage.value = ''
 
     try {
-      const data: UserPage = await usersApi.index({
-        search: filters.search.trim(),
-        role: filters.role,
-        status: filters.status,
-        page,
-        per_page: perPage.value,
-      }, { signal: nextController.signal })
+      const data: UserPage = await usersApi.index(
+        {
+          search: filters.search.trim(),
+          role: filters.role,
+          status: filters.status,
+          workshop_id: filters.workshop_id.trim(),
+          without_workshop: filters.without_workshop,
+          page,
+          per_page: currentPerPage,
+        },
+        { signal: nextController.signal },
+      )
 
       users.value = data.items
       pagination.value = data.pagination
@@ -74,30 +110,30 @@ export const useUsers = () => {
   }
 
   const applyFilters = () => {
-    pagination.value = { ...pagination.value, current_page: 1 }
-    void fetchUsers(1)
+    void pushListQuery(1, perPage.value)
   }
 
   const clearFilters = () => {
-    filters.search = ''
-    filters.role = ''
-    filters.status = ''
+    Object.assign(filters, EMPTY_FILTERS)
     applyFilters()
   }
 
   const updatePage = (page: number) => {
-    void fetchUsers(page)
+    void pushListQuery(page, perPage.value)
   }
 
   const updatePerPage = (value: number) => {
-    perPage.value = Number(value)
-    pagination.value = { ...pagination.value, current_page: 1 }
-    void fetchUsers(1)
+    void pushListQuery(1, Number(value))
   }
 
-  onMounted(() => {
-    void fetchUsers(1)
-  })
+  watch(
+    () => route.query,
+    () => {
+      syncFiltersFromQuery()
+      void fetchUsers()
+    },
+    { immediate: true },
+  )
 
   onBeforeUnmount(() => {
     controller?.abort()
@@ -111,6 +147,7 @@ export const useUsers = () => {
     perPage,
     loading,
     errorMessage,
+    hasActiveFilters,
     fetchUsers,
     applyFilters,
     clearFilters,
