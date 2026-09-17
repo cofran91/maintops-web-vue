@@ -37,6 +37,10 @@
   @extend .owner-detail-alert;
 }
 
+.user-delete-dialog {
+  @extend .owner-delete-dialog;
+}
+
 .user-detail-loading {
   @extend .owner-detail-loading;
 }

@@ -51,6 +51,10 @@ export const usersApi = {
     return unwrapApiData<User>(response.data)
   },
 
+  async remove(id: string | number) {
+    await http.delete(`/users/${id}`)
+  },
+
   async advisors() {
     return usersApi.byRole('advisor')
   },

@@ -20,6 +20,8 @@ const isCanceledRequest = (error: unknown) => {
 export const useUserDetail = (userId: Ref<string>) => {
   const user = ref<User | null>(null)
   const loading = ref(false)
+  const deleting = ref(false)
+  const deleteDialogOpen = ref(false)
   const errorMessage = ref('')
   let controller: AbortController | null = null
 
@@ -54,6 +56,26 @@ export const useUserDetail = (userId: Ref<string>) => {
     }
   }
 
+  const deleteUser = async () => {
+    if (!user.value) {
+      return false
+    }
+
+    deleting.value = true
+    errorMessage.value = ''
+
+    try {
+      await usersApi.remove(user.value.id)
+      deleteDialogOpen.value = false
+      return true
+    } catch (error) {
+      errorMessage.value = normalizeApiError(error).message
+      return false
+    } finally {
+      deleting.value = false
+    }
+  }
+
   watch(userId, () => void fetchUser(), { immediate: true })
 
   onBeforeUnmount(() => {
@@ -64,7 +86,10 @@ export const useUserDetail = (userId: Ref<string>) => {
   return {
     user,
     loading,
+    deleting,
+    deleteDialogOpen,
     errorMessage,
     fetchUser,
+    deleteUser,
   }
 }

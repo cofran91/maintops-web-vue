@@ -11,6 +11,7 @@ import {
   mdiPencilOutline,
   mdiPhoneOutline,
   mdiRefresh,
+  mdiTrashCanOutline,
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -24,7 +25,15 @@ const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const userId = computed(() => String(route.params.id ?? ''))
 
-const { errorMessage, fetchUser, loading, user } = useUserDetail(userId)
+const {
+  deleteDialogOpen,
+  deleteUser,
+  deleting,
+  errorMessage,
+  fetchUser,
+  loading,
+  user,
+} = useUserDetail(userId)
 
 const currentUserName = computed(() => authStore.user?.name || 'Juan Martínez')
 const currentUserInitials = computed(() =>
@@ -58,6 +67,14 @@ const initials = (name: string) =>
     .join('')
     .slice(0, 2)
     .toUpperCase()
+
+const confirmDelete = async () => {
+  const deleted = await deleteUser()
+
+  if (deleted) {
+    await router.replace({ name: 'users' })
+  }
+}
 
 const formatDateTime = (value?: string | null) => {
   if (!value) {
@@ -109,6 +126,10 @@ const signOut = async () => {
             <v-btn v-if="user" color="primary" height="42" :to="{ name: 'users-edit', params: { id: user.id } }">
               <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
               Editar usuario
+            </v-btn>
+            <v-btn v-if="user" color="error" height="42" variant="tonal" @click="deleteDialogOpen = true">
+              <v-icon :icon="mdiTrashCanOutline" class="mr-2" size="17" />
+              Eliminar
             </v-btn>
           </div>
         </header>
@@ -197,6 +218,20 @@ const signOut = async () => {
         </template>
       </div>
     </v-main>
+
+    <v-dialog v-model="deleteDialogOpen" max-width="430">
+      <v-card class="user-delete-dialog">
+        <v-card-title>¿Eliminar este usuario?</v-card-title>
+        <v-card-text>
+          {{ user?.name }} perderá el acceso a la plataforma y dejará de estar disponible para nuevas asignaciones. Esta acción no se puede deshacer desde la plataforma.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="deleting" @click="deleteDialogOpen = false">Cancelar</v-btn>
+          <v-btn color="error" :loading="deleting" @click="confirmDelete">Eliminar usuario</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
