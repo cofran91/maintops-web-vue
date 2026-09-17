@@ -1,28 +1,31 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { mdiChevronDown } from '@mdi/js'
 import type { WeekActivity } from '@/types/dashboard'
 
 defineProps<{
   data: WeekActivity[]
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <article class="dashboard-card activity-chart-card">
     <div class="card-heading">
       <div>
-        <h2>Actividad de mantenimiento</h2>
-        <p>Órdenes planificadas y completadas esta semana</p>
+        <h2>{{ t('dashboard.maintenanceActivity') }}</h2>
+        <p>{{ t('dashboard.plannedCompleted') }}</p>
       </div>
       <button class="period-selector" type="button">
-        Esta semana
+        {{ t('dashboard.thisWeek') }}
         <v-icon :icon="mdiChevronDown" size="16" />
       </button>
     </div>
 
     <div class="chart-legend">
-      <span><i class="legend-dot legend-dot--planned" /> Planificadas</span>
-      <span><i class="legend-dot legend-dot--done" /> Completadas</span>
+      <span><i class="legend-dot legend-dot--planned" /> {{ t('dashboard.planned') }}</span>
+      <span><i class="legend-dot legend-dot--done" /> {{ t('dashboard.completed') }}</span>
     </div>
 
     <div class="bar-chart">

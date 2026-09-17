@@ -1,0 +1,21 @@
+.language-switcher {
+  gap: 6px;
+  min-width: 62px;
+  color: #50617c;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.language-menu {
+  border: 1px solid #e4e9f1;
+  box-shadow: 0 14px 34px rgba(17, 29, 53, 0.14) !important;
+}
+
+.language-menu__code {
+  width: 28px;
+  color: #7f8da5;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}

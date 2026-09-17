@@ -4,20 +4,24 @@ import {
   mdiMagnify,
   mdiMenu,
 } from '@mdi/js'
+import { useI18n } from 'vue-i18n'
 import RealtimeActivityTray from '@/components/layout/RealtimeActivityTray.vue'
 import RealtimeStatusBadge from '@/components/layout/RealtimeStatusBadge.vue'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
 
 withDefaults(defineProps<{
   userName: string
   userInitials: string
   context?: string
 }>(), {
-  context: 'Panel de operación',
+  context: '',
 })
 
 const emit = defineEmits<{
   (event: 'openMenu'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -25,23 +29,25 @@ const emit = defineEmits<{
     <v-btn
       class="topbar-menu"
       :icon="mdiMenu"
-      aria-label="Abrir navegación"
+      :aria-label="t('topbar.openNavigation')"
       variant="text"
       @click="emit('openMenu')"
     />
 
     <div class="topbar-context">
       <small>MaintOps</small>
-      <span>{{ context }}</span>
+      <span>{{ context || t('topbar.operationalPanel') }}</span>
     </div>
 
     <v-spacer />
 
     <div class="topbar-search">
       <v-icon :icon="mdiMagnify" size="20" />
-      <input aria-label="Buscar" placeholder="Buscar orden, vehículo o placa..." type="search" />
+      <input :aria-label="t('topbar.search')" :placeholder="t('topbar.searchPlaceholder')" type="search" />
       <kbd>⌘ K</kbd>
     </div>
+
+    <LanguageSwitcher />
 
     <RealtimeActivityTray />
 
@@ -51,7 +57,7 @@ const emit = defineEmits<{
 
     <button class="profile-button" type="button">
       <span class="profile-avatar">{{ userInitials }}</span>
-      <span class="profile-copy"><strong>{{ userName }}</strong><small>Administrador</small></span>
+      <span class="profile-copy"><strong>{{ userName }}</strong><small>{{ t('topbar.administrator') }}</small></span>
       <v-icon :icon="mdiChevronDown" size="17" />
     </button>
   </v-app-bar>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
@@ -31,6 +32,7 @@ import {
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale, t } = useI18n()
 const mobileDrawer = ref(false)
 const { errorMessage, fetchSummary, loading, summary } = useDashboardOverview()
 
@@ -41,18 +43,18 @@ const chartPoints = [
   '1,9 17,13 32,8 48,17 63,15 79,23 99,20',
 ]
 
-const weekActivity: WeekActivity[] = [
-  { day: 'Lun', planned: 78, completed: 61 },
-  { day: 'Mar', planned: 62, completed: 48 },
-  { day: 'Mié', planned: 86, completed: 69 },
-  { day: 'Jue', planned: 72, completed: 58 },
-  { day: 'Vie', planned: 94, completed: 75 },
-  { day: 'Sáb', planned: 55, completed: 41 },
-  { day: 'Dom', planned: 32, completed: 24 },
-]
+const weekActivity = computed<WeekActivity[]>(() => [
+  { day: t('dashboard.weekdays.mon'), planned: 78, completed: 61 },
+  { day: t('dashboard.weekdays.tue'), planned: 62, completed: 48 },
+  { day: t('dashboard.weekdays.wed'), planned: 86, completed: 69 },
+  { day: t('dashboard.weekdays.thu'), planned: 72, completed: 58 },
+  { day: t('dashboard.weekdays.fri'), planned: 94, completed: 75 },
+  { day: t('dashboard.weekdays.sat'), planned: 55, completed: 41 },
+  { day: t('dashboard.weekdays.sun'), planned: 32, completed: 24 },
+])
 
 const todayLabel = computed(() => {
-  const label = new Intl.DateTimeFormat('es-CO', {
+  const label = new Intl.DateTimeFormat(locale.value === 'en' ? 'en-US' : 'es-CO', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -78,37 +80,37 @@ const totalOrders = computed(() => {
 
 const stats = computed<DashboardStat[]>(() => [
   {
-    label: 'Órdenes activas',
+    label: t('dashboard.activeOrders'),
     value: String(metricValue('active_orders')),
-    detail: `${summary.value?.activities.active ?? 0} actividades en curso`,
-    change: 'Actual',
+    detail: t('dashboard.activitiesInProgress', { count: summary.value?.activities.active ?? 0 }),
+    change: t('dashboard.current'),
     icon: mdiWrenchOutline,
     tone: 'blue',
     points: chartPoints[0] ?? '',
   },
   {
-    label: 'Programadas hoy',
+    label: t('dashboard.scheduledToday'),
     value: String(summary.value?.today_schedules.length ?? 0),
-    detail: `${summary.value?.upcoming_schedules.length ?? 0} próximas a iniciar`,
-    change: 'Hoy',
+    detail: t('dashboard.startingSoon', { count: summary.value?.upcoming_schedules.length ?? 0 }),
+    change: t('common.today'),
     icon: mdiCalendarCheckOutline,
     tone: 'teal',
     points: chartPoints[1] ?? '',
   },
   {
-    label: 'Por aprobación',
+    label: t('dashboard.awaitingApproval'),
     value: String(metricValue('awaiting_owner_approval')),
-    detail: 'Requieren revisión',
-    change: 'Atención',
+    detail: t('dashboard.requireReview'),
+    change: t('dashboard.attention'),
     icon: mdiClipboardTextOutline,
     tone: 'amber',
     points: chartPoints[2] ?? '',
   },
   {
-    label: 'Fuera de plazo',
+    label: t('dashboard.overdue'),
     value: String(metricValue('overdue_activities')),
-    detail: 'Seguimiento requerido',
-    change: 'Revisar',
+    detail: t('dashboard.followUpRequired'),
+    change: t('dashboard.review'),
     icon: mdiAlertOutline,
     tone: 'red',
     points: chartPoints[3] ?? '',
@@ -119,13 +121,13 @@ const rawStatusCount = (status: string) => Number(summary.value?.orders_by_statu
 
 const statusBreakdown = computed<StatusBreakdown[]>(() => {
   const knownStatuses = [
-    { label: 'En proceso', count: rawStatusCount('in_progress'), color: '#3158e7' },
-    { label: 'Programadas', count: rawStatusCount('scheduled'), color: '#14a694' },
-    { label: 'Finalizadas', count: rawStatusCount('completed'), color: '#8090ad' },
+    { label: t('dashboard.statuses.in_progress'), count: rawStatusCount('in_progress'), color: '#3158e7' },
+    { label: t('dashboard.statuses.scheduled'), count: rawStatusCount('scheduled'), color: '#14a694' },
+    { label: t('dashboard.statuses.completed'), count: rawStatusCount('completed'), color: '#8090ad' },
   ]
   const knownCount = knownStatuses.reduce((total, status) => total + status.count, 0)
   const pendingCount = Math.max(0, totalOrders.value - knownCount)
-  const statuses = [...knownStatuses, { label: 'Por gestionar', count: pendingCount, color: '#f1a13c' }]
+  const statuses = [...knownStatuses, { label: t('dashboard.managed'), count: pendingCount, color: '#f1a13c' }]
 
   let assignedPercentage = 0
 
@@ -156,31 +158,31 @@ const scheduleOrders = computed(() => {
 })
 
 const vehicleLabel = (vehicle?: DashboardVehicle | null) =>
-  vehicle ? [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || 'Vehículo' : 'Vehículo'
+  vehicle ? [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || t('dashboard.vehicleFallback') : t('dashboard.vehicleFallback')
 
 const plateLabel = (vehicle?: DashboardVehicle | null) =>
-  vehicle?.license_plate || 'Sin placa'
+  vehicle?.license_plate || t('dashboard.noPlate')
 
 const workshopLabel = (workshop?: DashboardWorkshop | null) =>
-  workshop?.name || workshop?.code || 'Taller pendiente'
+  workshop?.name || workshop?.code || t('dashboard.pendingWorkshop')
 
 const technicianLabel = (technician?: DashboardUser | null) =>
-  technician?.name || 'Sin asignar'
+  technician?.name || t('dashboard.unassigned')
 
 const statusLabel = (status: string) => {
   const labels: Record<string, string> = {
-    created: 'Creada',
-    pending_owner_approval: 'Por aprobar',
-    approved: 'Aprobada',
-    partially_approved: 'Parcialmente aprobada',
-    scheduled: 'Programada',
-    in_progress: 'En proceso',
-    completed: 'Finalizada',
-    rejected: 'Rechazada',
-    canceled: 'Cancelada',
+    created: 'dashboard.statuses.created',
+    pending_owner_approval: 'dashboard.statuses.pending_owner_approval',
+    approved: 'dashboard.statuses.approved',
+    partially_approved: 'dashboard.statuses.partially_approved',
+    scheduled: 'dashboard.statuses.scheduled',
+    in_progress: 'dashboard.statuses.in_progress',
+    completed: 'dashboard.statuses.completed',
+    rejected: 'dashboard.statuses.rejected',
+    canceled: 'dashboard.statuses.canceled',
   }
 
-  return labels[status] ?? 'Actualizada'
+  return labels[status] ? t(labels[status]) : t('dashboard.statuses.updated')
 }
 
 const statusKey = (status: string): RecentOrder['statusKey'] => {
@@ -201,10 +203,10 @@ const statusKey = (status: string): RecentOrder['statusKey'] => {
 
 const dateLabel = (value?: string | null) => {
   if (!value) {
-    return 'Sin fecha'
+    return t('dashboard.withoutDate')
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value === 'en' ? 'en-US' : 'es-CO', {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
@@ -217,7 +219,7 @@ const timeLabel = (value?: string | null) => {
     return '--:--'
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value === 'en' ? 'en-US' : 'es-CO', {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(value))
@@ -246,7 +248,7 @@ const recentOrders = computed<RecentOrder[]>(() =>
 const upcomingTasks = computed<UpcomingTask[]>(() =>
   scheduleOrders.value.slice(0, 3).map((order, index) => ({
     time: timeLabel(order.scheduled_at),
-    title: order.status === 'in_progress' ? 'Mantenimiento en curso' : 'Mantenimiento programado',
+    title: order.status === 'in_progress' ? t('dashboard.maintenanceInProgress') : t('dashboard.scheduledMaintenance'),
     vehicle: `${vehicleLabel(order.vehicle)} · ${plateLabel(order.vehicle)}`,
     location: workshopLabel(order.workshop),
     tone: (['blue', 'teal', 'amber'][index] ?? 'blue') as UpcomingTask['tone'],
@@ -296,8 +298,8 @@ const openOrder = (orderId: number) => {
         <header class="page-header">
           <div>
             <span class="page-date">{{ todayLabel }}</span>
-            <h1>Buen día, {{ userName.split(' ')[0] }} <span>👋</span></h1>
-            <p>Este es el estado general de tu operación de mantenimiento.</p>
+            <h1>{{ t('dashboard.greeting', { name: userName.split(' ')[0] }) }} <span>👋</span></h1>
+            <p>{{ t('dashboard.description') }}</p>
           </div>
           <div class="page-actions">
             <v-btn class="filter-button" height="44" variant="outlined">
@@ -321,26 +323,26 @@ const openOrder = (orderId: number) => {
           <span>{{ errorMessage }}</span>
           <template #append>
             <v-btn :loading="loading" size="small" variant="text" @click="fetchSummary">
-              Reintentar
+              {{ t('common.retry') }}
             </v-btn>
           </template>
         </v-alert>
 
         <div v-if="loading && !summary" class="dashboard-state dashboard-state--loading">
           <v-progress-circular color="primary" indeterminate size="34" width="3" />
-          <strong>Cargando el estado de la operación</strong>
-          <span>Estamos preparando tus indicadores.</span>
+          <strong>{{ t('dashboard.loadingTitle') }}</strong>
+          <span>{{ t('dashboard.loadingDescription') }}</span>
         </div>
 
         <div v-else-if="!summary" class="dashboard-state">
           <v-icon :icon="mdiAlertOutline" color="error" size="32" />
-          <strong>No fue posible cargar el dashboard</strong>
-          <span>Verifica la conexión con MaintOps e inténtalo nuevamente.</span>
-          <v-btn color="primary" :loading="loading" @click="fetchSummary">Reintentar</v-btn>
+          <strong>{{ t('dashboard.loadErrorTitle') }}</strong>
+          <span>{{ t('dashboard.loadErrorDescription') }}</span>
+          <v-btn color="primary" :loading="loading" @click="fetchSummary">{{ t('common.retry') }}</v-btn>
         </div>
 
         <template v-else>
-          <section class="stats-grid" aria-label="Indicadores principales">
+          <section class="stats-grid" :aria-label="t('dashboard.mainIndicators')">
             <MetricCard v-for="stat in stats" :key="stat.label" :stat="stat" />
           </section>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 import { useRoute, useRouter } from 'vue-router'
 import { canAccessRoute } from '@/auth/permissions'
@@ -36,23 +37,24 @@ const { mdAndDown } = useDisplay()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const navigation = [
-  { label: 'Inicio', icon: mdiViewDashboardOutline, route: 'dashboard' },
-  { label: 'Órdenes de mantenimiento', icon: mdiClipboardTextOutline, route: 'orders', badge: '12' },
-  { label: 'Vehículos', icon: mdiCarMultiple, route: 'vehicles' },
-  { label: 'Propietarios', icon: mdiAccountGroupOutline, route: 'owners' },
-  { label: 'Planes de mantenimiento', icon: mdiCalendarClockOutline, route: 'maintenance-plans' },
-  { label: 'Catálogo de tareas', icon: mdiWrenchOutline, route: 'maintenance-tasks' },
-  { label: 'Agenda operativa', icon: mdiCalendarMonthOutline, route: 'maintenance-schedule' },
-  { label: 'Talleres', icon: mdiGarageVariant, route: 'workshops' },
-  { label: 'Usuarios', icon: mdiAccountGroupOutline, route: 'users' },
+  { labelKey: 'nav.home', icon: mdiViewDashboardOutline, route: 'dashboard' },
+  { labelKey: 'nav.orders', icon: mdiClipboardTextOutline, route: 'orders', badge: '12' },
+  { labelKey: 'nav.vehicles', icon: mdiCarMultiple, route: 'vehicles' },
+  { labelKey: 'nav.owners', icon: mdiAccountGroupOutline, route: 'owners' },
+  { labelKey: 'nav.plans', icon: mdiCalendarClockOutline, route: 'maintenance-plans' },
+  { labelKey: 'nav.tasks', icon: mdiWrenchOutline, route: 'maintenance-tasks' },
+  { labelKey: 'nav.schedule', icon: mdiCalendarMonthOutline, route: 'maintenance-schedule' },
+  { labelKey: 'nav.workshops', icon: mdiGarageVariant, route: 'workshops' },
+  { labelKey: 'nav.users', icon: mdiAccountGroupOutline, route: 'users' },
 ]
 
 const analysisNavigation = [
-  { label: 'Analítica', icon: mdiChartBoxOutline, route: 'analytics' },
-  { label: 'Reportes', icon: mdiCalendarMonthOutline, route: 'reports' },
-  { label: 'Auditoría', icon: mdiHistory, route: 'access-audit' },
+  { labelKey: 'nav.analytics', icon: mdiChartBoxOutline, route: 'analytics' },
+  { labelKey: 'nav.reports', icon: mdiCalendarMonthOutline, route: 'reports' },
+  { labelKey: 'nav.audits', icon: mdiHistory, route: 'access-audit' },
 ]
 
 const visibleNavigation = computed(() =>
@@ -103,46 +105,46 @@ const isActive = (routeName?: string) => routeName === route.name
       </div>
 
       <nav class="sidebar-nav" aria-label="Navegación principal">
-        <span class="nav-section-label">Operación</span>
+        <span class="nav-section-label">{{ t('nav.operation') }}</span>
         <button
           v-for="item in visibleNavigation"
-          :key="item.label"
+          :key="item.route"
           :class="['nav-item', { 'nav-item--active': isActive(item.route) }]"
           type="button"
           @click="navigate(item.route)"
         >
           <v-icon :icon="item.icon" size="20" />
-          <span>{{ item.label }}</span>
+          <span>{{ t(item.labelKey) }}</span>
           <small v-if="item.badge">{{ item.badge }}</small>
         </button>
 
-        <span class="nav-section-label nav-section-label--spaced">Análisis</span>
+        <span class="nav-section-label nav-section-label--spaced">{{ t('nav.analysis') }}</span>
         <button
           v-for="item in visibleAnalysisNavigation"
-          :key="item.label"
+          :key="item.route"
           :class="['nav-item', { 'nav-item--active': isActive(item.route) }]"
           type="button"
           @click="navigate(item.route)"
         >
           <v-icon :icon="item.icon" size="20" />
-          <span>{{ item.label }}</span>
+          <span>{{ t(item.labelKey) }}</span>
         </button>
       </nav>
 
       <div class="sidebar-help">
         <span><v-icon :icon="mdiHelpCircleOutline" size="21" /></span>
-        <div><strong>¿Necesitas ayuda?</strong><small>Consulta el centro de soporte</small></div>
+        <div><strong>{{ t('nav.help') }}</strong><small>{{ t('nav.supportCenter') }}</small></div>
         <v-icon :icon="mdiChevronRight" size="18" />
       </div>
 
       <div class="sidebar-bottom">
         <button class="nav-item" type="button">
           <v-icon :icon="mdiCogOutline" size="20" />
-          <span>Configuración</span>
+          <span>{{ t('nav.settings') }}</span>
         </button>
         <button class="nav-item" type="button" @click="emit('signOut')">
           <v-icon :icon="mdiLogoutVariant" size="20" />
-          <span>Cerrar sesión</span>
+          <span>{{ t('nav.signOut') }}</span>
         </button>
       </div>
     </div>

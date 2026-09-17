@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertCircleOutline,
@@ -20,6 +21,7 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const { t } = useI18n()
 const showPassword = ref(false)
 const rememberSession = ref(true)
 const fieldErrors = reactive({
@@ -51,11 +53,11 @@ const validateForm = () => {
   clearErrors()
 
   if (!credentials.email.trim()) {
-    fieldErrors.email = 'Ingresa tu correo electrónico.'
+    fieldErrors.email = t('auth.forgot.requiredEmail')
   }
 
   if (!credentials.password) {
-    fieldErrors.password = 'Ingresa tu contraseña.'
+    fieldErrors.password = t('auth.login.passwordPlaceholder')
   }
 
   return !fieldErrors.email && !fieldErrors.password
@@ -94,9 +96,9 @@ const enterDashboard = async () => {
 
         <div class="login-content">
           <div class="login-heading">
-            <span class="eyebrow">Portal operativo</span>
-            <h1>Bienvenido de nuevo</h1>
-            <p>Ingresa para gestionar la operación de mantenimiento de tu flota.</p>
+            <span class="eyebrow">{{ t('auth.login.eyebrow') }}</span>
+            <h1>{{ t('auth.login.welcome') }}</h1>
+            <p>{{ t('auth.login.description') }}</p>
           </div>
 
           <v-alert
@@ -110,7 +112,7 @@ const enterDashboard = async () => {
 
           <v-form class="login-form" @submit.prevent="enterDashboard">
             <div class="field-group">
-              <label for="email">Correo electrónico</label>
+              <label for="email">{{ t('auth.login.email') }}</label>
               <v-text-field
                 id="email"
                 v-model="credentials.email"
@@ -120,15 +122,15 @@ const enterDashboard = async () => {
                 :error-messages="fieldErrors.email"
                 hide-details="auto"
                 name="email"
-                placeholder="nombre@empresa.com"
+                :placeholder="t('auth.login.emailPlaceholder')"
                 type="email"
               />
             </div>
 
             <div class="field-group">
               <div class="field-label-row">
-                <label for="password">Contraseña</label>
-                <router-link class="text-action" :to="{ name: 'forgot-password' }">¿Olvidaste tu contraseña?</router-link>
+                <label for="password">{{ t('auth.login.password') }}</label>
+                <router-link class="text-action" :to="{ name: 'forgot-password' }">{{ t('auth.login.forgotPassword') }}</router-link>
               </div>
               <v-text-field
                 id="password"
@@ -141,7 +143,7 @@ const enterDashboard = async () => {
                 :error-messages="fieldErrors.password"
                 hide-details="auto"
                 name="password"
-                placeholder="Ingresa tu contraseña"
+                :placeholder="t('auth.login.passwordPlaceholder')"
                 @click:append-inner="showPassword = !showPassword"
               />
             </div>
@@ -151,7 +153,7 @@ const enterDashboard = async () => {
                 v-model="rememberSession"
                 color="primary"
                 density="compact"
-                label="Mantener mi sesión iniciada"
+                :label="t('auth.login.remember')"
               />
             </div>
 
@@ -165,13 +167,13 @@ const enterDashboard = async () => {
               size="large"
               type="submit"
             >
-              Ingresar
+              {{ t('auth.login.submit') }}
               <v-icon :icon="mdiArrowRight" class="ml-2" size="20" />
             </v-btn>
 
             <div class="demo-note">
               <v-icon :icon="mdiShieldCheckOutline" color="success" size="18" />
-              <span>Usa las credenciales de tu cuenta MaintOps.</span>
+              <span>{{ t('auth.login.credentialsNote') }}</span>
             </div>
           </v-form>
         </div>
@@ -179,8 +181,8 @@ const enterDashboard = async () => {
         <footer class="login-footer">
           <span>© 2026 MaintOps</span>
           <span class="login-footer__dot" />
-          <button type="button">Soporte</button>
-          <button type="button">Privacidad</button>
+          <button type="button">{{ t('auth.login.support') }}</button>
+          <button type="button">{{ t('auth.login.privacy') }}</button>
         </footer>
       </div>
     </section>
@@ -192,12 +194,9 @@ const enterDashboard = async () => {
 
       <div class="visual-content">
         <div class="visual-copy">
-          <span class="visual-kicker"><i /> Control operativo en tiempo real</span>
-          <h2>Tu operación de mantenimiento, bajo control.</h2>
-          <p>
-            Centraliza órdenes, vehículos y equipos para tomar decisiones claras en el momento
-            indicado.
-          </p>
+          <span class="visual-kicker"><i /> {{ t('auth.login.visualKicker') }}</span>
+          <h2>{{ t('auth.login.visualTitle') }}</h2>
+          <p>{{ t('auth.login.visualDescription') }}</p>
         </div>
 
         <div class="product-preview">
@@ -205,15 +204,15 @@ const enterDashboard = async () => {
             <div class="window-dots"><i /><i /><i /></div>
             <div class="preview-title">
               <v-icon :icon="mdiWrenchCogOutline" size="15" />
-              <span>Centro de operaciones</span>
+              <span>{{ t('auth.login.operationsCenter') }}</span>
             </div>
-            <span class="live-pill"><i /> En línea</span>
+            <span class="live-pill"><i /> {{ t('auth.login.online') }}</span>
           </div>
 
           <div class="preview-body">
             <div class="preview-header">
               <div>
-                <span>Resumen de hoy</span>
+                <span>{{ t('auth.login.todaySummary') }}</span>
                 <strong>Buen día, Juan</strong>
               </div>
               <div class="preview-avatar">JM</div>
@@ -224,29 +223,29 @@ const enterDashboard = async () => {
                 <span class="mini-stat__icon mini-stat__icon--blue">
                   <v-icon :icon="mdiCarWrench" size="18" />
                 </span>
-                <div><small>Órdenes activas</small><strong>24</strong></div>
+                <div><small>{{ t('auth.login.activeOrders') }}</small><strong>24</strong></div>
                 <em>+12%</em>
               </div>
               <div class="mini-stat">
                 <span class="mini-stat__icon mini-stat__icon--green">
                   <v-icon :icon="mdiCalendarCheckOutline" size="18" />
                 </span>
-                <div><small>Programadas</small><strong>18</strong></div>
-                <em>Hoy</em>
+                <div><small>{{ t('auth.login.scheduled') }}</small><strong>18</strong></div>
+                <em>{{ t('common.today') }}</em>
               </div>
               <div class="mini-stat">
                 <span class="mini-stat__icon mini-stat__icon--orange">
                   <v-icon :icon="mdiAlertCircleOutline" size="18" />
                 </span>
-                <div><small>Por revisar</small><strong>7</strong></div>
-                <em>Acción</em>
+                <div><small>{{ t('auth.login.needsReview') }}</small><strong>7</strong></div>
+                <em>{{ t('auth.login.action') }}</em>
               </div>
             </div>
 
             <div class="preview-columns">
               <div class="activity-card">
                 <div class="preview-card-title">
-                  <div><strong>Actividad reciente</strong><span>Últimas órdenes</span></div>
+                  <div><strong>{{ t('auth.login.recentActivity') }}</strong><span>{{ t('auth.login.latestOrders') }}</span></div>
                   <v-icon :icon="mdiChevronRight" size="18" />
                 </div>
 
@@ -255,32 +254,32 @@ const enterDashboard = async () => {
                     <v-icon :icon="mdiCarWrench" size="17" />
                   </span>
                   <div><strong>OT-1048</strong><span>Toyota Hilux · KLM 482</span></div>
-                  <small class="status status--progress">En proceso</small>
+                  <small class="status status--progress">{{ t('auth.login.inProgress') }}</small>
                 </div>
                 <div class="activity-row">
                   <span class="activity-icon activity-icon--green">
                     <v-icon :icon="mdiCheckCircle" size="17" />
                   </span>
                   <div><strong>OT-1047</strong><span>Renault Duster · JRP 910</span></div>
-                  <small class="status status--done">Finalizada</small>
+                  <small class="status status--done">{{ t('auth.login.completed') }}</small>
                 </div>
                 <div class="activity-row">
                   <span class="activity-icon activity-icon--orange">
                     <v-icon :icon="mdiCalendarCheckOutline" size="17" />
                   </span>
                   <div><strong>OT-1046</strong><span>Chevrolet NHR · UXT 235</span></div>
-                  <small class="status status--scheduled">Programada</small>
+                  <small class="status status--scheduled">{{ t('dashboard.statuses.scheduled') }}</small>
                 </div>
               </div>
 
               <div class="health-card">
                 <div class="health-card__top">
-                  <span>Disponibilidad</span>
+                  <span>{{ t('auth.login.availability') }}</span>
                   <small>+3.2%</small>
                 </div>
                 <div class="health-score">
                   <strong>94<small>%</small></strong>
-                  <span>Flota operativa</span>
+                  <span>{{ t('auth.login.fleetOperational') }}</span>
                 </div>
                 <div class="health-ring"><i /></div>
               </div>
@@ -289,11 +288,11 @@ const enterDashboard = async () => {
         </div>
 
         <div class="trust-row">
-          <div><strong>99.9%</strong><span>Disponibilidad</span></div>
+          <div><strong>99.9%</strong><span>{{ t('auth.login.operationalAvailability') }}</span></div>
           <i />
-          <div><strong>+32%</strong><span>Eficiencia operativa</span></div>
+          <div><strong>+32%</strong><span>{{ t('auth.login.efficiency') }}</span></div>
           <i />
-          <div><strong>24/7</strong><span>Visibilidad</span></div>
+          <div><strong>24/7</strong><span>{{ t('auth.login.visibility') }}</span></div>
         </div>
       </div>
     </section>

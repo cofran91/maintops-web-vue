@@ -1,20 +1,23 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { mdiCalendarMonthOutline, mdiChevronRight, mdiClockOutline, mdiMapMarkerOutline } from '@mdi/js'
 import type { UpcomingTask } from '@/types/dashboard'
 
 defineProps<{
   tasks: UpcomingTask[]
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <article class="dashboard-card schedule-card">
     <div class="card-heading">
       <div>
-        <h2>Próximos servicios</h2>
-        <p>Agenda de hoy</p>
+        <h2>{{ t('dashboard.upcomingServices') }}</h2>
+        <p>{{ t('dashboard.todaySchedule') }}</p>
       </div>
-      <button class="calendar-button" aria-label="Abrir calendario" type="button">
+        <button class="calendar-button" :aria-label="t('dashboard.openCalendar')" type="button">
         <v-icon :icon="mdiCalendarMonthOutline" size="20" />
       </button>
     </div>
@@ -31,12 +34,12 @@ defineProps<{
           <small><v-icon :icon="mdiMapMarkerOutline" size="13" />{{ task.location }}</small>
         </div>
       </div>
-      <p v-if="tasks.length === 0" class="schedule-empty">No hay servicios próximos.</p>
+      <p v-if="tasks.length === 0" class="schedule-empty">{{ t('dashboard.noUpcomingServices') }}</p>
     </div>
 
     <button class="schedule-footer" type="button">
       <v-icon :icon="mdiClockOutline" size="17" />
-      Ver agenda completa
+      {{ t('dashboard.fullSchedule') }}
       <v-icon :icon="mdiChevronRight" size="17" />
     </button>
   </article>

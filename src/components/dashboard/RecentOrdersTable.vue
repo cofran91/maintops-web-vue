@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { mdiArrowRight, mdiCarMultiple, mdiDotsHorizontal } from '@mdi/js'
 import type { RecentOrder } from '@/types/dashboard'
 
 defineProps<{
   orders: RecentOrder[]
 }>()
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (event: 'viewAll'): void
@@ -16,11 +19,11 @@ const emit = defineEmits<{
   <article class="dashboard-card orders-card">
     <div class="card-heading card-heading--table">
       <div>
-        <h2>Órdenes recientes</h2>
-        <p>Últimas actualizaciones de la operación</p>
+        <h2>{{ t('dashboard.recentOrders') }}</h2>
+        <p>{{ t('dashboard.latestUpdates') }}</p>
       </div>
       <button class="see-all" type="button" @click="emit('viewAll')">
-        Ver todas <v-icon :icon="mdiArrowRight" size="17" />
+        {{ t('dashboard.viewAll') }} <v-icon :icon="mdiArrowRight" size="17" />
       </button>
     </div>
 
@@ -28,12 +31,12 @@ const emit = defineEmits<{
       <table class="orders-table">
         <thead>
           <tr>
-            <th>Orden</th>
-            <th>Vehículo</th>
-            <th>Taller</th>
-            <th>Técnico</th>
-            <th>Actualización</th>
-            <th>Estado</th>
+            <th>{{ t('dashboard.order') }}</th>
+            <th>{{ t('dashboard.vehicle') }}</th>
+            <th>{{ t('dashboard.workshop') }}</th>
+            <th>{{ t('dashboard.technician') }}</th>
+            <th>{{ t('dashboard.update') }}</th>
+            <th>{{ t('dashboard.status') }}</th>
             <th />
           </tr>
         </thead>
@@ -63,13 +66,13 @@ const emit = defineEmits<{
               </span>
             </td>
             <td>
-              <button aria-label="Más opciones" class="row-action" type="button">
+              <button :aria-label="t('common.moreOptions')" class="row-action" type="button">
                 <v-icon :icon="mdiDotsHorizontal" size="19" />
               </button>
             </td>
           </tr>
           <tr v-if="orders.length === 0">
-            <td class="table-empty" colspan="7">No hay órdenes programadas para mostrar.</td>
+            <td class="table-empty" colspan="7">{{ t('dashboard.noScheduledOrders') }}</td>
           </tr>
         </tbody>
       </table>

@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { mdiArrowUp, mdiDotsHorizontal } from '@mdi/js'
 import type { DashboardStat } from '@/types/dashboard'
 
 defineProps<{
   stat: DashboardStat
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -13,7 +16,7 @@ defineProps<{
       <span :class="['metric-icon', `metric-icon--${stat.tone}`]">
         <v-icon :icon="stat.icon" size="21" />
       </span>
-      <button aria-label="Más opciones" type="button">
+      <button :aria-label="t('common.moreOptions')" type="button">
         <v-icon :icon="mdiDotsHorizontal" size="20" />
       </button>
     </div>
