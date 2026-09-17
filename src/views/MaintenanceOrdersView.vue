@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
   mdiClipboardTextOutline,
+  mdiChevronDown,
+  mdiChevronUp,
   mdiMagnify,
   mdiPlus,
   mdiRefresh,
@@ -21,9 +23,11 @@ import {
 } from '@/types/maintenanceOrder'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const canCreateOrder = computed(() => authStore.canUseResource('orders', 'create'))
+const filtersExpanded = ref(false)
 
 const {
   applyFilters,
@@ -31,6 +35,7 @@ const {
   errorMessage,
   fetchOrders,
   filters,
+  hasActiveFilters,
   loading,
   orders,
   pagination,
@@ -223,9 +228,37 @@ const signOut = async () => {
 
             <div class="orders-filters__actions">
               <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
-              <v-btn variant="text" type="button" @click="clearFilters">Limpiar</v-btn>
+              <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn>
+              <v-btn class="orders-advanced-toggle" size="small" type="button" variant="text" @click="filtersExpanded = !filtersExpanded">
+                <v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" class="mr-1" size="15" />
+                {{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}
+              </v-btn>
             </div>
           </form>
+
+          <v-expand-transition>
+            <div v-if="filtersExpanded" class="orders-filters__advanced">
+              <v-text-field v-model="filters.vehicle_id" clearable hide-details label="ID del vehículo" min="1" type="number" />
+              <v-text-field v-model="filters.owner_id" clearable hide-details label="ID del propietario" min="1" type="number" />
+              <v-text-field v-model="filters.advisor_id" clearable hide-details label="ID del asesor" min="1" type="number" />
+              <v-text-field v-model="filters.workshop_id" clearable hide-details :disabled="filters.without_workshop" label="ID del taller" min="1" type="number" />
+              <v-text-field v-model="filters.technician_id" clearable hide-details :disabled="filters.without_technician" label="ID del técnico" min="1" type="number" />
+              <v-checkbox v-model="filters.without_workshop" class="orders-boolean-filter" color="primary" hide-details label="Sin taller asignado" />
+              <v-checkbox v-model="filters.without_technician" class="orders-boolean-filter" color="primary" hide-details label="Sin técnico asignado" />
+              <v-text-field v-model="filters.scheduled_from" clearable hide-details label="Programada desde" type="date" />
+              <v-text-field v-model="filters.scheduled_to" clearable hide-details label="Programada hasta" type="date" />
+              <v-text-field v-model="filters.started_from" clearable hide-details label="Iniciada desde" type="date" />
+              <v-text-field v-model="filters.started_to" clearable hide-details label="Iniciada hasta" type="date" />
+              <v-text-field v-model="filters.finished_from" clearable hide-details label="Finalizada desde" type="date" />
+              <v-text-field v-model="filters.finished_to" clearable hide-details label="Finalizada hasta" type="date" />
+              <v-text-field v-model="filters.delivered_from" clearable hide-details label="Entregada desde" type="date" />
+              <v-text-field v-model="filters.delivered_to" clearable hide-details label="Entregada hasta" type="date" />
+              <v-text-field v-model="filters.cancelled_from" clearable hide-details label="Cancelada desde" type="date" />
+              <v-text-field v-model="filters.cancelled_to" clearable hide-details label="Cancelada hasta" type="date" />
+              <v-text-field v-model="filters.created_from" clearable hide-details label="Creada desde" type="date" />
+              <v-text-field v-model="filters.created_to" clearable hide-details label="Creada hasta" type="date" />
+            </div>
+          </v-expand-transition>
 
           <v-progress-linear v-if="loading" color="primary" indeterminate />
 
@@ -262,7 +295,7 @@ const signOut = async () => {
                     <td>
                       <router-link
                         class="order-number"
-                        :to="{ name: 'orders-detail', params: { id: order.id } }"
+                        :to="{ name: 'orders-detail', params: { id: order.id }, query: route.query }"
                       >
                         {{ orderNumber(order) }}
                       </router-link>

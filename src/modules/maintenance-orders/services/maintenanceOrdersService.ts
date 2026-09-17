@@ -16,7 +16,7 @@ interface ApiResponse<T> {
   message?: string
 }
 
-interface MaintenanceOrderQuery extends MaintenanceOrderFilters {
+interface MaintenanceOrderQuery extends Partial<MaintenanceOrderFilters> {
   page: number
   per_page: number
 }

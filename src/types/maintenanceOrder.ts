@@ -140,4 +140,23 @@ export interface MaintenanceOrderItemsPayload {
 export interface MaintenanceOrderFilters {
   search: string
   status: string
+  vehicle_id: string
+  owner_id: string
+  advisor_id: string
+  workshop_id: string
+  without_workshop: boolean
+  technician_id: string
+  without_technician: boolean
+  scheduled_from: string
+  scheduled_to: string
+  started_from: string
+  started_to: string
+  finished_from: string
+  finished_to: string
+  delivered_from: string
+  delivered_to: string
+  cancelled_from: string
+  cancelled_to: string
+  created_from: string
+  created_to: string
 }

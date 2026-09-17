@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
   mdiCalendarCheckOutline,
@@ -18,6 +18,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import { useMaintenanceSchedule, toDateKey, type ScheduleEvent } from '@/modules/maintenance-orders/composables/useMaintenanceSchedule'
 import { useAuthStore } from '@/stores/auth'
+import { buildListQuery, getStringQuery } from '@/modules/shared/utils/queryParams'
 import { MAINTENANCE_ORDER_STATUSES, ORDER_STATUS_LABELS, type MaintenanceOrder } from '@/types/maintenanceOrder'
 
 interface CalendarDay {
@@ -28,11 +29,12 @@ interface CalendarDay {
 }
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
-const search = ref('')
-const statusFilter = ref('')
-const workshopFilter = ref('')
+const search = ref(getStringQuery(route.query.search))
+const statusFilter = ref(getStringQuery(route.query.status))
+const workshopFilter = ref(getStringQuery(route.query.workshop_id))
 
 const {
   currentMonth,
@@ -54,6 +56,21 @@ const statusOptions = [
 ]
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const todayKey = toDateKey(new Date())
+
+const monthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+const syncCalendarFromQuery = () => {
+  const month = getStringQuery(route.query.month)
+  if (/^\d{4}-\d{2}$/.test(month)) {
+    const monthParts = month.split('-').map(Number)
+    const year = monthParts[0] ?? 0
+    const monthNumber = monthParts[1] ?? 0
+    const parsedMonth = new Date(year, monthNumber - 1, 1)
+    if (parsedMonth.getFullYear() === year && parsedMonth.getMonth() === monthNumber - 1) currentMonth.value = parsedMonth
+  }
+
+  const day = getStringQuery(route.query.day)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)) selectedDay.value = day
+}
 
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() => userName.value.split(' ').map((part) => part.charAt(0)).join('').slice(0, 2).toUpperCase())
@@ -128,6 +145,33 @@ const signOut = async () => {
   await authStore.logout()
   await router.push({ name: 'login' })
 }
+
+const persistScheduleQuery = () => {
+  void router.replace({
+    name: 'maintenance-schedule',
+    query: {
+      ...buildListQuery({ search: search.value, status: statusFilter.value, workshop_id: workshopFilter.value }, 1, 15),
+      month: monthKey(currentMonth.value),
+      day: selectedDay.value,
+    },
+  })
+}
+
+syncCalendarFromQuery()
+watch(
+  [search, statusFilter, workshopFilter, selectedDay, () => currentMonth.value.getTime()],
+  persistScheduleQuery,
+  { flush: 'post' },
+)
+watch(
+  () => route.query,
+  () => {
+    search.value = getStringQuery(route.query.search)
+    statusFilter.value = getStringQuery(route.query.status)
+    workshopFilter.value = getStringQuery(route.query.workshop_id)
+    syncCalendarFromQuery()
+  },
+)
 </script>
 
 <template>
