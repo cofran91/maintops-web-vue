@@ -45,6 +45,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/owners',
+      name: 'owners',
+      component: () => import('@/views/OwnersView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Propietarios',
+      },
+    },
+    {
       path: '/vehicles/new',
       name: 'vehicles-new',
       component: () => import('@/views/VehicleFormView.vue'),

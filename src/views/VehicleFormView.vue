@@ -108,7 +108,7 @@ const loadOwners = async () => {
   optionsError.value = false
 
   try {
-    owners.value = (await ownersApi.index()).items
+    owners.value = (await ownersApi.index({ is_active: true, page: 1, per_page: 100 })).items
   } catch (error) {
     optionsError.value = true
     formError.value = normalizeApiError(error).message

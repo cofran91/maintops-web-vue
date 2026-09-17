@@ -19,3 +19,8 @@ export interface OwnerPage {
     to: number | null
   }
 }
+
+export interface OwnerFilters {
+  search: string
+  status: string
+}
