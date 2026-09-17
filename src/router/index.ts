@@ -89,6 +89,30 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Agenda operativa' },
     },
     {
+      path: '/maintenance-tasks',
+      name: 'maintenance-tasks',
+      component: () => import('@/views/MaintenanceTasksView.vue'),
+      meta: { requiresAuth: true, title: 'Catálogo de tareas' },
+    },
+    {
+      path: '/maintenance-tasks/new',
+      name: 'maintenance-tasks-new',
+      component: () => import('@/views/MaintenanceTaskFormView.vue'),
+      meta: { requiresAuth: true, title: 'Nueva tarea' },
+    },
+    {
+      path: '/maintenance-tasks/:id(\\d+)',
+      name: 'maintenance-tasks-detail',
+      component: () => import('@/views/MaintenanceTaskDetailView.vue'),
+      meta: { requiresAuth: true, title: 'Detalle de tarea' },
+    },
+    {
+      path: '/maintenance-tasks/:id(\\d+)/edit',
+      name: 'maintenance-tasks-edit',
+      component: () => import('@/views/MaintenanceTaskFormView.vue'),
+      meta: { requiresAuth: true, title: 'Editar tarea' },
+    },
+    {
       path: '/maintenance-plans/:id(\\d+)',
       name: 'maintenance-plans-detail',
       component: () => import('@/views/MaintenancePlanDetailView.vue'),
