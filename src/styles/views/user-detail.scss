@@ -1,0 +1,104 @@
+@use './owners.scss';
+@use './owner-detail.scss';
+
+.user-detail-shell {
+  @extend .owners-shell;
+}
+
+.user-detail-main {
+  @extend .owners-main;
+}
+
+.user-detail-content {
+  @extend .owner-detail-content;
+}
+
+.user-breadcrumbs {
+  @extend .owner-breadcrumbs;
+}
+
+.user-breadcrumbs__arrow {
+  @extend .owner-breadcrumbs__arrow;
+}
+
+.user-detail-header {
+  @extend .owner-detail-header;
+}
+
+.user-detail-refresh {
+  @extend .owners-refresh;
+}
+
+.user-detail-alert {
+  @extend .owner-detail-alert;
+}
+
+.user-detail-loading {
+  @extend .owner-detail-loading;
+}
+
+.user-detail-empty {
+  @extend .owner-detail-empty;
+}
+
+.user-detail-hero {
+  @extend .owner-detail-hero;
+}
+
+.user-detail-hero__identity {
+  @extend .owner-detail-hero__identity;
+}
+
+.user-detail-hero__avatar {
+  @extend .owner-detail-hero__avatar;
+}
+
+.user-detail-overline {
+  @extend .owner-detail-overline;
+}
+
+.user-detail-hero__stat {
+  @extend .owner-detail-hero__stat;
+}
+
+.user-detail-grid {
+  @extend .owner-detail-grid;
+}
+
+.user-detail-card {
+  @extend .owner-detail-card;
+}
+
+.user-detail-card__heading {
+  @extend .owner-detail-card__heading;
+}
+
+.user-detail-card__icon {
+  @extend .owner-detail-card__icon;
+}
+
+.user-detail-card__icon--blue {
+  @extend .owner-detail-card__icon--blue;
+}
+
+.user-detail-card__icon--teal {
+  @extend .owner-detail-card__icon--teal;
+}
+
+.user-definition-list {
+  @extend .owner-definition-list;
+}
+
+.user-contact-footer {
+  @extend .owner-contact-footer;
+}
+
+.user-detail-meta {
+  @extend .owner-detail-meta;
+}
+
+@media (max-width: 620px) {
+  .user-detail-header .user-detail-refresh {
+    width: 100%;
+  }
+}

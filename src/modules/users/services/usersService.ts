@@ -33,6 +33,12 @@ export const usersApi = {
     return usersApi.index({ role, status: 'active', page: 1, per_page: 100 })
   },
 
+  async show(id: string | number, config: AxiosRequestConfig = {}) {
+    const response = await http.get<ApiResponse<User>>(`/users/${id}`, config)
+
+    return unwrapApiData<User>(response.data)
+  },
+
   async advisors() {
     return usersApi.byRole('advisor')
   },

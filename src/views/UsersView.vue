@@ -223,7 +223,13 @@ const signOut = async () => {
                       <div class="user-identity">
                         <span class="user-identity__avatar">{{ initials(user.name) }}</span>
                         <span>
-                          <strong>{{ user.name }}</strong>
+                          <router-link
+                            class="user-number"
+                            :to="{ name: 'users-detail', params: { id: user.id } }"
+                            @click.stop
+                          >
+                            {{ user.name }}
+                          </router-link>
                           <small>Usuario #{{ user.id }}</small>
                         </span>
                       </div>
