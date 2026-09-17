@@ -5,5 +5,6 @@ const optionalUrl = (value: unknown) => {
 }
 
 export const integrations = Object.freeze({
+  analyticsBaseUrl: optionalUrl(import.meta.env.VITE_ANALYTICS_BASE_URL),
   realtimeUrl: optionalUrl(import.meta.env.VITE_REALTIME_URL),
 })
