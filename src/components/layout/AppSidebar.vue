@@ -13,6 +13,7 @@ import {
   mdiCogOutline,
   mdiGarageVariant,
   mdiHelpCircleOutline,
+  mdiHistory,
   mdiLogoutVariant,
   mdiViewDashboardOutline,
   mdiWrenchCogOutline,
@@ -47,6 +48,7 @@ const navigation = [
 const analysisNavigation = [
   { label: 'Analítica', icon: mdiChartBoxOutline, route: 'analytics' },
   { label: 'Reportes', icon: mdiCalendarMonthOutline, route: 'reports' },
+  { label: 'Auditoría', icon: mdiHistory, route: 'access-audit' },
 ]
 
 const closeOnMobile = () => {

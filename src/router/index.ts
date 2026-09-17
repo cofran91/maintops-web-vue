@@ -62,6 +62,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/audits',
+      name: 'access-audit',
+      component: () => import('@/views/AuditsView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Auditoría del sistema',
+      },
+    },
+    {
       path: '/orders',
       name: 'orders',
       component: () => import('@/views/MaintenanceOrdersView.vue'),
