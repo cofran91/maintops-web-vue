@@ -2,6 +2,7 @@ import { onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import { normalizeApiError } from '@/api/errors'
 import maintenanceOrdersApi from '@/modules/maintenance-orders/services/maintenanceOrdersService'
 import type { MaintenanceOrder } from '@/types/maintenanceOrder'
+import type { MaintenanceOrderAction } from '@/modules/maintenance-orders/utils/orderStatusRules'
 
 const isCanceledRequest = (error: unknown) => {
   if (typeof error !== 'object' || error === null) {
@@ -20,6 +21,7 @@ const isCanceledRequest = (error: unknown) => {
 export const useMaintenanceOrderDetail = (orderId: Ref<string>) => {
   const order = ref<MaintenanceOrder | null>(null)
   const loading = ref(false)
+  const updatingStatus = ref(false)
   const errorMessage = ref('')
   let controller: AbortController | null = null
 
@@ -54,6 +56,25 @@ export const useMaintenanceOrderDetail = (orderId: Ref<string>) => {
     }
   }
 
+  const updateOrderStatus = async (status: MaintenanceOrderAction) => {
+    if (!order.value) {
+      return false
+    }
+
+    updatingStatus.value = true
+    errorMessage.value = ''
+
+    try {
+      order.value = await maintenanceOrdersApi.updateStatus(order.value.id, status)
+      return true
+    } catch (error) {
+      errorMessage.value = normalizeApiError(error).message
+      return false
+    } finally {
+      updatingStatus.value = false
+    }
+  }
+
   watch(orderId, () => void fetchOrder(), { immediate: true })
 
   onBeforeUnmount(() => {
@@ -64,7 +85,9 @@ export const useMaintenanceOrderDetail = (orderId: Ref<string>) => {
   return {
     order,
     loading,
+    updatingStatus,
     errorMessage,
     fetchOrder,
+    updateOrderStatus,
   }
 }

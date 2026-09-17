@@ -5,6 +5,7 @@ import type {
   MaintenanceOrder,
   MaintenanceOrderPage,
 } from '@/types/maintenanceOrder'
+import type { MaintenanceOrderAction } from '@/modules/maintenance-orders/utils/orderStatusRules'
 
 interface ApiResponse<T> {
   data: T
@@ -28,6 +29,14 @@ export const maintenanceOrdersApi = {
 
   async show(id: string | number, config: AxiosRequestConfig = {}) {
     const response = await http.get<ApiResponse<MaintenanceOrder>>(`/maintenance-orders/${id}`, config)
+
+    return unwrapApiData<MaintenanceOrder>(response.data)
+  },
+
+  async updateStatus(id: string | number, status: MaintenanceOrderAction) {
+    const response = await http.patch<ApiResponse<MaintenanceOrder>>(`/maintenance-orders/${id}`, {
+      status,
+    })
 
     return unwrapApiData<MaintenanceOrder>(response.data)
   },

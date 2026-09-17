@@ -4,14 +4,17 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
   mdiArrowLeft,
+  mdiCancel,
   mdiCalendarClockOutline,
   mdiCalendarOutline,
   mdiCarMultiple,
   mdiClipboardCheckOutline,
+  mdiCheckCircleOutline,
   mdiClockOutline,
   mdiMapMarkerOutline,
   mdiRefresh,
   mdiTuneVariant,
+  mdiTruckDeliveryOutline,
   mdiAccountGroupOutline,
   mdiWrenchOutline,
 } from '@mdi/js'
@@ -24,6 +27,10 @@ import {
   type MaintenanceOrder,
   type MaintenanceOrderItem,
 } from '@/types/maintenanceOrder'
+import {
+  orderStatusActions,
+  type MaintenanceOrderAction,
+} from '@/modules/maintenance-orders/utils/orderStatusRules'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,7 +38,14 @@ const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 
 const orderId = computed(() => String(route.params.id ?? ''))
-const { errorMessage, fetchOrder, loading, order } = useMaintenanceOrderDetail(orderId)
+const {
+  errorMessage,
+  fetchOrder,
+  loading,
+  order,
+  updateOrderStatus,
+  updatingStatus,
+} = useMaintenanceOrderDetail(orderId)
 
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() =>
@@ -44,6 +58,70 @@ const userInitials = computed(() =>
 )
 
 const pageTitle = computed(() => (order.value ? orderNumber(order.value) : 'Detalle de orden'))
+
+const availableActions = computed(() =>
+  order.value
+    ? orderStatusActions(order.value, authStore.user?.roles ?? [], authStore.user)
+    : [],
+)
+
+const selectedAction = ref<MaintenanceOrderAction | null>(null)
+const actionDialog = ref(false)
+
+const actionLabels: Record<MaintenanceOrderAction, string> = {
+  approved: 'Aprobar orden',
+  rejected: 'Rechazar orden',
+  cancelled: 'Cancelar orden',
+  delivered: 'Marcar como entregada',
+}
+
+const actionDescriptions: Record<MaintenanceOrderAction, string> = {
+  approved: 'La orden quedará aprobada y podrá continuar con su proceso operativo.',
+  rejected: 'La orden quedará rechazada y no continuará al siguiente paso.',
+  cancelled: 'La orden quedará cancelada y esta acción no se puede deshacer.',
+  delivered: 'La orden quedará registrada como entregada al propietario.',
+}
+
+const actionIcons: Record<MaintenanceOrderAction, string> = {
+  approved: mdiCheckCircleOutline,
+  rejected: mdiCancel,
+  cancelled: mdiCancel,
+  delivered: mdiTruckDeliveryOutline,
+}
+
+const actionColors: Record<MaintenanceOrderAction, string> = {
+  approved: 'success',
+  rejected: 'error',
+  cancelled: 'error',
+  delivered: 'primary',
+}
+
+const requestStatusChange = (action: MaintenanceOrderAction) => {
+  selectedAction.value = action
+  actionDialog.value = true
+  errorMessage.value = ''
+}
+
+const closeActionDialog = () => {
+  if (!updatingStatus.value) {
+    actionDialog.value = false
+    selectedAction.value = null
+  }
+}
+
+const confirmStatusChange = async () => {
+  if (!selectedAction.value) {
+    return
+  }
+
+  const action = selectedAction.value
+  const updated = await updateOrderStatus(action)
+
+  if (updated) {
+    actionDialog.value = false
+    selectedAction.value = null
+  }
+}
 
 const orderNumber = (currentOrder: MaintenanceOrder) =>
   `OT-${String(currentOrder.id).padStart(5, '0')}`
@@ -218,6 +296,26 @@ const signOut = async () => {
             </div>
           </section>
 
+          <section v-if="availableActions.length" class="detail-actions-bar">
+            <div>
+              <span class="detail-overline">Acciones disponibles</span>
+              <p>Gestiona el siguiente paso de esta orden.</p>
+            </div>
+            <div class="detail-actions-bar__buttons">
+              <v-btn
+                v-for="action in availableActions"
+                :key="action"
+                :color="actionColors[action]"
+                :disabled="updatingStatus"
+                variant="tonal"
+                @click="requestStatusChange(action)"
+              >
+                <v-icon :icon="actionIcons[action]" class="mr-2" size="16" />
+                {{ actionLabels[action] }}
+              </v-btn>
+            </div>
+          </section>
+
           <section class="detail-info-grid">
             <article class="detail-card">
               <div class="detail-card__heading">
@@ -315,6 +413,26 @@ const signOut = async () => {
         </template>
       </div>
     </v-main>
+
+    <v-dialog v-model="actionDialog" max-width="430" @update:model-value="closeActionDialog">
+      <v-card class="status-dialog">
+        <v-card-title>¿{{ selectedAction ? actionLabels[selectedAction] : 'Actualizar orden' }}?</v-card-title>
+        <v-card-text>
+          {{ selectedAction ? actionDescriptions[selectedAction] : '' }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="updatingStatus" @click="closeActionDialog">Cancelar</v-btn>
+          <v-btn
+            :color="selectedAction ? actionColors[selectedAction] : 'primary'"
+            :loading="updatingStatus"
+            @click="confirmStatusChange"
+          >
+            Confirmar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
