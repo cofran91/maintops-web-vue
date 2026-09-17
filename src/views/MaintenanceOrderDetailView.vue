@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
@@ -21,6 +21,7 @@ import {
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import { normalizeApiError } from '@/api/errors'
 import { useAuthStore } from '@/stores/auth'
 import { useMaintenanceOrderDetail } from '@/modules/maintenance-orders/composables/useMaintenanceOrderDetail'
 import { useMaintenanceOrderRealtimeRefresh } from '@/modules/realtime/composables/useMaintenanceOrderRealtimeRefresh'
@@ -30,7 +31,12 @@ import {
   ORDER_ITEM_STATUS_LABELS,
   type MaintenanceOrder,
   type MaintenanceOrderItem,
+  type MaintenanceOrderAssignmentPayload,
+  type MaintenanceOrderPerson,
+  type MaintenanceOrderWorkshop,
 } from '@/types/maintenanceOrder'
+import usersApi from '@/modules/users/services/usersService'
+import workshopsApi from '@/modules/workshops/services/workshopsService'
 import {
   orderItemStatusActions,
   orderStatusActions,
@@ -52,6 +58,8 @@ const {
   updateItemStatus,
   updateOrderStatus,
   updatingStatus,
+  assignOrder,
+  updatingAssignment,
 } = useMaintenanceOrderDetail(orderId)
 
 useMaintenanceOrderRealtimeRefresh(
@@ -83,6 +91,16 @@ type SelectedTransition =
 
 const selectedTransition = ref<SelectedTransition | null>(null)
 const actionDialog = ref(false)
+const assignmentDialog = ref(false)
+const assignmentError = ref('')
+const loadingAssignmentOptions = ref(false)
+const workshops = ref<MaintenanceOrderWorkshop[]>([])
+const technicians = ref<MaintenanceOrderPerson[]>([])
+const assignmentForm = reactive({
+  workshop_id: null as number | null,
+  technician_id: null as number | null,
+  scheduled_at: '',
+})
 
 const actionLabels: Record<MaintenanceOrderAction | MaintenanceOrderItemAction, string> = {
   approved: 'Aprobar orden',
@@ -119,6 +137,33 @@ const actionColors: Record<MaintenanceOrderAction | MaintenanceOrderItemAction, 
   in_progress: 'primary',
   completed: 'success',
 }
+
+const canSchedule = computed(() => {
+  const roles = authStore.user?.roles ?? []
+  const activeOrder = order.value
+
+  return Boolean(
+    activeOrder &&
+      ['super_admin', 'admin', 'workshop_manager'].some((role) => roles.includes(role)) &&
+      !['rejected', 'cancelled', 'delivered', 'completed'].includes(activeOrder.status),
+  )
+})
+
+const workshopOptions = computed(() =>
+  workshops.value.map((workshop) => ({
+    ...workshop,
+    title: [workshop.code, workshop.name].filter(Boolean).join(' · '),
+    subtitle: workshop.city || 'Ciudad pendiente',
+  })),
+)
+
+const technicianOptions = computed(() =>
+  technicians.value.map((technician) => ({
+    ...technician,
+    title: technician.name || `Usuario ${technician.id}`,
+    subtitle: technician.email || 'Sin correo registrado',
+  })),
+)
 
 const requestStatusChange = (action: MaintenanceOrderAction) => {
   selectedTransition.value = { type: 'order', action }
@@ -159,6 +204,69 @@ const confirmStatusChange = async () => {
     actionDialog.value = false
     selectedTransition.value = null
   }
+}
+
+const toDateTimeInput = (value?: string | null) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = (part: number) => String(part).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+const loadAssignmentOptions = async () => {
+  loadingAssignmentOptions.value = true
+  assignmentError.value = ''
+
+  try {
+    const [workshopPage, technicianPage] = await Promise.all([
+      workshopsApi.index({ is_active: true, page: 1, per_page: 100 }),
+      usersApi.technicians(),
+    ])
+    workshops.value = workshopPage.items
+    technicians.value = technicianPage.items
+  } catch (error) {
+    assignmentError.value = normalizeApiError(error).message
+  } finally {
+    loadingAssignmentOptions.value = false
+  }
+}
+
+const openAssignmentDialog = async () => {
+  if (!order.value) return
+  assignmentError.value = ''
+  assignmentForm.workshop_id = order.value.workshop?.id ?? null
+  assignmentForm.technician_id = order.value.technician?.id ?? null
+  assignmentForm.scheduled_at = toDateTimeInput(order.value.scheduled_at)
+  assignmentDialog.value = true
+
+  if (workshops.value.length === 0 || technicians.value.length === 0) {
+    await loadAssignmentOptions()
+  }
+}
+
+const closeAssignmentDialog = () => {
+  if (!updatingAssignment.value) assignmentDialog.value = false
+}
+
+const confirmAssignment = async () => {
+  assignmentError.value = ''
+  if (!assignmentForm.workshop_id) {
+    assignmentError.value = 'Selecciona el taller responsable.'
+    return
+  }
+  if (!assignmentForm.scheduled_at) {
+    assignmentError.value = 'Selecciona la fecha y hora de atención.'
+    return
+  }
+
+  const payload: MaintenanceOrderAssignmentPayload = {
+    workshop_id: Number(assignmentForm.workshop_id),
+    technician_id: assignmentForm.technician_id ? Number(assignmentForm.technician_id) : null,
+    scheduled_at: new Date(assignmentForm.scheduled_at).toISOString(),
+  }
+  const updated = await assignOrder(payload)
+  if (updated) assignmentDialog.value = false
 }
 
 const orderNumber = (currentOrder: MaintenanceOrder) =>
@@ -336,17 +444,27 @@ const signOut = async () => {
             </div>
           </section>
 
-          <section v-if="availableActions.length" class="detail-actions-bar">
+          <section v-if="availableActions.length || canSchedule" class="detail-actions-bar">
             <div>
               <span class="detail-overline">Acciones disponibles</span>
               <p>Gestiona el siguiente paso de esta orden.</p>
             </div>
             <div class="detail-actions-bar__buttons">
               <v-btn
+                v-if="canSchedule"
+                color="primary"
+                :disabled="updatingStatus || updatingAssignment"
+                variant="tonal"
+                @click="openAssignmentDialog"
+              >
+                <v-icon :icon="mdiCalendarClockOutline" class="mr-2" size="16" />
+                Programar y asignar
+              </v-btn>
+              <v-btn
                 v-for="action in availableActions"
                 :key="action"
                 :color="actionColors[action]"
-                :disabled="updatingStatus"
+                :disabled="updatingStatus || updatingAssignment"
                 variant="tonal"
                 @click="requestStatusChange(action)"
               >
@@ -491,6 +609,46 @@ const signOut = async () => {
           >
             Confirmar
           </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="assignmentDialog" max-width="620" @update:model-value="closeAssignmentDialog">
+      <v-card class="assignment-dialog">
+        <v-card-title>Programar y asignar orden</v-card-title>
+        <v-card-text>
+          <p class="assignment-dialog__intro">Define el centro de servicio, el técnico responsable y el momento de atención.</p>
+          <v-alert v-if="assignmentError" class="assignment-dialog__alert" type="error" variant="tonal">{{ assignmentError }}</v-alert>
+          <div class="assignment-dialog__fields">
+            <v-autocomplete
+              v-model="assignmentForm.workshop_id"
+              item-title="title"
+              item-value="id"
+              label="Taller responsable"
+              :items="workshopOptions"
+              :loading="loadingAssignmentOptions"
+              placeholder="Selecciona un taller"
+              clearable
+              variant="outlined"
+            />
+            <v-autocomplete
+              v-model="assignmentForm.technician_id"
+              item-title="title"
+              item-value="id"
+              label="Técnico asignado"
+              :items="technicianOptions"
+              :loading="loadingAssignmentOptions"
+              placeholder="Selecciona un técnico"
+              clearable
+              variant="outlined"
+            />
+            <v-text-field v-model="assignmentForm.scheduled_at" label="Fecha y hora de atención" type="datetime-local" variant="outlined" />
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="updatingAssignment" @click="closeAssignmentDialog">Cancelar</v-btn>
+          <v-btn color="primary" :loading="updatingAssignment" :disabled="loadingAssignmentOptions" @click="confirmAssignment">Guardar programación</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

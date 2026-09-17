@@ -567,3 +567,53 @@
     display: grid;
   }
 }
+
+.assignment-dialog {
+  border: 1px solid #e8ecf2;
+}
+
+.assignment-dialog .v-card-title {
+  padding: 22px 22px 8px;
+  color: #25334c;
+  font-size: 16px;
+  font-weight: 730;
+}
+
+.assignment-dialog .v-card-text {
+  padding: 0 22px 15px;
+}
+
+.assignment-dialog__intro {
+  margin: 0 0 17px;
+  color: #73809a;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.assignment-dialog__alert {
+  margin-bottom: 15px;
+  border-radius: 10px;
+  font-size: 10px;
+}
+
+.assignment-dialog__fields {
+  display: grid;
+  gap: 14px;
+}
+
+.assignment-dialog__fields .v-field {
+  border-radius: 10px;
+}
+
+.assignment-dialog__fields .v-label,
+.assignment-dialog__fields .v-field__input {
+  font-size: 10.5px;
+}
+
+.assignment-dialog .v-card-actions {
+  padding: 10px 17px 17px;
+}
+
+.assignment-dialog .v-btn {
+  font-size: 10.5px;
+}

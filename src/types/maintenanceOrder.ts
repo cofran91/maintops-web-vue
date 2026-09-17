@@ -126,6 +126,12 @@ export interface MaintenanceOrderCreatePayload {
   advisor_id?: number
 }
 
+export interface MaintenanceOrderAssignmentPayload {
+  workshop_id: number
+  technician_id: number | null
+  scheduled_at: string
+}
+
 export interface MaintenanceOrderFilters {
   search: string
   status: string
