@@ -3,22 +3,33 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
+  mdiDownload,
   mdiGarageVariant,
   mdiMagnify,
   mdiPlus,
   mdiRefresh,
   mdiTuneVariant,
+  mdiUpload,
 } from '@mdi/js'
+import { normalizeApiError } from '@/api/errors'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import DataImportDialog from '@/components/common/DataImportDialog.vue'
 import { useWorkshops } from '@/modules/workshops/composables/useWorkshops'
+import workshopsApi from '@/modules/workshops/services/workshopsService'
 import { useAuthStore } from '@/stores/auth'
+import type { ImportSummaryField } from '@/types/import'
 import type { Workshop } from '@/types/workshop'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const canCreateWorkshop = computed(() => authStore.canUseResource('workshops', 'create'))
+const canImportWorkshop = computed(() => authStore.canUseResource('workshops', 'import'))
+const canExportWorkshop = computed(() => authStore.canUseResource('workshops', 'export'))
+const importing = ref(false)
+const exporting = ref(false)
+const importDialogOpen = ref(false)
 
 const {
   applyFilters,
@@ -98,6 +109,36 @@ const formatDate = (value?: string | null) => {
   }).format(new Date(value))
 }
 
+const importSummaryFields: ImportSummaryField[] = [
+  { key: 'processed_rows', label: 'Filas procesadas' },
+  { key: 'rows_with_errors', label: 'Filas con errores' },
+  { key: 'created_records', label: 'Creados' },
+  { key: 'updated_records', label: 'Actualizados' },
+]
+
+const openImportDialog = () => {
+  importDialogOpen.value = true
+}
+
+const importWorkshops = (file: File) => workshopsApi.importWorkshops(file)
+
+const refreshAfterImport = () => {
+  void fetchWorkshops()
+}
+
+const exportWorkshops = async () => {
+  exporting.value = true
+  errorMessage.value = ''
+
+  try {
+    await workshopsApi.exportWorkshops()
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    exporting.value = false
+  }
+}
+
 const signOut = async () => {
   await authStore.logout()
   await router.push({ name: 'login' })
@@ -125,6 +166,28 @@ const signOut = async () => {
           </div>
 
           <div class="workshops-header__actions">
+            <v-btn
+              v-if="canImportWorkshop"
+              color="secondary"
+              :disabled="importing"
+              height="42"
+              variant="tonal"
+              @click="openImportDialog"
+            >
+              <v-icon :icon="mdiUpload" class="mr-2" size="17" />
+              Importar
+            </v-btn>
+            <v-btn
+              v-if="canExportWorkshop"
+              class="workshops-refresh"
+              height="42"
+              :loading="exporting"
+              variant="outlined"
+              @click="exportWorkshops"
+            >
+              <v-icon :icon="mdiDownload" class="mr-2" size="17" />
+              Exportar
+            </v-btn>
             <v-btn v-if="canCreateWorkshop" color="primary" height="42" :to="{ name: 'workshops-new' }">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nuevo taller
@@ -288,6 +351,15 @@ const signOut = async () => {
           </footer>
         </section>
       </div>
+
+      <DataImportDialog
+        v-model="importDialogOpen"
+        :import-action="importWorkshops"
+        :summary-fields="importSummaryFields"
+        title="Importar talleres"
+        @imported="refreshAfterImport"
+        @processing="importing = $event"
+      />
     </v-main>
   </div>
 </template>

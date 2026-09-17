@@ -7,7 +7,7 @@ export const ROLES = {
 } as const
 
 export type Role = (typeof ROLES)[keyof typeof ROLES]
-export type PermissionAction = 'view' | 'create' | 'update' | 'delete'
+export type PermissionAction = 'view' | 'create' | 'update' | 'delete' | 'import' | 'export'
 
 export const ROLE_LABELS: Record<string, string> = {
   super_admin: 'Super administrador',
@@ -53,7 +53,7 @@ const routePermissions: Record<string, Role[]> = {
   'maintenance-schedule': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.WORKSHOP_MANAGER, ROLES.ADVISOR, ROLES.TECHNICIAN],
 }
 
-const resourcePermissions: Record<string, Record<PermissionAction, Role[]>> = {
+const resourcePermissions: Record<string, Partial<Record<PermissionAction, Role[]>>> = {
   users: {
     view: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.WORKSHOP_MANAGER],
     create: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
@@ -65,18 +65,24 @@ const resourcePermissions: Record<string, Record<PermissionAction, Role[]>> = {
     create: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.WORKSHOP_MANAGER, ROLES.ADVISOR],
     update: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.WORKSHOP_MANAGER, ROLES.ADVISOR],
     delete: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+    import: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+    export: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
   },
   vehicles: {
     view: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.WORKSHOP_MANAGER, ROLES.ADVISOR],
     create: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.WORKSHOP_MANAGER, ROLES.ADVISOR],
     update: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.WORKSHOP_MANAGER, ROLES.ADVISOR],
     delete: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+    import: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+    export: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
   },
   workshops: {
     view: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
     create: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
     update: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
     delete: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+    import: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+    export: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
   },
   'maintenance-plans': {
     view: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ADVISOR],

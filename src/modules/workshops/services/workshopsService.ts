@@ -1,5 +1,7 @@
 import type { AxiosRequestConfig } from 'axios'
 import http, { unwrapApiData } from '@/api/http'
+import { downloadBlobResponse } from '@/api/files'
+import type { ImportSummary } from '@/types/import'
 import type { Workshop, WorkshopFilters, WorkshopPage, WorkshopPayload } from '@/types/workshop'
 
 interface ApiResponse<T> {
@@ -45,6 +47,21 @@ export const workshopsApi = {
     const response = await http.put<ApiResponse<Workshop>>(`/workshops/${id}`, payload)
 
     return unwrapApiData<Workshop>(response.data)
+  },
+
+  async exportWorkshops() {
+    const response = await http.get('/workshops/export', { responseType: 'blob' })
+
+    downloadBlobResponse(response, 'workshops.xlsx')
+  },
+
+  async importWorkshops(file: File): Promise<ImportSummary> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await http.post<ApiResponse<ImportSummary>>('/workshops/import', formData)
+
+    return unwrapApiData<ImportSummary>(response.data)
   },
 }
 

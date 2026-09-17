@@ -4,21 +4,32 @@ import { useRouter } from 'vue-router'
 import {
   mdiAccountGroupOutline,
   mdiAlertOutline,
+  mdiDownload,
   mdiMagnify,
   mdiPlus,
   mdiRefresh,
   mdiTuneVariant,
+  mdiUpload,
 } from '@mdi/js'
+import { normalizeApiError } from '@/api/errors'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import DataImportDialog from '@/components/common/DataImportDialog.vue'
 import { useOwners } from '@/modules/owners/composables/useOwners'
+import ownersApi from '@/modules/owners/services/ownersService'
 import { useAuthStore } from '@/stores/auth'
+import type { ImportSummaryField } from '@/types/import'
 import type { Owner } from '@/types/owner'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const canCreateOwner = computed(() => authStore.canUseResource('owners', 'create'))
+const canImportOwner = computed(() => authStore.canUseResource('owners', 'import'))
+const canExportOwner = computed(() => authStore.canUseResource('owners', 'export'))
+const importing = ref(false)
+const exporting = ref(false)
+const importDialogOpen = ref(false)
 
 const {
   applyFilters,
@@ -75,6 +86,35 @@ const pageSummary = computed(() => {
 const statusLabel = (owner: Owner) => (owner.is_active ? 'Activo' : 'Inactivo')
 const statusColor = (owner: Owner) => (owner.is_active ? '#239878' : '#7c8ba6')
 const ownerPhone = (owner: Owner) => owner.phone || 'Sin teléfono registrado'
+const importSummaryFields: ImportSummaryField[] = [
+  { key: 'processed_rows', label: 'Filas procesadas' },
+  { key: 'rows_with_errors', label: 'Filas con errores' },
+  { key: 'created_records', label: 'Creados' },
+  { key: 'updated_records', label: 'Actualizados' },
+]
+
+const openImportDialog = () => {
+  importDialogOpen.value = true
+}
+
+const importOwners = (file: File) => ownersApi.importOwners(file)
+
+const refreshAfterImport = () => {
+  void fetchOwners()
+}
+
+const exportOwners = async () => {
+  exporting.value = true
+  errorMessage.value = ''
+
+  try {
+    await ownersApi.exportOwners()
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    exporting.value = false
+  }
+}
 
 const signOut = async () => {
   await authStore.logout()
@@ -103,6 +143,28 @@ const signOut = async () => {
           </div>
 
           <div class="owners-header__actions">
+            <v-btn
+              v-if="canImportOwner"
+              color="secondary"
+              :disabled="importing"
+              height="42"
+              variant="tonal"
+              @click="openImportDialog"
+            >
+              <v-icon :icon="mdiUpload" class="mr-2" size="17" />
+              Importar
+            </v-btn>
+            <v-btn
+              v-if="canExportOwner"
+              class="owners-refresh"
+              height="42"
+              :loading="exporting"
+              variant="outlined"
+              @click="exportOwners"
+            >
+              <v-icon :icon="mdiDownload" class="mr-2" size="17" />
+              Exportar
+            </v-btn>
             <v-btn v-if="canCreateOwner" color="primary" height="42" :to="{ name: 'owners-new' }">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nuevo propietario
@@ -258,6 +320,15 @@ const signOut = async () => {
           </footer>
         </section>
       </div>
+
+      <DataImportDialog
+        v-model="importDialogOpen"
+        :import-action="importOwners"
+        :summary-fields="importSummaryFields"
+        title="Importar propietarios"
+        @imported="refreshAfterImport"
+        @processing="importing = $event"
+      />
     </v-main>
   </div>
 </template>

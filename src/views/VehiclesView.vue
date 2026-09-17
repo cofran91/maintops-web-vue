@@ -4,21 +4,32 @@ import { useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
   mdiCarMultiple,
+  mdiDownload,
   mdiMagnify,
   mdiPlus,
   mdiRefresh,
   mdiTuneVariant,
+  mdiUpload,
 } from '@mdi/js'
+import { normalizeApiError } from '@/api/errors'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
+import DataImportDialog from '@/components/common/DataImportDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVehicles } from '@/modules/vehicles/composables/useVehicles'
+import vehiclesApi from '@/modules/vehicles/services/vehiclesService'
+import type { ImportSummaryField } from '@/types/import'
 import type { Vehicle } from '@/types/vehicle'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const canCreateVehicle = computed(() => authStore.canUseResource('vehicles', 'create'))
+const canImportVehicle = computed(() => authStore.canUseResource('vehicles', 'import'))
+const canExportVehicle = computed(() => authStore.canUseResource('vehicles', 'export'))
+const importing = ref(false)
+const exporting = ref(false)
+const importDialogOpen = ref(false)
 
 const {
   applyFilters,
@@ -89,6 +100,36 @@ const formatKilometers = (value?: number | null) =>
     ? 'Sin registrar'
     : `${new Intl.NumberFormat('es-CO').format(value)} km`
 
+const importSummaryFields: ImportSummaryField[] = [
+  { key: 'processed_rows', label: 'Filas procesadas' },
+  { key: 'rows_with_errors', label: 'Filas con errores' },
+  { key: 'created_records', label: 'Creados' },
+  { key: 'updated_records', label: 'Actualizados' },
+]
+
+const openImportDialog = () => {
+  importDialogOpen.value = true
+}
+
+const importVehicles = (file: File) => vehiclesApi.importVehicles(file)
+
+const refreshAfterImport = () => {
+  void fetchVehicles()
+}
+
+const exportVehicles = async () => {
+  exporting.value = true
+  errorMessage.value = ''
+
+  try {
+    await vehiclesApi.exportVehicles()
+  } catch (error) {
+    errorMessage.value = normalizeApiError(error).message
+  } finally {
+    exporting.value = false
+  }
+}
+
 const signOut = async () => {
   await authStore.logout()
   await router.push({ name: 'login' })
@@ -116,6 +157,28 @@ const signOut = async () => {
           </div>
 
           <div class="vehicles-header__actions">
+            <v-btn
+              v-if="canImportVehicle"
+              color="secondary"
+              :disabled="importing"
+              height="42"
+              variant="tonal"
+              @click="openImportDialog"
+            >
+              <v-icon :icon="mdiUpload" class="mr-2" size="17" />
+              Importar
+            </v-btn>
+            <v-btn
+              v-if="canExportVehicle"
+              class="vehicles-refresh"
+              height="42"
+              :loading="exporting"
+              variant="outlined"
+              @click="exportVehicles"
+            >
+              <v-icon :icon="mdiDownload" class="mr-2" size="17" />
+              Exportar
+            </v-btn>
             <v-btn v-if="canCreateVehicle" color="primary" height="42" :to="{ name: 'vehicles-new' }">
               <v-icon :icon="mdiPlus" class="mr-2" size="18" />
               Nuevo vehículo
@@ -278,6 +341,15 @@ const signOut = async () => {
           </footer>
         </section>
       </div>
+
+      <DataImportDialog
+        v-model="importDialogOpen"
+        :import-action="importVehicles"
+        :summary-fields="importSummaryFields"
+        title="Importar vehículos"
+        @imported="refreshAfterImport"
+        @processing="importing = $event"
+      />
     </v-main>
   </div>
 </template>

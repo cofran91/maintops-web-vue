@@ -1,5 +1,7 @@
 import type { AxiosRequestConfig } from 'axios'
 import http, { unwrapApiData } from '@/api/http'
+import { downloadBlobResponse } from '@/api/files'
+import type { ImportSummary } from '@/types/import'
 import type { Vehicle, VehicleFilters, VehiclePage, VehiclePayload } from '@/types/vehicle'
 
 interface ApiResponse<T> {
@@ -49,6 +51,21 @@ export const vehiclesApi = {
 
   async remove(id: string | number) {
     await http.delete(`/vehicles/${id}`)
+  },
+
+  async exportVehicles() {
+    const response = await http.get('/vehicles/export', { responseType: 'blob' })
+
+    downloadBlobResponse(response, 'vehicles.xlsx')
+  },
+
+  async importVehicles(file: File): Promise<ImportSummary> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await http.post<ApiResponse<ImportSummary>>('/vehicles/import', formData)
+
+    return unwrapApiData<ImportSummary>(response.data)
   },
 }
 
