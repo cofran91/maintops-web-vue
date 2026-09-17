@@ -23,6 +23,8 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useMaintenanceOrderDetail } from '@/modules/maintenance-orders/composables/useMaintenanceOrderDetail'
+import { useMaintenanceOrderRealtimeRefresh } from '@/modules/realtime/composables/useMaintenanceOrderRealtimeRefresh'
+import { maintenanceOrderIdForEvent } from '@/modules/realtime/services/operationalEventsService'
 import {
   ORDER_STATUS_LABELS,
   ORDER_ITEM_STATUS_LABELS,
@@ -51,6 +53,11 @@ const {
   updateOrderStatus,
   updatingStatus,
 } = useMaintenanceOrderDetail(orderId)
+
+useMaintenanceOrderRealtimeRefresh(
+  fetchOrder,
+  (event) => String(maintenanceOrderIdForEvent(event)) === orderId.value,
+)
 
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() =>

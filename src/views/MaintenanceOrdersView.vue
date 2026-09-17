@@ -13,6 +13,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useMaintenanceOrders } from '@/modules/maintenance-orders/composables/useMaintenanceOrders'
+import { useMaintenanceOrderRealtimeRefresh } from '@/modules/realtime/composables/useMaintenanceOrderRealtimeRefresh'
 import {
   MAINTENANCE_ORDER_STATUSES,
   ORDER_STATUS_LABELS,
@@ -36,6 +37,8 @@ const {
   updatePage,
   updatePerPage,
 } = useMaintenanceOrders()
+
+useMaintenanceOrderRealtimeRefresh(fetchOrders)
 
 const statusOptions = MAINTENANCE_ORDER_STATUSES.map((value) => ({
   title: ORDER_STATUS_LABELS[value],
