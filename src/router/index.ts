@@ -36,6 +36,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/orders/new',
+      name: 'orders-new',
+      component: () => import('@/views/MaintenanceOrderFormView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Nueva orden de mantenimiento',
+      },
+    },
+    {
       path: '/orders/:id',
       name: 'orders-detail',
       component: () => import('@/views/MaintenanceOrderDetailView.vue'),

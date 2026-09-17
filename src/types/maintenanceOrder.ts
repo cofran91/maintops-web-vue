@@ -121,6 +121,11 @@ export interface MaintenanceOrderPage {
   pagination: MaintenanceOrderPagination
 }
 
+export interface MaintenanceOrderCreatePayload {
+  vehicle_id: number
+  advisor_id?: number
+}
+
 export interface MaintenanceOrderFilters {
   search: string
   status: string

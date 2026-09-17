@@ -304,7 +304,7 @@ const openOrder = (orderId: number) => {
               <v-icon :icon="mdiFilterVariant" class="mr-2" size="19" />
               Filtrar
             </v-btn>
-            <v-btn color="primary" height="44">
+            <v-btn :to="{ name: 'orders-new' }" color="primary" height="44">
               <v-icon :icon="mdiPlus" class="mr-2" size="20" />
               Nueva orden
             </v-btn>

@@ -1,6 +1,7 @@
 import type { AxiosRequestConfig } from 'axios'
 import http, { unwrapApiData } from '@/api/http'
 import type {
+  MaintenanceOrderCreatePayload,
   MaintenanceOrderFilters,
   MaintenanceOrder,
   MaintenanceOrderItemStatus,
@@ -26,6 +27,12 @@ export const maintenanceOrdersApi = {
     })
 
     return unwrapApiData<MaintenanceOrderPage>(response.data)
+  },
+
+  async create(payload: MaintenanceOrderCreatePayload) {
+    const response = await http.post<ApiResponse<MaintenanceOrder>>('/maintenance-orders', payload)
+
+    return unwrapApiData<MaintenanceOrder>(response.data)
   },
 
   async show(id: string | number, config: AxiosRequestConfig = {}) {

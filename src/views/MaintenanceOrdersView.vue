@@ -5,6 +5,7 @@ import {
   mdiAlertOutline,
   mdiClipboardTextOutline,
   mdiMagnify,
+  mdiPlus,
   mdiRefresh,
   mdiTuneVariant,
 } from '@mdi/js'
@@ -157,16 +158,22 @@ const signOut = async () => {
             <p>Consulta y supervisa las órdenes de trabajo de tu operación.</p>
           </div>
 
-          <v-btn
-            :loading="loading"
-            class="orders-refresh"
-            height="42"
-            variant="outlined"
-            @click="fetchOrders"
-          >
-            <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
-            Actualizar
-          </v-btn>
+          <div class="orders-header__actions">
+            <v-btn :to="{ name: 'orders-new' }" color="primary" height="42">
+              <v-icon :icon="mdiPlus" class="mr-2" size="18" />
+              Nueva orden
+            </v-btn>
+            <v-btn
+              :loading="loading"
+              class="orders-refresh"
+              height="42"
+              variant="outlined"
+              @click="fetchOrders"
+            >
+              <v-icon :icon="mdiRefresh" class="mr-2" size="18" />
+              Actualizar
+            </v-btn>
+          </div>
         </header>
 
         <section class="orders-summary" aria-label="Resumen de órdenes">
