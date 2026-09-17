@@ -14,6 +14,7 @@ import {
   mdiPhoneOutline,
   mdiRefresh,
   mdiSpeedometer,
+  mdiTrashCanOutline,
 } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -26,7 +27,15 @@ const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const vehicleId = computed(() => String(route.params.id ?? ''))
 
-const { errorMessage, fetchVehicle, loading, vehicle } = useVehicleDetail(vehicleId)
+const {
+  deleteDialogOpen,
+  deleteVehicle,
+  deleting,
+  errorMessage,
+  fetchVehicle,
+  loading,
+  vehicle,
+} = useVehicleDetail(vehicleId)
 
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() =>
@@ -63,6 +72,14 @@ const formatKilometers = (value?: number | null) =>
 
 const ownerName = computed(() => vehicle.value?.owner?.name || `Propietario ${vehicle.value?.owner_id ?? ''}`)
 
+const confirmDelete = async () => {
+  const deleted = await deleteVehicle()
+
+  if (deleted) {
+    await router.replace({ name: 'vehicles' })
+  }
+}
+
 const signOut = async () => {
   await authStore.logout()
   await router.push({ name: 'login' })
@@ -94,24 +111,36 @@ const signOut = async () => {
             <h1>{{ vehicleTitle }}</h1>
             <p>Consulta la información registrada y los datos del propietario.</p>
           </div>
-          <v-btn
-            :to="{ name: 'vehicles' }"
-            class="vehicles-refresh"
-            height="42"
-            variant="outlined"
-          >
-            <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
-            Volver al listado
-          </v-btn>
-          <v-btn
-            v-if="vehicle"
-            color="primary"
-            height="42"
-            :to="{ name: 'vehicles-edit', params: { id: vehicle.id } }"
-          >
-            <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
-            Editar vehículo
-          </v-btn>
+          <div class="vehicle-detail-header__actions">
+            <v-btn
+              :to="{ name: 'vehicles' }"
+              class="vehicles-refresh"
+              height="42"
+              variant="outlined"
+            >
+              <v-icon :icon="mdiArrowLeft" class="mr-2" size="17" />
+              Volver al listado
+            </v-btn>
+            <v-btn
+              v-if="vehicle"
+              color="primary"
+              height="42"
+              :to="{ name: 'vehicles-edit', params: { id: vehicle.id } }"
+            >
+              <v-icon :icon="mdiPencilOutline" class="mr-2" size="17" />
+              Editar vehículo
+            </v-btn>
+            <v-btn
+              v-if="vehicle"
+              color="error"
+              height="42"
+              variant="tonal"
+              @click="deleteDialogOpen = true"
+            >
+              <v-icon :icon="mdiTrashCanOutline" class="mr-2" size="17" />
+              Eliminar
+            </v-btn>
+          </div>
         </header>
 
         <v-alert v-if="errorMessage" class="vehicles-alert vehicle-detail-alert" type="error" variant="tonal">
@@ -205,6 +234,20 @@ const signOut = async () => {
         </template>
       </div>
     </v-main>
+
+    <v-dialog v-model="deleteDialogOpen" max-width="430">
+      <v-card class="vehicle-delete-dialog">
+        <v-card-title>¿Eliminar este vehículo?</v-card-title>
+        <v-card-text>
+          La unidad {{ vehicle?.license_plate }} dejará de estar disponible en la operación. Esta acción no se puede deshacer desde la plataforma.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="deleting" @click="deleteDialogOpen = false">Cancelar</v-btn>
+          <v-btn color="error" :loading="deleting" @click="confirmDelete">Eliminar vehículo</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 

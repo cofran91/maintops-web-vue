@@ -20,6 +20,8 @@ const isCanceledRequest = (error: unknown) => {
 export const useVehicleDetail = (vehicleId: Ref<string>) => {
   const vehicle = ref<Vehicle | null>(null)
   const loading = ref(false)
+  const deleting = ref(false)
+  const deleteDialogOpen = ref(false)
   const errorMessage = ref('')
   let controller: AbortController | null = null
 
@@ -54,6 +56,26 @@ export const useVehicleDetail = (vehicleId: Ref<string>) => {
     }
   }
 
+  const deleteVehicle = async () => {
+    if (!vehicle.value) {
+      return false
+    }
+
+    deleting.value = true
+    errorMessage.value = ''
+
+    try {
+      await vehiclesApi.remove(vehicle.value.id)
+      deleteDialogOpen.value = false
+      return true
+    } catch (error) {
+      errorMessage.value = normalizeApiError(error).message
+      return false
+    } finally {
+      deleting.value = false
+    }
+  }
+
   watch(vehicleId, () => void fetchVehicle(), { immediate: true })
 
   onBeforeUnmount(() => {
@@ -64,7 +86,10 @@ export const useVehicleDetail = (vehicleId: Ref<string>) => {
   return {
     vehicle,
     loading,
+    deleting,
+    deleteDialogOpen,
     errorMessage,
     fetchVehicle,
+    deleteVehicle,
   }
 }

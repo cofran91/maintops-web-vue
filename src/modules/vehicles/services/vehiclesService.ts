@@ -46,6 +46,10 @@ export const vehiclesApi = {
 
     return unwrapApiData<Vehicle>(response.data)
   },
+
+  async remove(id: string | number) {
+    await http.delete(`/vehicles/${id}`)
+  },
 }
 
 export default vehiclesApi

@@ -43,6 +43,13 @@
   font-size: 12.5px;
 }
 
+.vehicle-detail-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .vehicle-detail-alert {
   margin-right: 0;
   margin-left: 0;
@@ -283,6 +290,32 @@
   gap: 6px;
 }
 
+.vehicle-delete-dialog {
+  border: 1px solid #e8ecf2;
+}
+
+.vehicle-delete-dialog .v-card-title {
+  padding: 22px 22px 10px;
+  color: #25334c;
+  font-size: 16px;
+  font-weight: 730;
+}
+
+.vehicle-delete-dialog .v-card-text {
+  padding: 0 22px 15px;
+  color: #73809a;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.vehicle-delete-dialog .v-card-actions {
+  padding: 10px 17px 17px;
+}
+
+.vehicle-delete-dialog .v-btn {
+  font-size: 10.5px;
+}
+
 @media (max-width: 900px) {
   .vehicle-detail-hero {
     grid-template-columns: 1fr 1fr;
@@ -306,6 +339,15 @@
 
   .vehicle-detail-header .vehicles-refresh {
     width: 100%;
+  }
+
+  .vehicle-detail-header__actions {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .vehicle-detail-header__actions .v-btn {
+    flex: 1;
   }
 
   .vehicle-detail-hero,
