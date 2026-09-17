@@ -132,6 +132,11 @@ export interface MaintenanceOrderAssignmentPayload {
   scheduled_at: string
 }
 
+export interface MaintenanceOrderItemsPayload {
+  maintenance_plan_id: number
+  maintenance_task_ids: number[]
+}
+
 export interface MaintenanceOrderFilters {
   search: string
   status: string

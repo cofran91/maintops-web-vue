@@ -3,6 +3,7 @@ import { normalizeApiError } from '@/api/errors'
 import maintenanceOrdersApi from '@/modules/maintenance-orders/services/maintenanceOrdersService'
 import type { MaintenanceOrder } from '@/types/maintenanceOrder'
 import type { MaintenanceOrderAssignmentPayload } from '@/types/maintenanceOrder'
+import type { MaintenanceOrderItemsPayload } from '@/types/maintenanceOrder'
 import type { MaintenanceOrderItemStatus } from '@/types/maintenanceOrder'
 import type { MaintenanceOrderAction } from '@/modules/maintenance-orders/utils/orderStatusRules'
 
@@ -25,6 +26,7 @@ export const useMaintenanceOrderDetail = (orderId: Ref<string>) => {
   const loading = ref(false)
   const updatingStatus = ref(false)
   const updatingAssignment = ref(false)
+  const updatingItems = ref(false)
   const errorMessage = ref('')
   let controller: AbortController | null = null
 
@@ -113,6 +115,41 @@ export const useMaintenanceOrderDetail = (orderId: Ref<string>) => {
     }
   }
 
+  const addItems = async (payload: MaintenanceOrderItemsPayload) => {
+    if (!order.value) {
+      return false
+    }
+
+    updatingItems.value = true
+    errorMessage.value = ''
+
+    try {
+      order.value = await maintenanceOrdersApi.addItems(order.value.id, payload)
+      return true
+    } catch (error) {
+      errorMessage.value = normalizeApiError(error).message
+      return false
+    } finally {
+      updatingItems.value = false
+    }
+  }
+
+  const removeItem = async (itemId: number) => {
+    updatingItems.value = true
+    errorMessage.value = ''
+
+    try {
+      await maintenanceOrdersApi.removeItem(itemId)
+      await fetchOrder()
+      return true
+    } catch (error) {
+      errorMessage.value = normalizeApiError(error).message
+      return false
+    } finally {
+      updatingItems.value = false
+    }
+  }
+
   watch(orderId, () => void fetchOrder(), { immediate: true })
 
   onBeforeUnmount(() => {
@@ -125,10 +162,13 @@ export const useMaintenanceOrderDetail = (orderId: Ref<string>) => {
     loading,
     updatingStatus,
     updatingAssignment,
+    updatingItems,
     errorMessage,
     fetchOrder,
     updateOrderStatus,
     updateItemStatus,
     assignOrder,
+    addItems,
+    removeItem,
   }
 }

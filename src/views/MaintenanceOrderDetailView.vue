@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
@@ -11,7 +11,9 @@ import {
   mdiClipboardCheckOutline,
   mdiCheckCircleOutline,
   mdiClockOutline,
+  mdiDeleteOutline,
   mdiMapMarkerOutline,
+  mdiPlus,
   mdiPlayCircleOutline,
   mdiRefresh,
   mdiTuneVariant,
@@ -34,7 +36,10 @@ import {
   type MaintenanceOrderAssignmentPayload,
   type MaintenanceOrderPerson,
   type MaintenanceOrderWorkshop,
+  type MaintenanceOrderItemsPayload,
 } from '@/types/maintenanceOrder'
+import type { MaintenancePlan, MaintenanceTask } from '@/types/maintenancePlan'
+import maintenancePlansApi from '@/modules/maintenance-plans/services/maintenancePlansService'
 import usersApi from '@/modules/users/services/usersService'
 import workshopsApi from '@/modules/workshops/services/workshopsService'
 import {
@@ -60,6 +65,9 @@ const {
   updatingStatus,
   assignOrder,
   updatingAssignment,
+  addItems,
+  removeItem,
+  updatingItems,
 } = useMaintenanceOrderDetail(orderId)
 
 useMaintenanceOrderRealtimeRefresh(
@@ -101,6 +109,14 @@ const assignmentForm = reactive({
   technician_id: null as number | null,
   scheduled_at: '',
 })
+const activityDialog = ref(false)
+const activityError = ref('')
+const loadingActivityOptions = ref(false)
+const plans = ref<MaintenancePlan[]>([])
+const selectedPlanId = ref<number | null>(null)
+const selectedTaskIds = ref<number[]>([])
+const removeItemDialog = ref(false)
+const selectedItem = ref<MaintenanceOrderItem | null>(null)
 
 const actionLabels: Record<MaintenanceOrderAction | MaintenanceOrderItemAction, string> = {
   approved: 'Aprobar orden',
@@ -164,6 +180,32 @@ const technicianOptions = computed(() =>
     subtitle: technician.email || 'Sin correo registrado',
   })),
 )
+
+const canManageItems = computed(() => {
+  const roles = authStore.user?.roles ?? []
+  const activeOrder = order.value
+  return Boolean(
+    activeOrder &&
+      ['super_admin', 'admin', 'advisor', 'workshop_manager'].some((role) => roles.includes(role)) &&
+      !['rejected', 'cancelled', 'delivered', 'completed'].includes(activeOrder.status),
+  )
+})
+
+const planOptions = computed(() =>
+  plans.value.map((maintenancePlan) => ({
+    ...maintenancePlan,
+    title: [maintenancePlan.code, maintenancePlan.name].filter(Boolean).join(' · '),
+    subtitle: `${maintenancePlan.tasks?.length ?? maintenancePlan.tasks_count ?? 0} actividades · ${maintenancePlan.interval_km ? `${maintenancePlan.interval_km.toLocaleString('es-CO')} km` : 'frecuencia definida'}`,
+  })),
+)
+
+const selectedPlan = computed(() => plans.value.find((maintenancePlan) => maintenancePlan.id === selectedPlanId.value) ?? null)
+const availablePlanTasks = computed<MaintenanceTask[]>(() => {
+  const existingTaskIds = new Set(
+    (order.value?.items ?? []).map((item) => item.maintenance_task_id).filter((id): id is number => Boolean(id)),
+  )
+  return (selectedPlan.value?.tasks ?? []).filter((task) => !existingTaskIds.has(task.id) && task.is_active !== false)
+})
 
 const requestStatusChange = (action: MaintenanceOrderAction) => {
   selectedTransition.value = { type: 'order', action }
@@ -267,6 +309,71 @@ const confirmAssignment = async () => {
   }
   const updated = await assignOrder(payload)
   if (updated) assignmentDialog.value = false
+}
+
+const loadActivityOptions = async () => {
+  loadingActivityOptions.value = true
+  activityError.value = ''
+  try {
+    plans.value = (await maintenancePlansApi.index({ status: 'active', page: 1, per_page: 100 })).items
+  } catch (error) {
+    activityError.value = normalizeApiError(error).message
+  } finally {
+    loadingActivityOptions.value = false
+  }
+}
+
+const openActivityDialog = async () => {
+  activityError.value = ''
+  selectedPlanId.value = null
+  selectedTaskIds.value = []
+  activityDialog.value = true
+  if (plans.value.length === 0) await loadActivityOptions()
+}
+
+const closeActivityDialog = () => {
+  if (!updatingItems.value) activityDialog.value = false
+}
+
+const confirmAddItems = async () => {
+  activityError.value = ''
+  if (!selectedPlanId.value) {
+    activityError.value = 'Selecciona un plan de mantenimiento.'
+    return
+  }
+  if (selectedTaskIds.value.length === 0) {
+    activityError.value = 'Selecciona al menos una actividad para agregar.'
+    return
+  }
+
+  const payload: MaintenanceOrderItemsPayload = {
+    maintenance_plan_id: selectedPlanId.value,
+    maintenance_task_ids: selectedTaskIds.value,
+  }
+  const updated = await addItems(payload)
+  if (updated) activityDialog.value = false
+}
+
+const canRemoveItem = (item: MaintenanceOrderItem) =>
+  canManageItems.value && !['in_progress', 'completed', 'rejected', 'cancelled'].includes(item.status || '')
+
+const requestRemoveItem = (item: MaintenanceOrderItem) => {
+  selectedItem.value = item
+  removeItemDialog.value = true
+  errorMessage.value = ''
+}
+
+const closeRemoveItemDialog = () => {
+  if (!updatingItems.value) {
+    removeItemDialog.value = false
+    selectedItem.value = null
+  }
+}
+
+const confirmRemoveItem = async () => {
+  if (!selectedItem.value) return
+  const removed = await removeItem(selectedItem.value.id)
+  if (removed) closeRemoveItemDialog()
 }
 
 const orderNumber = (currentOrder: MaintenanceOrder) =>
@@ -526,7 +633,12 @@ const signOut = async () => {
                 </span>
                 <div><h2>Actividades de mantenimiento</h2><p>Trabajos incluidos en esta orden</p></div>
               </div>
-              <span class="detail-count">{{ order.items?.length ?? 0 }} actividades</span>
+              <div class="detail-activities-header__actions">
+                <span class="detail-count">{{ order.items?.length ?? 0 }} actividades</span>
+                <v-btn v-if="canManageItems" color="primary" size="small" variant="tonal" @click="openActivityDialog">
+                  <v-icon :icon="mdiPlus" class="mr-1" size="15" /> Agregar actividades
+                </v-btn>
+              </div>
             </div>
 
             <div v-if="order.items?.length" class="detail-items-wrap">
@@ -555,7 +667,7 @@ const signOut = async () => {
                     <td><span class="detail-table-muted">{{ itemDuration(item) }}</span></td>
                     <td><span class="detail-table-muted">{{ formatDateTime(item.scheduled_at) }}</span></td>
                     <td>
-                      <div v-if="availableItemActions(item).length" class="item-actions">
+                      <div v-if="availableItemActions(item).length || canRemoveItem(item)" class="item-actions">
                         <v-btn
                           v-for="action in availableItemActions(item)"
                           :key="action"
@@ -568,6 +680,17 @@ const signOut = async () => {
                           @click="requestItemStatusChange(action, item)"
                         >
                           <v-icon :icon="actionIcons[action]" size="15" />
+                        </v-btn>
+                        <v-btn
+                          v-if="canRemoveItem(item)"
+                          aria-label="Eliminar actividad"
+                          color="error"
+                          icon
+                          size="x-small"
+                          variant="tonal"
+                          @click="requestRemoveItem(item)"
+                        >
+                          <v-icon :icon="mdiDeleteOutline" size="15" />
                         </v-btn>
                       </div>
                       <span v-else class="detail-table-muted">—</span>
@@ -649,6 +772,64 @@ const signOut = async () => {
           <v-spacer />
           <v-btn variant="text" :disabled="updatingAssignment" @click="closeAssignmentDialog">Cancelar</v-btn>
           <v-btn color="primary" :loading="updatingAssignment" :disabled="loadingAssignmentOptions" @click="confirmAssignment">Guardar programación</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="activityDialog" max-width="700" @update:model-value="closeActivityDialog">
+      <v-card class="activity-dialog">
+        <v-card-title>Agregar actividades a la orden</v-card-title>
+        <v-card-text>
+          <p class="activity-dialog__intro">Selecciona un plan y las tareas que deben incorporarse a {{ order ? orderNumber(order) : 'esta orden' }}.</p>
+          <v-alert v-if="activityError" class="activity-dialog__alert" type="error" variant="tonal">{{ activityError }}</v-alert>
+          <v-autocomplete
+            v-model="selectedPlanId"
+            class="activity-dialog__plan"
+            item-title="title"
+            item-value="id"
+            label="Plan de mantenimiento"
+            :items="planOptions"
+            :loading="loadingActivityOptions"
+            placeholder="Selecciona un plan preventivo"
+            clearable
+            variant="outlined"
+          >
+            <template #item="{ props, item }"><v-list-item v-bind="props" :subtitle="item.raw.subtitle" /></template>
+          </v-autocomplete>
+          <div v-if="selectedPlan" class="activity-dialog__tasks">
+            <div class="activity-dialog__tasks-heading"><strong>Actividades disponibles</strong><span>{{ selectedTaskIds.length }} seleccionadas</span></div>
+            <div v-if="availablePlanTasks.length" class="activity-dialog__task-list">
+              <v-checkbox
+                v-for="task in availablePlanTasks"
+                :key="task.id"
+                v-model="selectedTaskIds"
+                color="primary"
+                hide-details
+                :label="task.name"
+                :value="task.id"
+              >
+                <template #label><span><strong>{{ task.name }}</strong><small>{{ task.code }} · {{ task.estimated_duration_minutes || '—' }} min{{ task.vehicle_system?.name ? ` · ${task.vehicle_system.name}` : '' }}</small></span></template>
+              </v-checkbox>
+            </div>
+            <div v-else class="activity-dialog__empty">Todas las actividades de este plan ya están incluidas en la orden.</div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="updatingItems" @click="closeActivityDialog">Cancelar</v-btn>
+          <v-btn color="primary" :loading="updatingItems" :disabled="loadingActivityOptions || !selectedPlan" @click="confirmAddItems">Agregar seleccionadas</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="removeItemDialog" max-width="430" @update:model-value="closeRemoveItemDialog">
+      <v-card class="remove-item-dialog">
+        <v-card-title>¿Eliminar esta actividad?</v-card-title>
+        <v-card-text>{{ selectedItem?.maintenance_task?.name || 'La actividad seleccionada' }} se quitará de esta orden mientras no haya iniciado su ejecución.</v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" :disabled="updatingItems" @click="closeRemoveItemDialog">Cancelar</v-btn>
+          <v-btn color="error" :loading="updatingItems" @click="confirmRemoveItem">Eliminar actividad</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

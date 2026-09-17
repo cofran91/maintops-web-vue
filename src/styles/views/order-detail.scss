@@ -617,3 +617,139 @@
 .assignment-dialog .v-btn {
   font-size: 10.5px;
 }
+
+.detail-activities-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-activities-header__actions .v-btn {
+  font-size: 9.5px;
+}
+
+.activity-dialog,
+.remove-item-dialog {
+  border: 1px solid #e8ecf2;
+}
+
+.activity-dialog .v-card-title,
+.remove-item-dialog .v-card-title {
+  padding: 22px 22px 8px;
+  color: #25334c;
+  font-size: 16px;
+  font-weight: 730;
+}
+
+.activity-dialog .v-card-text,
+.remove-item-dialog .v-card-text {
+  padding: 0 22px 15px;
+}
+
+.activity-dialog__intro {
+  margin: 0 0 17px;
+  color: #73809a;
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+.activity-dialog__alert {
+  margin-bottom: 14px;
+  border-radius: 10px;
+  font-size: 10px;
+}
+
+.activity-dialog__plan .v-field {
+  border-radius: 10px;
+}
+
+.activity-dialog__plan .v-label,
+.activity-dialog__plan .v-field__input {
+  font-size: 10.5px;
+}
+
+.activity-dialog__tasks {
+  margin-top: 5px;
+  border: 1px solid #e8ecf2;
+  border-radius: 11px;
+}
+
+.activity-dialog__tasks-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  color: #34415a;
+  font-size: 10px;
+  background: #f8f9fb;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.activity-dialog__tasks-heading span {
+  color: #3158e7;
+  font-size: 9px;
+}
+
+.activity-dialog__task-list {
+  display: grid;
+  max-height: 260px;
+  padding: 7px 13px;
+  overflow-y: auto;
+}
+
+.activity-dialog__task-list .v-checkbox {
+  min-height: 48px;
+  border-bottom: 1px solid #f0f2f6;
+}
+
+.activity-dialog__task-list .v-checkbox:last-child {
+  border-bottom: 0;
+}
+
+.activity-dialog__task-list .v-label {
+  display: grid;
+  gap: 3px;
+  color: #34415a;
+  font-size: 10px;
+}
+
+.activity-dialog__task-list .v-label small {
+  color: #929dae;
+  font-size: 8.5px;
+}
+
+.activity-dialog__empty {
+  padding: 22px 15px;
+  color: #929dae;
+  font-size: 9.5px;
+  text-align: center;
+}
+
+.activity-dialog .v-card-actions,
+.remove-item-dialog .v-card-actions {
+  padding: 10px 17px 17px;
+}
+
+.activity-dialog .v-btn,
+.remove-item-dialog .v-btn {
+  font-size: 10.5px;
+}
+
+.remove-item-dialog .v-card-text {
+  color: #73809a;
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 620px) {
+  .detail-activities-header__actions {
+    align-items: flex-end;
+    flex-direction: column-reverse;
+    gap: 5px;
+  }
+
+  .detail-activities-header__actions .detail-count {
+    display: none;
+  }
+}

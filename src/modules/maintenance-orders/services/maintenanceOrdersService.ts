@@ -3,6 +3,7 @@ import http, { unwrapApiData } from '@/api/http'
 import type {
   MaintenanceOrderCreatePayload,
   MaintenanceOrderAssignmentPayload,
+  MaintenanceOrderItemsPayload,
   MaintenanceOrderFilters,
   MaintenanceOrder,
   MaintenanceOrderItemStatus,
@@ -54,6 +55,16 @@ export const maintenanceOrdersApi = {
     const response = await http.patch<ApiResponse<MaintenanceOrder>>(`/maintenance-orders/${id}`, payload)
 
     return unwrapApiData<MaintenanceOrder>(response.data)
+  },
+
+  async addItems(id: string | number, payload: MaintenanceOrderItemsPayload) {
+    const response = await http.post<ApiResponse<MaintenanceOrder>>(`/maintenance-orders/${id}/items`, payload)
+
+    return unwrapApiData<MaintenanceOrder>(response.data)
+  },
+
+  async removeItem(itemId: string | number) {
+    await http.delete(`/maintenance-order-items/${itemId}`)
   },
 
   async updateItemStatus(id: string | number, status: MaintenanceOrderItemStatus) {
