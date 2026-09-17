@@ -31,3 +31,12 @@ export interface OperationalEvent {
   }
   data: Record<string, unknown>
 }
+
+export type LiveActivityKind = 'order' | 'item'
+
+export interface LiveActivity {
+  id: string
+  kind: LiveActivityKind
+  message: string
+  occurredAt: number
+}

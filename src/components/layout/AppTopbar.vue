@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {
-  mdiBellOutline,
   mdiChevronDown,
   mdiMagnify,
   mdiMenu,
 } from '@mdi/js'
+import RealtimeActivityTray from '@/components/layout/RealtimeActivityTray.vue'
 
 withDefaults(defineProps<{
   userName: string
@@ -42,10 +42,7 @@ const emit = defineEmits<{
       <kbd>⌘ K</kbd>
     </div>
 
-    <button class="notification-button" aria-label="Notificaciones" type="button">
-      <v-icon :icon="mdiBellOutline" size="22" />
-      <i />
-    </button>
+    <RealtimeActivityTray />
 
     <span class="topbar-divider" />
 
