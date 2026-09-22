@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAccountCircleOutline,
   mdiAlertOutline,
@@ -22,6 +23,7 @@ import { useAuthStore } from '@/stores/auth'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const ownerId = computed(() => String(route.params.id ?? ''))
 const canUpdateOwner = computed(() => authStore.canUseResource('owners', 'update'))
@@ -64,7 +66,7 @@ const formatDateTime = (value?: string | null) => {
     return 'Sin registrar'
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))

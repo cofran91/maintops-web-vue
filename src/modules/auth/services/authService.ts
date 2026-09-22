@@ -1,4 +1,5 @@
 import http, { unwrapApiData } from '@/api/http'
+import { t } from '@/i18n'
 import type { LoginCredentials, LoginResponse, AuthUser } from '@/types/auth'
 import type { PasswordResetPayload, PasswordResetRequest } from '@/types/auth'
 
@@ -16,13 +17,13 @@ export const login = async (credentials: LoginCredentials) => {
 export const requestPasswordReset = async (payload: PasswordResetRequest) => {
   const response = await http.post<{ message?: string }>('/auth/forgot-password', payload)
 
-  return response.data.message || 'Si el correo existe, recibirás un enlace para restablecer tu contraseña.'
+  return response.data.message || t('auth.forgotPassword.successFallback')
 }
 
 export const resetPassword = async (payload: PasswordResetPayload) => {
   const response = await http.post<{ message?: string }>('/auth/reset-password', payload)
 
-  return response.data.message || 'Tu contraseña fue actualizada correctamente.'
+  return response.data.message || t('auth.resetPassword.successFallback')
 }
 
 export const fetchCurrentUser = async () => {
@@ -33,4 +34,10 @@ export const fetchCurrentUser = async () => {
 
 export const logout = async () => {
   await http.post('/auth/logout')
+}
+
+export const updateLanguage = async (locale: string) => {
+  const response = await http.patch<ApiResponse<{ locale: string }>>('/auth/language', { locale })
+
+  return unwrapApiData<{ locale: string }>(response.data)
 }

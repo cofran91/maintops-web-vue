@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAlertOutline,
   mdiCarMultiple,
@@ -27,6 +28,7 @@ import type { Vehicle } from '@/types/vehicle'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const canCreateVehicle = computed(() => authStore.canUseResource('vehicles', 'create'))
 const canImportVehicle = computed(() => authStore.canUseResource('vehicles', 'import'))
@@ -72,7 +74,7 @@ const userInitials = computed(() =>
 )
 
 const todayLabel = computed(() => {
-  const label = new Intl.DateTimeFormat('es-CO', {
+  const label = new Intl.DateTimeFormat(locale.value, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -99,7 +101,7 @@ const formatDate = (value?: string | null) => {
     return 'Sin fecha'
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -109,7 +111,7 @@ const formatDate = (value?: string | null) => {
 const formatKilometers = (value?: number | null) =>
   value === null || value === undefined
     ? 'Sin registrar'
-    : `${new Intl.NumberFormat('es-CO').format(value)} km`
+    : `${new Intl.NumberFormat(locale.value).format(value)} km`
 
 const importSummaryFields: ImportSummaryField[] = [
   { key: 'processed_rows', label: 'Filas procesadas' },

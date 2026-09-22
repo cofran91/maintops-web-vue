@@ -1,4 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { normalizeApiError } from '@/api/errors'
 import maintenanceOrdersApi from '@/modules/maintenance-orders/services/maintenanceOrdersService'
 import type { MaintenanceOrder, MaintenanceOrderPage } from '@/types/maintenanceOrder'
@@ -21,6 +22,7 @@ const isCanceledRequest = (error: unknown) => {
 }
 
 export const useMaintenanceSchedule = () => {
+  const { locale } = useI18n()
   const orders = ref<MaintenanceOrder[]>([])
   const currentMonth = ref(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
   const selectedDay = ref(toDateKey(new Date()))
@@ -33,7 +35,7 @@ export const useMaintenanceSchedule = () => {
       if (!order.scheduled_at) return []
       const scheduledAt = new Date(order.scheduled_at)
       if (Number.isNaN(scheduledAt.getTime())) return []
-      return [{ order, dateKey: toDateKey(scheduledAt), timeLabel: new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit' }).format(scheduledAt) }]
+      return [{ order, dateKey: toDateKey(scheduledAt), timeLabel: new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit' }).format(scheduledAt) }]
     }),
   )
 
@@ -47,7 +49,7 @@ export const useMaintenanceSchedule = () => {
     return grouped
   })
 
-  const monthLabel = computed(() => new Intl.DateTimeFormat('es-CO', { month: 'long', year: 'numeric' }).format(currentMonth.value))
+  const monthLabel = computed(() => new Intl.DateTimeFormat(locale.value, { month: 'long', year: 'numeric' }).format(currentMonth.value))
   const fetchSchedule = async () => {
     controller?.abort()
     const nextController = new AbortController()

@@ -3,6 +3,7 @@ export interface AuthUser {
   name?: string
   email?: string
   roles?: string[]
+  preferred_locale?: string | null
   [key: string]: unknown
 }
 

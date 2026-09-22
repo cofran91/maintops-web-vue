@@ -8,6 +8,7 @@ import {
   mdiShieldCheckOutline,
   mdiWrenchCogOutline,
 } from '@mdi/js'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
 
 const { t } = useI18n()
 </script>
@@ -16,10 +17,15 @@ const { t } = useI18n()
   <main class="auth-recovery-page">
     <section class="auth-recovery-panel">
       <div class="auth-recovery-panel__inner">
-        <router-link :aria-label="t('auth.recovery.backAria')" class="recovery-brand" :to="{ name: 'login' }">
-          <span class="recovery-brand__mark"><v-icon :icon="mdiWrenchCogOutline" size="22" /></span>
-          <span>Maint<span>Ops</span></span>
-        </router-link>
+        <div class="auth-recovery-header">
+          <router-link :aria-label="t('auth.recovery.backAria')" class="recovery-brand" :to="{ name: 'login' }">
+            <span class="recovery-brand__mark"><v-icon :icon="mdiWrenchCogOutline" size="22" /></span>
+            <span>Maint<span>Ops</span></span>
+          </router-link>
+          <div class="guest-preferences">
+            <LanguageSwitcher />
+          </div>
+        </div>
 
         <div class="auth-recovery-content"><slot /></div>
 

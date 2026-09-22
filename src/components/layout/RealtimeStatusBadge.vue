@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { mdiWifi, mdiWifiOff } from '@mdi/js'
 import { useRealtimeConnection } from '@/modules/realtime/services/realtimeClientService'
 
 const realtime = useRealtimeConnection()
+const { t } = useI18n()
 const statusMeta = computed(() => ({
-  disabled: { label: 'Tiempo real desactivado', short: 'Desactivado', color: 'grey', icon: mdiWifiOff },
-  disconnected: { label: 'Sin conexión en tiempo real', short: 'Desconectado', color: 'grey', icon: mdiWifiOff },
-  connecting: { label: 'Conectando al servicio en tiempo real', short: 'Conectando', color: 'info', icon: mdiWifi },
-  connected: { label: 'Conectado al servicio en tiempo real', short: 'En línea', color: 'success', icon: mdiWifi },
-  error: { label: realtime.errorMessage || 'Error en la conexión en tiempo real', short: 'Con error', color: 'error', icon: mdiWifiOff },
+  disabled: { label: t('realtime.status.disabled'), short: t('realtime.status.shortDisabled'), color: 'grey', icon: mdiWifiOff },
+  disconnected: { label: t('realtime.status.disconnected'), short: t('realtime.status.shortDisconnected'), color: 'grey', icon: mdiWifiOff },
+  connecting: { label: t('realtime.status.connecting'), short: t('realtime.status.shortConnecting'), color: 'info', icon: mdiWifi },
+  connected: { label: t('realtime.status.connected'), short: t('realtime.status.shortConnected'), color: 'success', icon: mdiWifi },
+  error: { label: realtime.errorMessage || t('realtime.status.error'), short: t('realtime.status.shortError'), color: 'error', icon: mdiWifiOff },
 }[realtime.status]))
 </script>
 

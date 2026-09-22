@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { hasTranslation, t } from '@/i18n'
 
 export interface ApiError {
   message: string
@@ -11,6 +12,22 @@ export interface ApiError {
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
+
+const timeoutErrorCodes = new Set(['ECONNABORTED', 'ETIMEDOUT'])
+
+const getCode = (data: unknown) => {
+  if (!isRecord(data)) return undefined
+  if (typeof data.code === 'string') return data.code
+  return isRecord(data.detail) && typeof data.detail.code === 'string'
+    ? data.detail.code
+    : undefined
+}
+
+const translatedCodeMessage = (code?: string, params?: Record<string, unknown>) => {
+  if (!code) return undefined
+  const key = `api.codes.${code}`
+  return hasTranslation(key) ? t(key, params) : undefined
+}
 
 const getMessage = (data: unknown): string | undefined => {
   if (typeof data === 'string' && data.trim()) {
@@ -33,13 +50,41 @@ const getMessage = (data: unknown): string | undefined => {
     return data.detail.message
   }
 
-  return undefined
+  return translatedCodeMessage(
+    getCode(data),
+    isRecord(data.detail) ? data.detail : data,
+  )
+}
+
+const validationErrorMessage = (error: Record<string, unknown>) => {
+  const type = typeof error.type === 'string' ? error.type : 'default'
+  const key = `api.validation.${type}`
+  return hasTranslation(key)
+    ? t(key, isRecord(error.context) ? error.context : undefined)
+    : t('api.validation.default')
+}
+
+const getStructuredValidationErrors = (errors: unknown[]) => {
+  const normalized: Record<string, string[]> = {}
+
+  errors.forEach((error) => {
+    if (!isRecord(error) || typeof error.field !== 'string' || !error.field) return
+    normalized[error.field] = [validationErrorMessage(error)]
+  })
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined
 }
 
 const getValidationErrors = (data: unknown): Record<string, string[]> | undefined => {
-  if (!isRecord(data) || !isRecord(data.errors)) {
+  if (!isRecord(data)) {
     return undefined
   }
+
+  if (isRecord(data.detail) && Array.isArray(data.detail.errors)) {
+    return getStructuredValidationErrors(data.detail.errors)
+  }
+
+  if (!isRecord(data.errors)) return undefined
 
   const errors: Record<string, string[]> = {}
 
@@ -71,18 +116,18 @@ export const normalizeApiError = (error: unknown): ApiError => {
 
   if (axios.isAxiosError(error)) {
     const data = error.response?.data
-    const isTimeout = error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT'
+    const isTimeout = timeoutErrorCodes.has(error.code ?? '')
 
     return {
       message:
         getMessage(data) ??
         (isTimeout
-          ? 'La solicitud tardó demasiado. Intenta nuevamente.'
+          ? t('api.errors.timeout')
           : error.response
-            ? 'No fue posible completar la solicitud.'
-            : 'No fue posible conectarse con el servidor.'),
+            ? error.message || t('api.errors.default')
+            : t('api.errors.network')),
       status: error.response?.status ?? null,
-      code: isRecord(data) && typeof data.code === 'string' ? data.code : error.code,
+      code: getCode(data) ?? error.code,
       errors: getValidationErrors(data),
       data,
       isNetworkError: error.response === undefined,
@@ -90,7 +135,7 @@ export const normalizeApiError = (error: unknown): ApiError => {
   }
 
   return {
-    message: error instanceof Error ? error.message : 'Ocurrió un error inesperado.',
+    message: error instanceof Error && error.message ? error.message : t('api.errors.default'),
     status: null,
     isNetworkError: false,
   }

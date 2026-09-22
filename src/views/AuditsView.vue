@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { mdiChevronDown, mdiChevronUp, mdiClose, mdiHistory, mdiMagnify, mdiRefresh, mdiTableSearch } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
@@ -11,6 +12,7 @@ import { useAuthStore } from '@/stores/auth'
 import type { AuditLog } from '@/types/audit'
 
 const router = useRouter()
+const { locale } = useI18n()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const filtersExpanded = ref(false)
@@ -23,10 +25,10 @@ const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() => userName.value.split(' ').map((part) => part.charAt(0)).join('').slice(0, 2).toUpperCase())
 const hasActiveFilters = computed(() => Object.values(filters).some(Boolean))
 const todayLabel = computed(() => {
-  const value = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
+  const value = new Intl.DateTimeFormat(locale.value, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
   return value.charAt(0).toUpperCase() + value.slice(1)
 })
-const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—'
+const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—'
 const changesCount = (audit: AuditLog) => {
   const oldValues = audit.old_values && !Array.isArray(audit.old_values) ? Object.keys(audit.old_values) : []
   const newValues = audit.new_values && !Array.isArray(audit.new_values) ? Object.keys(audit.new_values) : []

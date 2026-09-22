@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
@@ -30,6 +31,7 @@ interface CalendarDay {
 
 const router = useRouter()
 const route = useRoute()
+const { locale } = useI18n()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const search = ref(getStringQuery(route.query.search))
@@ -116,7 +118,7 @@ const calendarDays = computed<CalendarDay[]>(() => {
   })
 })
 const selectedEvents = computed(() => eventsByDate.value[selectedDay.value] ?? [])
-const selectedDateLabel = computed(() => new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${selectedDay.value}T12:00:00`)))
+const selectedDateLabel = computed(() => new Intl.DateTimeFormat(locale.value, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${selectedDay.value}T12:00:00`)))
 const currentMonthEvents = computed(() => filteredEvents.value.filter((event) => {
   const date = new Date(`${event.dateKey}T12:00:00`)
   return date.getFullYear() === currentMonth.value.getFullYear() && date.getMonth() === currentMonth.value.getMonth()
@@ -139,7 +141,7 @@ const vehicleLabel = (order: MaintenanceOrder) => [order.vehicle?.brand, order.v
 const workshopLabel = (order: MaintenanceOrder) => order.workshop?.name || 'Taller pendiente'
 const statusLabel = (status: string) => ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || 'Estado actualizado'
 const statusColor = (status: string) => ({ scheduled: '#397eea', in_progress: '#d58930', completed: '#239878', pending_owner_approval: '#d58930', cancelled: '#dc5967' }[status] || '#7c8ba6')
-const formatSelectedDate = (value: string) => new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short' }).format(new Date(`${value}T12:00:00`))
+const formatSelectedDate = (value: string) => new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short' }).format(new Date(`${value}T12:00:00`))
 
 const signOut = async () => {
   await authStore.logout()

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { mdiGarageVariant, mdiWrenchClockOutline } from '@mdi/js'
 import type { WorkshopBottleneckMetric } from '@/types/analytics'
 
 defineProps<{ metrics: WorkshopBottleneckMetric[] }>()
-const number = (value: unknown) => Number.isFinite(Number(value)) ? new Intl.NumberFormat('es-CO').format(Number(value)) : '—'
+const { locale } = useI18n()
+const number = (value: unknown) => Number.isFinite(Number(value)) ? new Intl.NumberFormat(locale.value).format(Number(value)) : '—'
 const ratio = (value: unknown) => value === null || value === undefined ? '—' : (Number(value) * 100).toFixed(1) + '%'
 </script>
 

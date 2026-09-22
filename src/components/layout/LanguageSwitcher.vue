@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { mdiTranslate } from '@mdi/js'
 import {
   LOCALE_LABEL_KEYS,
   SUPPORTED_LOCALES,
-  setLocale,
   type SupportedLocale,
 } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const { locale, t } = useI18n()
+const isSaving = ref(false)
 
 const localeOptions = computed(() =>
   SUPPORTED_LOCALES.map((code) => ({
@@ -18,8 +20,15 @@ const localeOptions = computed(() =>
   })),
 )
 
-const selectLocale = (code: SupportedLocale) => {
-  setLocale(code)
+const selectLocale = async (code: SupportedLocale) => {
+  if (locale.value === code || isSaving.value) return
+
+  isSaving.value = true
+  try {
+    await authStore.updateLanguage(code)
+  } finally {
+    isSaving.value = false
+  }
 }
 </script>
 
@@ -28,8 +37,9 @@ const selectLocale = (code: SupportedLocale) => {
     <template #activator="{ props }">
       <v-btn
         v-bind="props"
-        aria-label="Cambiar idioma"
+        :aria-label="t('language.label')"
         class="language-switcher"
+        :loading="isSaving"
         rounded="lg"
         size="small"
         variant="tonal"
@@ -45,6 +55,7 @@ const selectLocale = (code: SupportedLocale) => {
         v-for="option in localeOptions"
         :key="option.code"
         :active="locale === option.code"
+        :disabled="isSaving"
         :title="option.label"
         @click="selectLocale(option.code)"
       >

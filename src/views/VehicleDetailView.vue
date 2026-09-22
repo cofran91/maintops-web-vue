@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccountCircleOutline,
@@ -23,6 +24,7 @@ import { useVehicleDetail } from '@/modules/vehicles/composables/useVehicleDetai
 
 const route = useRoute()
 const router = useRouter()
+const { locale } = useI18n()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const vehicleId = computed(() => String(route.params.id ?? ''))
@@ -61,7 +63,7 @@ const formatDateTime = (value?: string | null) => {
     return 'Sin registrar'
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
@@ -70,7 +72,7 @@ const formatDateTime = (value?: string | null) => {
 const formatKilometers = (value?: number | null) =>
   value === null || value === undefined
     ? 'Sin registrar'
-    : `${new Intl.NumberFormat('es-CO').format(value)} km`
+    : `${new Intl.NumberFormat(locale.value).format(value)} km`
 
 const ownerName = computed(() => vehicle.value?.owner?.name || `Propietario ${vehicle.value?.owner_id ?? ''}`)
 

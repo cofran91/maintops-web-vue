@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAlertOutline,
   mdiArrowLeft,
@@ -22,6 +23,7 @@ import type { MaintenanceTask } from '@/types/maintenancePlan'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const planId = computed(() => String(route.params.id ?? ''))
 
@@ -51,7 +53,7 @@ const intervalLabel = computed(() => {
   if (!plan.value) return 'Sin intervalo definido'
   const parts = []
   if (plan.value.recommended_interval_days) parts.push(`${plan.value.recommended_interval_days} días`)
-  if (plan.value.recommended_interval_km) parts.push(`${plan.value.recommended_interval_km.toLocaleString('es-CO')} km`)
+  if (plan.value.recommended_interval_km) parts.push(`${plan.value.recommended_interval_km.toLocaleString(locale.value)} km`)
   return parts.join(' · ') || 'Sin intervalo definido'
 })
 const taskCount = computed(() => plan.value?.tasks_count ?? plan.value?.tasks?.length ?? 0)
@@ -65,7 +67,7 @@ const formatDuration = (minutes?: number | null) => {
 const taskSystem = (task: MaintenanceTask) => task.vehicle_system?.name || 'Sistema general'
 const formatDateTime = (value?: string | null) => {
   if (!value) return 'Sin registrar'
-  return new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
 const confirmDelete = async () => {
@@ -147,7 +149,7 @@ const signOut = async () => {
             <article class="maintenance-plan-detail-card">
               <div class="maintenance-plan-detail-card__heading"><span class="maintenance-plan-detail-card__icon maintenance-plan-detail-card__icon--teal"><v-icon :icon="mdiWrenchOutline" size="18" /></span><div><h2>Resumen operativo</h2><p>Actividades incluidas en la rutina</p></div></div>
               <div class="maintenance-plan-detail-summary"><strong>{{ taskCount }}</strong><span>actividades de mantenimiento</span></div>
-              <div class="maintenance-plan-detail-summary"><strong>{{ plan.recommended_interval_km ? `${plan.recommended_interval_km.toLocaleString('es-CO')} km` : '—' }}</strong><span>intervalo por kilometraje</span></div>
+              <div class="maintenance-plan-detail-summary"><strong>{{ plan.recommended_interval_km ? `${plan.recommended_interval_km.toLocaleString(locale)} km` : '—' }}</strong><span>intervalo por kilometraje</span></div>
               <div class="maintenance-plan-detail-summary"><strong>{{ plan.recommended_interval_days ? `${plan.recommended_interval_days} días` : '—' }}</strong><span>intervalo por tiempo</span></div>
             </article>
           </section>

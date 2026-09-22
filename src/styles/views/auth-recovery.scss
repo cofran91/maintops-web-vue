@@ -493,3 +493,17 @@
     display: none;
   }
 }
+.auth-recovery-header,
+.auth-recovery-header .guest-preferences {
+  display: flex;
+  align-items: center;
+}
+
+.auth-recovery-header {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.auth-recovery-header .guest-preferences {
+  gap: 6px;
+}

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
@@ -19,6 +20,7 @@ import { useAuthStore } from '@/stores/auth'
 import type { MaintenancePlan } from '@/types/maintenancePlan'
 
 const router = useRouter()
+const { locale } = useI18n()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const canCreatePlan = computed(() => authStore.canUseResource('maintenance-plans', 'create'))
@@ -56,7 +58,7 @@ const userInitials = computed(() =>
     .toUpperCase(),
 )
 const todayLabel = computed(() => {
-  const label = new Intl.DateTimeFormat('es-CO', {
+  const label = new Intl.DateTimeFormat(locale.value, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -74,12 +76,12 @@ const taskCount = (plan: MaintenancePlan) => plan.tasks_count ?? plan.tasks?.len
 const intervalLabel = (plan: MaintenancePlan) => {
   const parts = []
   if (plan.recommended_interval_days) parts.push(`${plan.recommended_interval_days} días`)
-  if (plan.recommended_interval_km) parts.push(`${plan.recommended_interval_km.toLocaleString('es-CO')} km`)
+  if (plan.recommended_interval_km) parts.push(`${plan.recommended_interval_km.toLocaleString(locale.value)} km`)
   return parts.join(' · ') || 'Sin intervalo definido'
 }
 const formatDate = (value?: string | null) => {
   if (!value) return 'Sin fecha'
-  return new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
 }
 
 const signOut = async () => {

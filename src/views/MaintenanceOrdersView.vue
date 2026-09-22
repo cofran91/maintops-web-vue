@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAlertOutline,
   mdiClipboardTextOutline,
@@ -25,6 +26,7 @@ import {
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const canCreateOrder = computed(() => authStore.canUseResource('orders', 'create'))
 const filtersExpanded = ref(false)
@@ -67,7 +69,7 @@ const userInitials = computed(() =>
 )
 
 const todayLabel = computed(() => {
-  const label = new Intl.DateTimeFormat('es-CO', {
+  const label = new Intl.DateTimeFormat(locale.value, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -89,7 +91,7 @@ const formatDate = (value?: string | null, emptyLabel = 'Sin fecha') => {
     return emptyLabel
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -101,7 +103,7 @@ const formatDateTime = (value?: string | null) => {
     return 'Sin programar'
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',

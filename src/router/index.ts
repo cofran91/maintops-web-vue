@@ -4,10 +4,11 @@ import { canAccessRoute } from '@/auth/permissions'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior: (_to, _from, savedPosition) => savedPosition ?? { top: 0 },
   routes: [
     {
       path: '/',
-      redirect: '/login',
+      redirect: '/dashboard',
     },
     {
       path: '/login',
@@ -73,6 +74,7 @@ const router = createRouter({
     },
     {
       path: '/audits',
+      alias: '/access/audit',
       name: 'access-audit',
       component: () => import('@/views/AuditsView.vue'),
       meta: {
@@ -91,12 +93,14 @@ const router = createRouter({
     },
     {
       path: '/maintenance-plans',
+      alias: '/maintenance/plans',
       name: 'maintenance-plans',
       component: () => import('@/views/MaintenancePlansView.vue'),
       meta: { requiresAuth: true, title: 'Planes de mantenimiento' },
     },
     {
       path: '/maintenance-plans/new',
+      alias: '/maintenance/plans/new',
       name: 'maintenance-plans-new',
       component: () => import('@/views/MaintenancePlanFormView.vue'),
       meta: { requiresAuth: true, title: 'Nuevo plan' },
@@ -109,42 +113,49 @@ const router = createRouter({
     },
     {
       path: '/maintenance-tasks',
+      alias: '/maintenance/tasks',
       name: 'maintenance-tasks',
       component: () => import('@/views/MaintenanceTasksView.vue'),
       meta: { requiresAuth: true, title: 'Catálogo de tareas' },
     },
     {
       path: '/maintenance-tasks/new',
+      alias: '/maintenance/tasks/new',
       name: 'maintenance-tasks-new',
       component: () => import('@/views/MaintenanceTaskFormView.vue'),
       meta: { requiresAuth: true, title: 'Nueva tarea' },
     },
     {
       path: '/maintenance-tasks/:id(\\d+)',
+      alias: '/maintenance/tasks/:id(\\d+)',
       name: 'maintenance-tasks-detail',
       component: () => import('@/views/MaintenanceTaskDetailView.vue'),
       meta: { requiresAuth: true, title: 'Detalle de tarea' },
     },
     {
       path: '/maintenance-tasks/:id(\\d+)/edit',
+      alias: '/maintenance/tasks/:id(\\d+)/edit',
       name: 'maintenance-tasks-edit',
       component: () => import('@/views/MaintenanceTaskFormView.vue'),
       meta: { requiresAuth: true, title: 'Editar tarea' },
     },
     {
       path: '/maintenance-plans/:id(\\d+)',
+      alias: '/maintenance/plans/:id(\\d+)',
       name: 'maintenance-plans-detail',
       component: () => import('@/views/MaintenancePlanDetailView.vue'),
       meta: { requiresAuth: true, title: 'Detalle de plan' },
     },
     {
       path: '/maintenance-plans/:id(\\d+)/edit',
+      alias: '/maintenance/plans/:id(\\d+)/edit',
       name: 'maintenance-plans-edit',
       component: () => import('@/views/MaintenancePlanFormView.vue'),
       meta: { requiresAuth: true, title: 'Editar plan' },
     },
     {
       path: '/vehicles',
+      alias: '/operations/vehicles',
       name: 'vehicles',
       component: () => import('@/views/VehiclesView.vue'),
       meta: {
@@ -154,6 +165,7 @@ const router = createRouter({
     },
     {
       path: '/owners',
+      alias: '/operations/owners',
       name: 'owners',
       component: () => import('@/views/OwnersView.vue'),
       meta: {
@@ -163,6 +175,7 @@ const router = createRouter({
     },
     {
       path: '/users',
+      alias: '/operations/users',
       name: 'users',
       component: () => import('@/views/UsersView.vue'),
       meta: {
@@ -172,6 +185,7 @@ const router = createRouter({
     },
     {
       path: '/users/new',
+      alias: '/operations/users/new',
       name: 'users-new',
       component: () => import('@/views/UserFormView.vue'),
       meta: {
@@ -181,6 +195,7 @@ const router = createRouter({
     },
     {
       path: '/users/:id(\\d+)',
+      alias: '/operations/users/:id(\\d+)',
       name: 'users-detail',
       component: () => import('@/views/UserDetailView.vue'),
       meta: {
@@ -190,6 +205,7 @@ const router = createRouter({
     },
     {
       path: '/users/:id(\\d+)/edit',
+      alias: '/operations/users/:id(\\d+)/edit',
       name: 'users-edit',
       component: () => import('@/views/UserFormView.vue'),
       meta: {
@@ -199,6 +215,7 @@ const router = createRouter({
     },
     {
       path: '/workshops',
+      alias: '/operations/workshops',
       name: 'workshops',
       component: () => import('@/views/WorkshopsView.vue'),
       meta: {
@@ -208,6 +225,7 @@ const router = createRouter({
     },
     {
       path: '/workshops/new',
+      alias: '/operations/workshops/new',
       name: 'workshops-new',
       component: () => import('@/views/WorkshopFormView.vue'),
       meta: {
@@ -217,6 +235,7 @@ const router = createRouter({
     },
     {
       path: '/workshops/:id(\\d+)',
+      alias: '/operations/workshops/:id(\\d+)',
       name: 'workshops-detail',
       component: () => import('@/views/WorkshopDetailView.vue'),
       meta: {
@@ -226,6 +245,7 @@ const router = createRouter({
     },
     {
       path: '/workshops/:id(\\d+)/edit',
+      alias: '/operations/workshops/:id(\\d+)/edit',
       name: 'workshops-edit',
       component: () => import('@/views/WorkshopFormView.vue'),
       meta: {
@@ -235,6 +255,7 @@ const router = createRouter({
     },
     {
       path: '/owners/new',
+      alias: '/operations/owners/new',
       name: 'owners-new',
       component: () => import('@/views/OwnerFormView.vue'),
       meta: {
@@ -244,6 +265,7 @@ const router = createRouter({
     },
     {
       path: '/owners/:id(\\d+)',
+      alias: '/operations/owners/:id(\\d+)',
       name: 'owners-detail',
       component: () => import('@/views/OwnerDetailView.vue'),
       meta: {
@@ -253,6 +275,7 @@ const router = createRouter({
     },
     {
       path: '/owners/:id(\\d+)/edit',
+      alias: '/operations/owners/:id(\\d+)/edit',
       name: 'owners-edit',
       component: () => import('@/views/OwnerFormView.vue'),
       meta: {
@@ -262,6 +285,7 @@ const router = createRouter({
     },
     {
       path: '/vehicles/new',
+      alias: '/operations/vehicles/new',
       name: 'vehicles-new',
       component: () => import('@/views/VehicleFormView.vue'),
       meta: {
@@ -271,6 +295,7 @@ const router = createRouter({
     },
     {
       path: '/vehicles/:id(\\d+)',
+      alias: '/operations/vehicles/:id(\\d+)',
       name: 'vehicles-detail',
       component: () => import('@/views/VehicleDetailView.vue'),
       meta: {
@@ -280,6 +305,7 @@ const router = createRouter({
     },
     {
       path: '/vehicles/:id(\\d+)/edit',
+      alias: '/operations/vehicles/:id(\\d+)/edit',
       name: 'vehicles-edit',
       component: () => import('@/views/VehicleFormView.vue'),
       meta: {
@@ -307,7 +333,12 @@ const router = createRouter({
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/login',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundView.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Página no encontrada',
+      },
     },
   ],
 })
@@ -339,8 +370,8 @@ router.beforeEach(async (to) => {
   return true
 })
 
-router.afterEach((to) => {
-  document.title = `${String(to.meta.title ?? 'MaintOps')} · MaintOps`
+router.onError((error, to) => {
+  console.error(`[router] Navigation to "${to.fullPath}" failed.`, error)
 })
 
 export default router

@@ -1,34 +1,20 @@
 import { computed, readonly, ref } from 'vue'
 import { maintenanceOrderIdForEvent, subscribeToOperationalEvents } from '@/modules/realtime/services/operationalEventsService'
+import { t } from '@/i18n'
 import type { LiveActivity, OperationalEvent } from '@/types/realtime'
 
 const MAX_ACTIVITY_ITEMS = 50
 const STORAGE_KEY_PREFIX = 'maintops.live-activity'
 
-const ORDER_ACTIONS: Record<string, string> = {
-  created: 'fue creada',
-  updated: 'fue actualizada',
-  pending_owner_approval: 'quedó pendiente de aprobación',
-  approved: 'fue aprobada',
-  partially_approved: 'fue aprobada parcialmente',
-  rejected: 'fue rechazada',
-  scheduled: 'fue programada',
-  in_progress: 'entró en proceso',
-  completed: 'fue finalizada',
-  delivered: 'fue entregada',
-  cancelled: 'fue cancelada',
-}
+const ORDER_ACTIONS = [
+  'created', 'updated', 'pending_owner_approval', 'approved', 'partially_approved',
+  'rejected', 'scheduled', 'in_progress', 'completed', 'delivered', 'cancelled',
+] as const
 
-const ITEM_ACTIONS: Record<string, string> = {
-  created: 'fue agregada',
-  updated: 'fue actualizada',
-  pending_owner_approval: 'quedó pendiente de aprobación',
-  scheduled: 'fue programada',
-  in_progress: 'entró en proceso',
-  completed: 'fue finalizada',
-  rejected: 'fue rechazada',
-  cancelled: 'fue cancelada',
-}
+const ITEM_ACTIONS = [
+  'created', 'updated', 'pending_owner_approval', 'scheduled', 'in_progress',
+  'completed', 'rejected', 'cancelled',
+] as const
 
 const activities = ref<LiveActivity[]>([])
 const latestActivityId = ref<string | null>(null)
@@ -77,20 +63,28 @@ export const operationalEventMessage = (event: OperationalEvent) => {
   const action = actionFromEvent(event)
 
   if (event.aggregate.type === 'maintenance_order') {
-    const actionLabel = ORDER_ACTIONS[action]
-    return actionLabel ? `La orden OT-${orderId.padStart(5, '0')} ${actionLabel}.` : null
+    if (!ORDER_ACTIONS.includes(action as (typeof ORDER_ACTIONS)[number])) return null
+    return t('realtime.liveActivity.orderMessage', {
+      action: t(`realtime.liveActivityActions.${action}`),
+      orderId,
+    })
   }
 
-  const actionLabel = ITEM_ACTIONS[action]
-  if (!actionLabel) return null
+  if (!ITEM_ACTIONS.includes(action as (typeof ITEM_ACTIONS)[number])) return null
 
   const taskName = typeof event.data.maintenance_task_name === 'string'
     ? event.data.maintenance_task_name.trim()
     : ''
   const taskId = event.data.maintenance_task_id
-  const itemLabel = taskName || (typeof taskId === 'number' ? `actividad #${taskId}` : 'una actividad')
+  const itemLabel = taskName || (typeof taskId === 'number'
+    ? t('realtime.liveActivity.task', { id: taskId })
+    : t('realtime.liveActivity.orderItem'))
 
-  return `La actividad ${itemLabel} de OT-${orderId.padStart(5, '0')} ${actionLabel}.`
+  return t('realtime.liveActivity.itemMessage', {
+    action: t(`realtime.liveActivityActions.${action}`),
+    name: itemLabel,
+    orderId,
+  })
 }
 
 const recordOperationalActivity = (event: OperationalEvent) => {

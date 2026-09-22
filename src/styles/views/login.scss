@@ -24,6 +24,21 @@
   padding: clamp(30px, 5vw, 58px) clamp(34px, 6vw, 80px) 30px;
 }
 
+.login-header,
+.guest-preferences {
+  display: flex;
+  align-items: center;
+}
+
+.login-header {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.guest-preferences {
+  gap: 6px;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;

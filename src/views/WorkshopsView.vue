@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAlertOutline,
   mdiChevronDown,
@@ -27,6 +28,7 @@ import type { Workshop } from '@/types/workshop'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const canCreateWorkshop = computed(() => authStore.canUseResource('workshops', 'create'))
 const canImportWorkshop = computed(() => authStore.canUseResource('workshops', 'import'))
@@ -77,7 +79,7 @@ const userInitials = computed(() =>
 )
 
 const todayLabel = computed(() => {
-  const label = new Intl.DateTimeFormat('es-CO', {
+  const label = new Intl.DateTimeFormat(locale.value, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -113,7 +115,7 @@ const formatDate = (value?: string | null) => {
     return 'Sin fecha'
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

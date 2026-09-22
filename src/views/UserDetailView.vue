@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAccountCircleOutline,
@@ -25,6 +26,7 @@ import type { User } from '@/types/user'
 
 const route = useRoute()
 const router = useRouter()
+const { locale } = useI18n()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 const userId = computed(() => String(route.params.id ?? ''))
@@ -90,7 +92,7 @@ const formatDateTime = (value?: string | null) => {
     return 'Sin registrar'
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))

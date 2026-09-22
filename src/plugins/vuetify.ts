@@ -30,6 +30,22 @@ export default createVuetify({
           'on-surface': '#17223c',
         },
       },
+      maintopsDark: {
+        dark: true,
+        colors: {
+          background: '#0f1728',
+          surface: '#162137',
+          primary: '#6f8cff',
+          secondary: '#32c7b5',
+          accent: '#ffb55f',
+          error: '#ff7684',
+          warning: '#ffc463',
+          info: '#6eabff',
+          success: '#48c99e',
+          'on-background': '#e9eef8',
+          'on-surface': '#edf2fa',
+        },
+      },
     },
   },
   defaults: {

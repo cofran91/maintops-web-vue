@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAccountGroupOutline,
   mdiAlertOutline,
@@ -25,6 +26,7 @@ import type { Owner } from '@/types/owner'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const canCreateOwner = computed(() => authStore.canUseResource('owners', 'create'))
 const canImportOwner = computed(() => authStore.canUseResource('owners', 'import'))
@@ -74,7 +76,7 @@ const userInitials = computed(() =>
 )
 
 const todayLabel = computed(() => {
-  const label = new Intl.DateTimeFormat('es-CO', {
+  const label = new Intl.DateTimeFormat(locale.value, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',

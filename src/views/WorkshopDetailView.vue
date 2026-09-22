@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAccountGroupOutline,
   mdiAlertOutline,
@@ -28,6 +29,7 @@ import { isUserPresent } from '@/modules/realtime/services/realtimePresenceServi
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const workshopId = computed(() => String(route.params.id ?? ''))
 const canUpdateWorkshop = computed(() => authStore.canUseResource('workshops', 'update'))
@@ -63,7 +65,7 @@ const formatDateTime = (value?: string | null) => {
     return 'Sin registrar'
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))

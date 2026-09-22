@@ -16,6 +16,7 @@ import {
   mdiShieldCheckOutline,
   mdiWrenchCogOutline,
 } from '@mdi/js'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
@@ -87,12 +88,17 @@ const enterDashboard = async () => {
   <main class="login-page">
     <section class="login-panel">
       <div class="login-panel__inner">
-        <header class="brand" aria-label="MaintOps">
-          <span class="brand__mark">
-            <v-icon :icon="mdiWrenchCogOutline" size="23" />
-          </span>
-          <span class="brand__name">Maint<span>Ops</span></span>
-        </header>
+        <div class="login-header">
+          <header class="brand" aria-label="MaintOps">
+            <span class="brand__mark">
+              <v-icon :icon="mdiWrenchCogOutline" size="23" />
+            </span>
+            <span class="brand__name">Maint<span>Ops</span></span>
+          </header>
+          <div class="guest-preferences">
+            <LanguageSwitcher />
+          </div>
+        </div>
 
         <div class="login-content">
           <div class="login-heading">

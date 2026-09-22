@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { mdiClose, mdiHistory } from '@mdi/js'
 import type { AuditLog } from '@/types/audit'
 import { buildAuditChangeRows } from '@/modules/audits/utils/auditChanges'
@@ -16,9 +17,10 @@ import {
 
 const props = defineProps<{ audit: AuditLog }>()
 defineEmits<{ close: [] }>()
+const { locale } = useI18n()
 const changes = computed(() => buildAuditChangeRows(props.audit))
 const date = (value?: string | null) => value
-  ? new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+  ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
   : '—'
 </script>
 

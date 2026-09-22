@@ -1,0 +1,103 @@
+.not-found-page {
+  position: relative;
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(49, 88, 231, 0.16), transparent 34%),
+    radial-gradient(circle at 85% 80%, rgba(19, 166, 151, 0.13), transparent 32%),
+    #f4f7fb;
+  place-items: center;
+}
+
+.not-found-page__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.42;
+  background-image:
+    linear-gradient(rgba(94, 112, 147, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(94, 112, 147, 0.08) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.not-found-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(100%, 560px);
+  padding: 44px 42px;
+  flex-direction: column;
+  align-items: center;
+  color: #17223c;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(222, 229, 240, 0.9);
+  border-radius: 24px;
+  box-shadow: 0 24px 70px rgba(37, 57, 94, 0.12);
+  backdrop-filter: blur(16px);
+}
+
+.not-found-brand {
+  position: absolute;
+  top: 22px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.not-found-brand > span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  color: #fff;
+  background: #3158e7;
+  border-radius: 10px;
+  place-items: center;
+}
+
+.not-found-card__icon {
+  display: grid;
+  width: 76px;
+  height: 76px;
+  margin-top: 32px;
+  color: #3158e7;
+  background: #eaf0ff;
+  border-radius: 22px;
+  place-items: center;
+}
+
+.not-found-card__code {
+  margin-top: 22px;
+  color: #3158e7;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.18em;
+}
+
+.not-found-card h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  letter-spacing: -0.045em;
+}
+
+.not-found-card p {
+  max-width: 410px;
+  margin: 0;
+  color: #77869e;
+  line-height: 1.65;
+}
+
+.not-found-card__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+@media (max-width: 600px) {
+  .not-found-page { padding: 16px; }
+  .not-found-card { padding: 42px 22px 30px; }
+  .not-found-card__actions { width: 100%; flex-direction: column; }
+}

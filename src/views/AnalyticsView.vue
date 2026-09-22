@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { mdiAlertCircleOutline, mdiArrowRight, mdiChartBoxOutline, mdiRefresh } from '@mdi/js'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
@@ -16,6 +17,7 @@ import type { AnalyticsEndpointResponse } from '@/types/analytics'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 
 const {
@@ -42,7 +44,7 @@ const isReady = computed(() => Boolean(overview.value))
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() => userName.value.split(' ').map((part) => part.charAt(0)).join('').slice(0, 2).toUpperCase())
 const updatedLabel = computed(() => lastUpdated.value
-  ? 'Actualizado ' + new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit' }).format(lastUpdated.value)
+  ? 'Actualizado ' + new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit' }).format(lastUpdated.value)
   : 'Sin actualización reciente')
 
 const updateFilter = (key: keyof typeof filters, value: string | number) => {

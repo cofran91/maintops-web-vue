@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
@@ -51,6 +52,7 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+const { locale } = useI18n()
 const authStore = useAuthStore()
 const mobileDrawer = ref(false)
 
@@ -195,7 +197,7 @@ const planOptions = computed(() =>
   plans.value.map((maintenancePlan) => ({
     ...maintenancePlan,
     title: [maintenancePlan.code, maintenancePlan.name].filter(Boolean).join(' · '),
-    subtitle: `${maintenancePlan.tasks?.length ?? maintenancePlan.tasks_count ?? 0} actividades · ${maintenancePlan.recommended_interval_km ? `${maintenancePlan.recommended_interval_km.toLocaleString('es-CO')} km` : 'frecuencia definida'}`,
+    subtitle: `${maintenancePlan.tasks?.length ?? maintenancePlan.tasks_count ?? 0} actividades · ${maintenancePlan.recommended_interval_km ? `${maintenancePlan.recommended_interval_km.toLocaleString(locale.value)} km` : 'frecuencia definida'}`,
   })),
 )
 
@@ -423,7 +425,7 @@ const formatDateTime = (value?: string | null, emptyLabel = 'Sin registrar') => 
     return emptyLabel
   }
 
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
@@ -444,7 +446,7 @@ const itemSystemName = (item: MaintenanceOrderItem) =>
 const itemDuration = (item: MaintenanceOrderItem) => {
   const duration = item.planned_duration_minutes ?? item.maintenance_task?.estimated_duration_minutes
 
-  return duration ? `${new Intl.NumberFormat('es-CO').format(duration)} min` : 'Sin estimar'
+  return duration ? `${new Intl.NumberFormat(locale.value).format(duration)} min` : 'Sin estimar'
 }
 
 const itemStatusColor = (status?: string | null) => {

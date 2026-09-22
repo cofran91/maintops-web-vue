@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAlertOutline,
   mdiArrowLeft,
@@ -23,6 +24,7 @@ import { MAINTENANCE_TASK_STATUS_LABELS } from '@/types/maintenanceTask'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const taskId = computed(() => String(route.params.id ?? ''))
 const { deleteDialogOpen, deleteTask, deleting, errorMessage, fetchTask, loading, task } = useMaintenanceTaskDetail(taskId)
@@ -33,8 +35,8 @@ const statusLabel = computed(() => task.value ? MAINTENANCE_TASK_STATUS_LABELS[t
 const statusColor = computed(() => ({ created: '#7c8ba6', scheduled: '#397eea', started: '#d58930', completed: '#239878', rejected: '#dc5967', cancelled: '#b65362' }[task.value?.status || ''] || '#7c8ba6'))
 const scopeLabel = computed(() => task.value?.vehicle ? 'Vehículo específico' : 'Tarea reutilizable')
 const vehicleLabel = computed(() => task.value?.vehicle ? `${task.value.vehicle.license_plate} · ${[task.value.vehicle.brand, task.value.vehicle.model].filter(Boolean).join(' ')}` : 'Disponible para toda la flota')
-const formatDateTime = (value?: string | null) => value ? new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Sin registrar'
-const formatDuration = (value?: number | null) => value === null || value === undefined ? 'Sin estimar' : `${new Intl.NumberFormat('es-CO').format(value)} minutos`
+const formatDateTime = (value?: string | null) => value ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Sin registrar'
+const formatDuration = (value?: number | null) => value === null || value === undefined ? 'Sin estimar' : `${new Intl.NumberFormat(locale.value).format(value)} minutos`
 
 const confirmDelete = async () => {
   if (await deleteTask()) await router.replace({ name: 'maintenance-tasks' })

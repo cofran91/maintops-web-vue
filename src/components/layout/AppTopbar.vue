@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import RealtimeActivityTray from '@/components/layout/RealtimeActivityTray.vue'
 import RealtimeStatusBadge from '@/components/layout/RealtimeStatusBadge.vue'
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
+import ThemeSwitcher from '@/components/layout/ThemeSwitcher.vue'
 
 withDefaults(defineProps<{
   userName: string
@@ -48,6 +49,8 @@ const { t } = useI18n()
     </div>
 
     <LanguageSwitcher />
+
+    <ThemeSwitcher />
 
     <RealtimeActivityTray />
 

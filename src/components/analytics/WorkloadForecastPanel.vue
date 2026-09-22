@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { mdiChartTimelineVariant, mdiTrendingUp } from '@mdi/js'
 import type { AnalyticsForecast } from '@/types/analytics'
 
 defineProps<{ forecasts: AnalyticsForecast[]; algorithmVersion?: string }>()
-const number = (value: unknown) => Number.isFinite(Number(value)) ? new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 }).format(Number(value)) : '—'
+const { locale } = useI18n()
+const number = (value: unknown) => Number.isFinite(Number(value)) ? new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 }).format(Number(value)) : '—'
 const percentage = (value: unknown) => value === null || value === undefined ? '—' : (Number(value) * 100).toFixed(1) + '%'
 </script>
 

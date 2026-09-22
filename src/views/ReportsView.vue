@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAlertCircleOutline,
   mdiCalendarRange,
@@ -22,6 +23,7 @@ import type { MaintenanceOrder } from '@/types/maintenanceOrder'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const reportType = ref('operations')
 const startDate = ref('')
@@ -68,7 +70,7 @@ const userInitials = computed(() =>
 )
 
 const todayLabel = computed(() => {
-  const label = new Intl.DateTimeFormat('es-CO', {
+  const label = new Intl.DateTimeFormat(locale.value, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -105,7 +107,7 @@ const selectedReport = computed(() => reportTypes.find((report) => report.value 
 
 const formatDate = (value?: string | null) => {
   if (!value) return 'Sin fecha'
-  return new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
 }
 
 const statusLabel = (status: string) => statusOptions.find((option) => option.value === status)?.title || 'Actualizada'

@@ -1,4 +1,27 @@
-export const messages = {
+import { messages as baseMessages } from '@/i18n/baseMessages.js'
+
+type MessageValue = string | MessageTree
+interface MessageTree {
+  [key: string]: MessageValue
+}
+
+const isMessageTree = (value: MessageValue | undefined): value is MessageTree =>
+  typeof value === 'object' && value !== null
+
+const mergeMessages = (base: MessageTree, overrides: MessageTree): MessageTree => {
+  const merged: MessageTree = { ...base }
+
+  Object.entries(overrides).forEach(([key, value]) => {
+    const baseValue = merged[key]
+    merged[key] = isMessageTree(baseValue) && isMessageTree(value)
+      ? mergeMessages(baseValue, value)
+      : value
+  })
+
+  return merged
+}
+
+const appMessages = {
   es: {
     common: {
       moreOptions: 'Más opciones',
@@ -85,13 +108,17 @@ export const messages = {
     sections: {
       maintops: 'MaintOps',
     },
+    theme: {
+      switchToDark: 'Activar tema oscuro',
+      switchToLight: 'Activar tema claro',
+    },
     auth: {
       login: {
         eyebrow: 'Portal operativo',
         welcome: 'Bienvenido de nuevo',
         description: 'Ingresa para gestionar la operación de mantenimiento de tu flota.',
         email: 'Correo electrónico',
-        emailPlaceholder: 'nombre@empresa.com',
+        emailPlaceholder: "nombre{'@'}empresa.com",
         password: 'Contraseña',
         passwordPlaceholder: 'Ingresa tu contraseña',
         forgotPassword: '¿Olvidaste tu contraseña?',
@@ -141,7 +168,7 @@ export const messages = {
         title: '¿Olvidaste tu contraseña?',
         description: 'Ingresa tu correo y te enviaremos las instrucciones para recuperar el acceso a MaintOps.',
         email: 'Correo electrónico',
-        emailPlaceholder: 'nombre@empresa.com',
+        emailPlaceholder: "nombre{'@'}empresa.com",
         securityNote: 'Por seguridad, nunca compartiremos si una cuenta existe o no.',
         submit: 'Enviar instrucciones',
         requiredEmail: 'Ingresa el correo electrónico de tu cuenta.',
@@ -151,7 +178,7 @@ export const messages = {
         title: 'Restablece tu acceso',
         description: 'Crea una nueva contraseña para volver a ingresar de forma segura a tu operación.',
         email: 'Correo electrónico',
-        emailPlaceholder: 'nombre@empresa.com',
+        emailPlaceholder: "nombre{'@'}empresa.com",
         newPassword: 'Nueva contraseña',
         newPasswordPlaceholder: 'Mínimo 8 caracteres',
         confirmPassword: 'Confirmar contraseña',
@@ -329,13 +356,17 @@ export const messages = {
     sections: {
       maintops: 'MaintOps',
     },
+    theme: {
+      switchToDark: 'Use dark theme',
+      switchToLight: 'Use light theme',
+    },
     auth: {
       login: {
         eyebrow: 'Operations portal',
         welcome: 'Welcome back',
         description: 'Sign in to manage your fleet maintenance operations.',
         email: 'Email address',
-        emailPlaceholder: 'name@company.com',
+        emailPlaceholder: "name{'@'}company.com",
         password: 'Password',
         passwordPlaceholder: 'Enter your password',
         forgotPassword: 'Forgot your password?',
@@ -385,7 +416,7 @@ export const messages = {
         title: 'Forgot your password?',
         description: 'Enter your email and we will send instructions to recover access to MaintOps.',
         email: 'Email address',
-        emailPlaceholder: 'name@company.com',
+        emailPlaceholder: "name{'@'}company.com",
         securityNote: 'For security, we will never disclose whether an account exists.',
         submit: 'Send instructions',
         requiredEmail: 'Enter your account email address.',
@@ -395,7 +426,7 @@ export const messages = {
         title: 'Reset your access',
         description: 'Create a new password to securely return to your operation.',
         email: 'Email address',
-        emailPlaceholder: 'name@company.com',
+        emailPlaceholder: "name{'@'}company.com",
         newPassword: 'New password',
         newPasswordPlaceholder: 'At least 8 characters',
         confirmPassword: 'Confirm password',
@@ -488,5 +519,16 @@ export const messages = {
     },
   },
 } as const
+
+export const messages = {
+  es: mergeMessages(
+    baseMessages.es as MessageTree,
+    appMessages.es as unknown as MessageTree,
+  ),
+  en: mergeMessages(
+    baseMessages.en as MessageTree,
+    appMessages.en as unknown as MessageTree,
+  ),
+}
 
 export type SupportedLocale = keyof typeof messages

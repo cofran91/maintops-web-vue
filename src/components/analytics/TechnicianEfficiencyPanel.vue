@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { mdiAccountHardHatOutline, mdiSpeedometer } from '@mdi/js'
 import type { TechnicianEfficiencyMetric } from '@/types/analytics'
 
 defineProps<{ metrics: TechnicianEfficiencyMetric[] }>()
 
-const number = (value: unknown) => Number.isFinite(Number(value)) ? new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 }).format(Number(value)) : '—'
+const { locale } = useI18n()
+const number = (value: unknown) => Number.isFinite(Number(value)) ? new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 }).format(Number(value)) : '—'
 const ratio = (value: unknown) => value === null || value === undefined ? '—' : number(Number(value) * 100) + '%'
 </script>
 

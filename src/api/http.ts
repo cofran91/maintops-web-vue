@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '@/config/api'
 import { normalizeApiError } from '@/api/errors'
+import { currentLocale } from '@/i18n'
 
 export const API_UNAUTHORIZED_EVENT = 'maintops-api:unauthorized'
 export const AUTH_TOKEN_STORAGE_KEY = 'maintops.auth.token'
@@ -77,9 +78,10 @@ export const http = axios.create({
 
 http.interceptors.request.use((config) => {
   const token = getStoredToken()
+  const locale = currentLocale()
 
-  config.headers.set('Accept-Language', 'es')
-  config.headers.set('X-Locale', 'es')
+  config.headers.set('Accept-Language', locale)
+  config.headers.set('X-Locale', locale)
 
   if (token) {
     config.headers.set('Authorization', `${getStoredTokenType()} ${token}`)

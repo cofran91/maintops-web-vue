@@ -15,7 +15,9 @@ import {
   fetchCurrentUser,
   login as loginRequest,
   logout as logoutRequest,
+  updateLanguage as updateLanguageRequest,
 } from '@/modules/auth/services/authService'
+import { normalizeLocale, setLocale, t, type SupportedLocale } from '@/i18n'
 import type { AuthUser, LoginCredentials } from '@/types/auth'
 
 interface AuthState {
@@ -69,6 +71,11 @@ const persistUser = (user: AuthUser, remember = true) => {
   storage?.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user))
 }
 
+const syncLocaleFromUser = (user: AuthUser | null) => {
+  const locale = normalizeLocale(user?.preferred_locale)
+  if (locale) setLocale(locale)
+}
+
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     token: null,
@@ -96,6 +103,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = getStoredToken()
       this.tokenType = getStoredTokenType()
       this.user = readStoredUser()
+      syncLocaleFromUser(this.user)
       this.initialized = true
 
       if (!removeUnauthorizedListener) {
@@ -123,12 +131,13 @@ export const useAuthStore = defineStore('auth', {
         const user = normalizeUser(data.user)
 
         if (!data.token || !user) {
-          throw new Error('La respuesta de autenticación no es válida.')
+          throw new Error(t('auth.errors.signInFailed'))
         }
 
         this.token = data.token
         this.tokenType = data.token_type || 'Bearer'
         this.user = user
+        syncLocaleFromUser(user)
         this.initialized = true
 
         setStoredToken(this.token, this.tokenType, remember)
@@ -155,10 +164,11 @@ export const useAuthStore = defineStore('auth', {
         const user = normalizeUser(await fetchCurrentUser())
 
         if (!user) {
-          throw new Error('No fue posible recuperar el usuario autenticado.')
+          throw new Error(t('api.errors.missingData'))
         }
 
         this.user = user
+        syncLocaleFromUser(user)
         persistUser(user)
 
         return user
@@ -185,6 +195,34 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.clearSession()
         this.loading = false
+      }
+    },
+
+    async updateLanguage(locale: SupportedLocale) {
+      const normalizedLocale = setLocale(locale)
+
+      if (!this.isAuthenticated) {
+        return normalizedLocale
+      }
+
+      try {
+        const data = await updateLanguageRequest(normalizedLocale)
+        const persistedLocale = normalizeLocale(data.locale) ?? normalizedLocale
+        const user = normalizeUser({
+          ...this.user,
+          preferred_locale: persistedLocale,
+        })
+
+        if (user) {
+          this.user = user
+          persistUser(user, window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) !== null)
+        }
+
+        setLocale(persistedLocale)
+        return persistedLocale
+      } catch (error) {
+        this.error = normalizeApiError(error)
+        throw this.error
       }
     },
 

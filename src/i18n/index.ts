@@ -56,6 +56,11 @@ export const i18n = createI18n({
 
 export const currentLocale = () => i18n.global.locale.value as SupportedLocale
 
+export const hasTranslation = (key: string) => i18n.global.te(key)
+
+export const t = (key: string, params?: Record<string, unknown>) =>
+  params ? i18n.global.t(key, params) : i18n.global.t(key)
+
 export const setLocale = (locale: unknown): SupportedLocale => {
   const normalized = resolveLocale(locale)
   i18n.global.locale.value = normalized

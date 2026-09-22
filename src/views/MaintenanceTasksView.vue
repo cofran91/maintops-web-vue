@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   mdiAlertOutline,
   mdiCarMultiple,
@@ -26,6 +27,7 @@ import { MAINTENANCE_TASK_STATUS_LABELS, MAINTENANCE_TASK_STATUSES, type Mainten
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { locale } = useI18n()
 const mobileDrawer = ref(false)
 const canCreateTask = computed(() => authStore.canUseResource('maintenance-tasks', 'create'))
 const vehicleSystems = ref<{ id: number; code: string; name: string }[]>([])
@@ -58,7 +60,7 @@ const activeOptions = [{ title: 'Activas', value: 'active' }, { title: 'Inactiva
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() => userName.value.split(' ').map((part) => part.charAt(0)).join('').slice(0, 2).toUpperCase())
 const todayLabel = computed(() => {
-  const label = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
+  const label = new Intl.DateTimeFormat(locale.value, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())
   return label.charAt(0).toUpperCase() + label.slice(1)
 })
 const activeCount = computed(() => tasks.value.filter((task) => task.is_active).length)
@@ -69,8 +71,8 @@ const taskStatusLabel = (status: string) => MAINTENANCE_TASK_STATUS_LABELS[statu
 const taskStatusColor = (status: string) => ({ created: '#7c8ba6', scheduled: '#397eea', started: '#d58930', completed: '#239878', rejected: '#dc5967', cancelled: '#b65362' }[status] || '#7c8ba6')
 const systemName = (task: MaintenanceTask) => task.vehicle_system?.name || `Sistema ${task.vehicle_system_id}`
 const vehicleName = (task: MaintenanceTask) => task.vehicle ? `${task.vehicle.license_plate} · ${[task.vehicle.brand, task.vehicle.model].filter(Boolean).join(' ')}` : 'Tarea reutilizable'
-const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : 'Sin fecha'
-const formatDuration = (value?: number | null) => value === null || value === undefined ? 'Sin estimar' : `${new Intl.NumberFormat('es-CO').format(value)} min`
+const formatDate = (value?: string | null) => value ? new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : 'Sin fecha'
+const formatDuration = (value?: number | null) => value === null || value === undefined ? 'Sin estimar' : `${new Intl.NumberFormat(locale.value).format(value)} min`
 
 const fetchVehicleSystems = async () => {
   loadingSystems.value = true

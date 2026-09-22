@@ -1,0 +1,144 @@
+.maintops-dark {
+  background: #0f1728;
+}
+
+.maintops-dark body,
+.maintops-dark #app,
+.maintops-dark .v-application,
+.maintops-dark [class$='-shell'],
+.maintops-dark [class$='-main'] {
+  color: #dfe7f4;
+  background-color: #0f1728 !important;
+}
+
+.maintops-dark .topbar {
+  color: #edf2fa !important;
+  background: #162137 !important;
+  border-color: #283750 !important;
+}
+
+.maintops-dark .topbar-search,
+.maintops-dark .notification-button,
+.maintops-dark .profile-button {
+  color: #aebbd0;
+  background-color: #1c2941;
+  border-color: #31415c;
+}
+
+.maintops-dark .topbar-search input {
+  color: #edf2fa;
+}
+
+.maintops-dark .topbar-search kbd,
+.maintops-dark .topbar-divider {
+  color: #aebbd0;
+  background: #263650;
+  border-color: #3a4b67;
+}
+
+.maintops-dark :is(
+  [class$='-card'],
+  [class*='-card '],
+  [class$='-panel'],
+  [class*='-panel '],
+  [class$='-summary'],
+  [class*='-summary '],
+  [class$='-filters'],
+  [class*='-filters '],
+  [class$='-table-wrap'],
+  [class*='-table-wrap '],
+  .v-card,
+  .v-list,
+  .realtime-notifications-panel
+) {
+  color: #dfe7f4 !important;
+  background-color: #162137 !important;
+  border-color: #2a3953 !important;
+}
+
+.maintops-dark :is(
+  h1,
+  h2,
+  h3,
+  .card-heading h2,
+  .metric-card h2,
+  .profile-copy strong,
+  .page-header h1,
+  [class$='-header'] h1,
+  [class$='-heading'] h2,
+  [class$='-card'] strong,
+  [class*='-card '] strong,
+  th,
+  dt
+) {
+  color: #edf2fa !important;
+}
+
+.maintops-dark :is(
+  p,
+  small,
+  dd,
+  .page-date,
+  [class$='-subtitle'],
+  [class$='-description'],
+  td
+) {
+  border-color: #2a3953;
+}
+
+.maintops-dark table,
+.maintops-dark tr,
+.maintops-dark td,
+.maintops-dark th,
+.maintops-dark .v-divider {
+  border-color: #2a3953 !important;
+}
+
+.maintops-dark tbody tr:hover {
+  background-color: #1b2941 !important;
+}
+
+.maintops-dark .not-found-page,
+.maintops-dark .login-page,
+.maintops-dark .auth-recovery-page {
+  background-color: #0f1728;
+}
+
+.maintops-dark .not-found-card,
+.maintops-dark .login-panel,
+.maintops-dark .auth-recovery-panel {
+  color: #dfe7f4;
+  background: #162137;
+  border-color: #2a3953;
+}
+
+.maintops-dark :is(
+  .brand__name,
+  .recovery-brand,
+  .field-group label,
+  .recovery-field-group label
+) {
+  color: #edf2fa;
+}
+
+.maintops-dark :is(
+  .login-heading p,
+  .recovery-heading p,
+  .demo-note,
+  .login-footer,
+  .auth-recovery-footer,
+  .recovery-back-button,
+  .password-requirements span
+) {
+  color: #aebbd0;
+}
+
+.maintops-dark .recovery-heading__icon {
+  background: #243657;
+}
+
+.maintops-dark .recovery-security-note {
+  color: #b9c7d9;
+  background: #172c32;
+  border-color: #28494d;
+}
