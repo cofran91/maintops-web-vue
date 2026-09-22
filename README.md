@@ -15,7 +15,7 @@ No es necesario instalar Node.js, npm ni dependencias en el equipo local. El `Do
 docker compose up -d --build
 ```
 
-La aplicación queda disponible en <http://localhost:5173>.
+La aplicación queda disponible en <http://localhost:5174>.
 
 El login usa `POST /auth/login`, conserva la sesión según la opción seleccionada y protege la ruta `/dashboard`. El dashboard consume `GET /dashboard` para sus métricas, estados y agenda; la gráfica histórica semanal continúa siendo demostrativa hasta contar con un endpoint de histórico.
 
@@ -37,7 +37,7 @@ docker compose exec frontend npm run lint
 Copiar `.env.example` a `.env` únicamente si es necesario cambiar puertos, hosts o URLs de servicios:
 
 ```dotenv
-FRONTEND_PORT=5173
+FRONTEND_PORT=5174
 FRONTEND_ALLOWED_HOSTS=localhost,127.0.0.1
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 VITE_REALTIME_URL=http://localhost:3000

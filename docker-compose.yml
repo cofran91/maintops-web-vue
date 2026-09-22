@@ -7,7 +7,7 @@ services:
     container_name: maintops-web-vue3
     working_dir: /app
     ports:
-      - "${FRONTEND_PORT:-5173}:5173"
+      - "${FRONTEND_PORT:-5174}:5174"
     environment:
       CHOKIDAR_USEPOLLING: "true"
       FRONTEND_ALLOWED_HOSTS: ${FRONTEND_ALLOWED_HOSTS:-localhost,127.0.0.1}
