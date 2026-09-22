@@ -8,24 +8,21 @@ import AppTopbar from '@/components/layout/AppTopbar.vue'
 import ActivityChart from '@/components/dashboard/ActivityChart.vue'
 import MetricCard from '@/components/dashboard/MetricCard.vue'
 import OrderStatusChart from '@/components/dashboard/OrderStatusChart.vue'
-import RecentOrdersTable from '@/components/dashboard/RecentOrdersTable.vue'
-import UpcomingServices from '@/components/dashboard/UpcomingServices.vue'
 import { useDashboardOverview } from '@/modules/dashboard/composables/useDashboardOverview'
 import type {
   DashboardUser,
   DashboardVehicle,
   DashboardWorkshop,
   DashboardStat,
-  RecentOrder,
   StatusBreakdown,
-  UpcomingTask,
   WeekActivity,
 } from '@/types/dashboard'
 import {
   mdiAlertOutline,
+  mdiAccountMultipleOutline,
   mdiCalendarCheckOutline,
-  mdiClipboardTextOutline,
-  mdiFilterVariant,
+  mdiCheckCircleOutline,
+  mdiCalendarClockOutline,
   mdiPlus,
   mdiWrenchOutline,
 } from '@mdi/js'
@@ -80,34 +77,52 @@ const totalOrders = computed(() => {
 
 const stats = computed<DashboardStat[]>(() => [
   {
-    label: t('dashboard.activeOrders'),
-    value: String(metricValue('active_orders')),
-    detail: t('dashboard.activitiesInProgress', { count: summary.value?.activities.active ?? 0 }),
+    label: t('dashboard.metrics.open_orders'),
+    value: String(metricValue('open_orders')),
+    detail: t('dashboard.current'),
     change: t('dashboard.current'),
     icon: mdiWrenchOutline,
     tone: 'blue',
     points: chartPoints[0] ?? '',
   },
   {
-    label: t('dashboard.scheduledToday'),
-    value: String(summary.value?.today_schedules.length ?? 0),
-    detail: t('dashboard.startingSoon', { count: summary.value?.upcoming_schedules.length ?? 0 }),
-    change: t('common.today'),
-    icon: mdiCalendarCheckOutline,
-    tone: 'teal',
-    points: chartPoints[1] ?? '',
-  },
-  {
-    label: t('dashboard.awaitingApproval'),
+    label: t('dashboard.metrics.awaiting_owner_approval'),
     value: String(metricValue('awaiting_owner_approval')),
     detail: t('dashboard.requireReview'),
     change: t('dashboard.attention'),
-    icon: mdiClipboardTextOutline,
+    icon: mdiAccountMultipleOutline,
     tone: 'amber',
+    points: chartPoints[1] ?? '',
+  },
+  {
+    label: t('dashboard.metrics.awaiting_scheduling'),
+    value: String(metricValue('awaiting_scheduling')),
+    detail: t('dashboard.startingSoon', { count: summary.value?.upcoming_schedules.length ?? 0 }),
+    change: t('common.today'),
+    icon: mdiCalendarClockOutline,
+    tone: 'teal',
     points: chartPoints[2] ?? '',
   },
   {
-    label: t('dashboard.overdue'),
+    label: t('dashboard.metrics.active_orders'),
+    value: String(metricValue('active_orders')),
+    detail: t('dashboard.activitiesInProgress', { count: summary.value?.activities.active ?? 0 }),
+    change: t('dashboard.current'),
+    icon: mdiCalendarCheckOutline,
+    tone: 'blue',
+    points: chartPoints[3] ?? '',
+  },
+  {
+    label: t('dashboard.metrics.completed_today'),
+    value: String(metricValue('completed_today')),
+    detail: t('dashboard.completed'),
+    change: t('common.today'),
+    icon: mdiCheckCircleOutline,
+    tone: 'teal',
+    points: chartPoints[0] ?? '',
+  },
+  {
+    label: t('dashboard.metrics.overdue_activities'),
     value: String(metricValue('overdue_activities')),
     detail: t('dashboard.followUpRequired'),
     change: t('dashboard.review'),
@@ -148,24 +163,6 @@ const statusBreakdown = computed<StatusBreakdown[]>(() => {
   })
 })
 
-const scheduleOrders = computed(() => {
-  const orders = [...(summary.value?.today_schedules ?? []), ...(summary.value?.upcoming_schedules ?? [])]
-  const uniqueOrders = new Map<number, (typeof orders)[number]>()
-
-  orders.forEach((order) => uniqueOrders.set(order.maintenance_order_id, order))
-
-  return [...uniqueOrders.values()]
-})
-
-const vehicleLabel = (vehicle?: DashboardVehicle | null) =>
-  vehicle ? [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || t('dashboard.vehicleFallback') : t('dashboard.vehicleFallback')
-
-const plateLabel = (vehicle?: DashboardVehicle | null) =>
-  vehicle?.license_plate || t('dashboard.noPlate')
-
-const workshopLabel = (workshop?: DashboardWorkshop | null) =>
-  workshop?.name || workshop?.code || t('dashboard.pendingWorkshop')
-
 const technicianLabel = (technician?: DashboardUser | null) =>
   technician?.name || t('dashboard.unassigned')
 
@@ -185,22 +182,6 @@ const statusLabel = (status: string) => {
   return labels[status] ? t(labels[status]) : t('dashboard.statuses.updated')
 }
 
-const statusKey = (status: string): RecentOrder['statusKey'] => {
-  if (status === 'completed') {
-    return 'done'
-  }
-
-  if (status === 'in_progress') {
-    return 'progress'
-  }
-
-  if (status === 'scheduled') {
-    return 'scheduled'
-  }
-
-  return 'pending'
-}
-
 const dateLabel = (value?: string | null) => {
   if (!value) {
     return t('dashboard.withoutDate')
@@ -213,47 +194,6 @@ const dateLabel = (value?: string | null) => {
     month: 'short',
   }).format(new Date(value))
 }
-
-const timeLabel = (value?: string | null) => {
-  if (!value) {
-    return '--:--'
-  }
-
-  return new Intl.DateTimeFormat(locale.value === 'en' ? 'en-US' : 'es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
-}
-
-const recentOrders = computed<RecentOrder[]>(() =>
-  scheduleOrders.value.slice(0, 4).map((order) => ({
-    orderId: order.maintenance_order_id,
-    id: `OT-${String(order.maintenance_order_id).padStart(4, '0')}`,
-    vehicle: vehicleLabel(order.vehicle),
-    plate: plateLabel(order.vehicle),
-    workshop: workshopLabel(order.workshop),
-    technician: technicianLabel(order.technician),
-    initials: technicianLabel(order.technician)
-      .split(' ')
-      .map((part) => part.charAt(0))
-      .join('')
-      .slice(0, 2)
-      .toUpperCase(),
-    date: dateLabel(order.scheduled_at),
-    status: statusLabel(order.status),
-    statusKey: statusKey(order.status),
-  })),
-)
-
-const upcomingTasks = computed<UpcomingTask[]>(() =>
-  scheduleOrders.value.slice(0, 3).map((order, index) => ({
-    time: timeLabel(order.scheduled_at),
-    title: order.status === 'in_progress' ? t('dashboard.maintenanceInProgress') : t('dashboard.scheduledMaintenance'),
-    vehicle: `${vehicleLabel(order.vehicle)} · ${plateLabel(order.vehicle)}`,
-    location: workshopLabel(order.workshop),
-    tone: (['blue', 'teal', 'amber'][index] ?? 'blue') as UpcomingTask['tone'],
-  })),
-)
 
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() =>
@@ -274,13 +214,31 @@ const signOut = async () => {
   await router.push({ name: 'login' })
 }
 
-const openOrders = () => {
-  void router.push({ name: 'orders' })
-}
-
 const openOrder = (orderId: number) => {
   void router.push({ name: 'orders-detail', params: { id: orderId } })
 }
+
+const orderNumber = (id: unknown) => `#${String(id).padStart(5, '0')}`
+const fullVehicleLabel = (vehicle?: DashboardVehicle | null) =>
+  vehicle ? [vehicle.license_plate, vehicle.brand, vehicle.model].filter(Boolean).join(' ') : '—'
+const fullWorkshopLabel = (workshop?: DashboardWorkshop | null) =>
+  workshop ? [workshop.code, workshop.name, workshop.city].filter(Boolean).join(' · ') : '—'
+
+const roleContext = computed(() => summary.value?.role_context ?? {})
+const roleContextType = computed(() => String(roleContext.value.type ?? ''))
+const contextRows = (key: string): Record<string, any>[] => {
+  const rows = roleContext.value[key]
+  return Array.isArray(rows) ? rows as Record<string, any>[] : []
+}
+const numberLabel = (value: unknown) => new Intl.NumberFormat(locale.value).format(Number(value ?? 0))
+const durationLabel = (minutes: unknown) => {
+  const value = Number(minutes ?? 0)
+  const hours = Math.floor(value / 60)
+  const remainder = value % 60
+
+  return hours > 0 ? `${hours} h ${remainder} min` : `${remainder} min`
+}
+
 </script>
 
 <template>
@@ -290,7 +248,9 @@ const openOrder = (orderId: number) => {
     <AppTopbar
       :user-initials="userInitials"
       :user-name="userName"
+      :show-search="false"
       @open-menu="mobileDrawer = true"
+      @sign-out="signOut"
     />
 
     <v-main class="dashboard-main">
@@ -302,10 +262,6 @@ const openOrder = (orderId: number) => {
             <p>{{ t('dashboard.description') }}</p>
           </div>
           <div class="page-actions">
-            <v-btn class="filter-button" height="44" variant="outlined">
-              <v-icon :icon="mdiFilterVariant" class="mr-2" size="19" />
-              Filtrar
-            </v-btn>
             <v-btn :to="{ name: 'orders-new' }" color="primary" height="44">
               <v-icon :icon="mdiPlus" class="mr-2" size="20" />
               Nueva orden
@@ -346,18 +302,108 @@ const openOrder = (orderId: number) => {
             <MetricCard v-for="stat in stats" :key="stat.label" :stat="stat" />
           </section>
 
-          <section class="insight-grid">
-            <ActivityChart :data="weekActivity" />
-            <OrderStatusChart :statuses="statusBreakdown" :total="totalOrders" />
+          <section class="dashboard-table-section">
+            <div class="dashboard-section-heading">
+              <div>
+                <h2>{{ t('dashboard.sections.todayOrdersTitle') }}</h2>
+                <p>{{ t('dashboard.sections.todayOrdersDescription') }}</p>
+              </div>
+              <v-btn :to="{ name: 'orders' }" variant="text">{{ t('dashboard.actions.openOrders') }}</v-btn>
+            </div>
+            <v-card class="dashboard-operational-card dashboard-table-card" rounded="xl">
+              <div class="dashboard-data-table-wrap">
+                <table class="dashboard-data-table">
+                  <thead><tr><th>{{ t('dashboard.columns.order') }}</th><th>{{ t('dashboard.columns.vehicle') }}</th><th>{{ t('dashboard.columns.workshop') }}</th><th>{{ t('dashboard.columns.technician') }}</th><th>{{ t('dashboard.columns.scheduled') }}</th><th>{{ t('dashboard.columns.status') }}</th><th /></tr></thead>
+                  <tbody>
+                    <tr v-for="row in summary.today_schedules" :key="`today-${row.maintenance_order_id}-${row.scheduled_at}`">
+                      <td><button class="dashboard-order-link" type="button" @click="openOrder(row.maintenance_order_id)">{{ orderNumber(row.maintenance_order_id) }}</button></td>
+                      <td>{{ fullVehicleLabel(row.vehicle) }}</td><td>{{ fullWorkshopLabel(row.workshop) }}</td><td>{{ technicianLabel(row.technician) }}</td>
+                      <td>{{ dateLabel(row.scheduled_at) }}</td><td><span class="dashboard-status-pill">{{ statusLabel(row.status) }}</span></td>
+                      <td><v-btn :to="{ name: 'orders-detail', params: { id: row.maintenance_order_id } }" icon="mdi-eye-outline" size="small" variant="text" /></td>
+                    </tr>
+                    <tr v-if="summary.today_schedules.length === 0"><td class="dashboard-table-empty" colspan="7">{{ t('dashboard.empty.noOrdersScheduledTodayTitle') }}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </v-card>
           </section>
 
-          <section class="content-grid">
-            <RecentOrdersTable
-              :orders="recentOrders"
-              @view-all="openOrders"
-              @view-order="openOrder"
-            />
-            <UpcomingServices :tasks="upcomingTasks" />
+          <section class="dashboard-table-section">
+            <div class="dashboard-section-heading">
+              <div>
+                <h2>{{ t('dashboard.sections.upcomingOrdersTitle') }}</h2>
+                <p>{{ t('dashboard.sections.upcomingOrdersDescription') }}</p>
+              </div>
+              <v-btn :to="{ name: 'orders' }" variant="text">{{ t('dashboard.actions.openOrders') }}</v-btn>
+            </div>
+            <v-card class="dashboard-operational-card dashboard-table-card" rounded="xl">
+              <div class="dashboard-data-table-wrap">
+                <table class="dashboard-data-table">
+                  <thead><tr><th>{{ t('dashboard.columns.order') }}</th><th>{{ t('dashboard.columns.vehicle') }}</th><th>{{ t('dashboard.columns.workshop') }}</th><th>{{ t('dashboard.columns.technician') }}</th><th>{{ t('dashboard.columns.scheduled') }}</th><th>{{ t('dashboard.columns.status') }}</th><th /></tr></thead>
+                  <tbody>
+                    <tr v-for="row in summary.upcoming_schedules" :key="`upcoming-${row.maintenance_order_id}-${row.scheduled_at}`">
+                      <td><button class="dashboard-order-link" type="button" @click="openOrder(row.maintenance_order_id)">{{ orderNumber(row.maintenance_order_id) }}</button></td>
+                      <td>{{ fullVehicleLabel(row.vehicle) }}</td><td>{{ fullWorkshopLabel(row.workshop) }}</td><td>{{ technicianLabel(row.technician) }}</td>
+                      <td>{{ dateLabel(row.scheduled_at) }}</td><td><span class="dashboard-status-pill">{{ statusLabel(row.status) }}</span></td>
+                      <td><v-btn :to="{ name: 'orders-detail', params: { id: row.maintenance_order_id } }" icon="mdi-eye-outline" size="small" variant="text" /></td>
+                    </tr>
+                    <tr v-if="summary.upcoming_schedules.length === 0"><td class="dashboard-table-empty" colspan="7">{{ t('dashboard.empty.noUpcomingOrdersTitle') }}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </v-card>
+          </section>
+
+          <section v-if="roleContextType === 'system_admin'" class="dashboard-table-section">
+            <div class="dashboard-section-heading">
+              <div>
+                <h2>Órdenes por taller</h2>
+                <p>Carga actual de órdenes abiertas por ubicación.</p>
+              </div>
+            </div>
+            <v-card class="dashboard-operational-card dashboard-table-card" rounded="xl">
+              <div class="dashboard-data-table-wrap">
+                <table class="dashboard-data-table">
+                  <thead><tr><th>Taller</th><th>Órdenes abiertas</th></tr></thead>
+                  <tbody>
+                    <tr v-for="row in contextRows('orders_by_workshop')" :key="row.workshop_id">
+                      <td>{{ fullWorkshopLabel(row.workshop) }}</td>
+                      <td>{{ numberLabel(row.open_orders_count) }}</td>
+                    </tr>
+                    <tr v-if="contextRows('orders_by_workshop').length === 0"><td class="dashboard-table-empty" colspan="2">Sin órdenes abiertas por taller.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </v-card>
+          </section>
+
+          <section v-if="roleContextType === 'system_admin'" class="dashboard-table-section">
+            <div class="dashboard-section-heading">
+              <div>
+                <h2>Carga de técnicos hoy</h2>
+                <p>Tareas asignadas a cada técnico durante el día.</p>
+              </div>
+            </div>
+            <v-card class="dashboard-operational-card dashboard-table-card" rounded="xl">
+              <div class="dashboard-data-table-wrap">
+                <table class="dashboard-data-table">
+                  <thead><tr><th>Técnico</th><th>Tareas asignadas</th><th>Tiempo planificado</th></tr></thead>
+                  <tbody>
+                    <tr v-for="row in contextRows('technician_workload_today')" :key="row.technician_id">
+                      <td>{{ technicianLabel(row.technician) }}</td>
+                      <td>{{ numberLabel(row.assigned_items_count) }}</td>
+                      <td>{{ durationLabel(row.planned_minutes) }}</td>
+                    </tr>
+                    <tr v-if="contextRows('technician_workload_today').length === 0"><td class="dashboard-table-empty" colspan="3">Sin tareas asignadas hoy.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </v-card>
+          </section>
+
+          <section class="insight-grid">
+            <ActivityChart :data="weekActivity" />
+            <OrderStatusChart :statuses="statusBreakdown" />
           </section>
         </template>
       </div>

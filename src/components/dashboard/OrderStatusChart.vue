@@ -1,31 +1,12 @@
 <script setup lang="ts">
-import { mdiDotsHorizontal } from '@mdi/js'
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { StatusBreakdown } from '@/types/dashboard'
 
-const props = defineProps<{
+defineProps<{
   statuses: StatusBreakdown[]
-  total: number
 }>()
 
 const { t } = useI18n()
-
-const donutGradient = computed(() => {
-  if (props.total === 0 || props.statuses.length === 0) {
-    return '#e9edf4'
-  }
-
-  let start = 0
-  const segments = props.statuses.map((status) => {
-    const end = start + status.value
-    const segment = `${status.color} ${start}% ${end}%`
-    start = end
-    return segment
-  })
-
-  return `conic-gradient(${segments.join(', ')})`
-})
 </script>
 
 <template>
@@ -34,15 +15,6 @@ const donutGradient = computed(() => {
       <div>
         <h2>{{ t('dashboard.orderStatus') }}</h2>
         <p>{{ t('dashboard.currentDistribution') }}</p>
-      </div>
-      <button :aria-label="t('common.moreOptions')" class="icon-action" type="button">
-        <v-icon :icon="mdiDotsHorizontal" size="20" />
-      </button>
-    </div>
-
-    <div class="donut-wrap">
-      <div :style="{ background: donutGradient }" class="donut-chart">
-        <div><strong>{{ total }}</strong><span>{{ t('common.total') }}</span></div>
       </div>
     </div>
 

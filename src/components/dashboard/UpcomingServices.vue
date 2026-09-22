@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { mdiCalendarMonthOutline, mdiChevronRight, mdiClockOutline, mdiMapMarkerOutline } from '@mdi/js'
+import { mdiCalendarMonthOutline, mdiMapMarkerOutline } from '@mdi/js'
 import type { UpcomingTask } from '@/types/dashboard'
 
 defineProps<{
@@ -36,11 +36,5 @@ const { t } = useI18n()
       </div>
       <p v-if="tasks.length === 0" class="schedule-empty">{{ t('dashboard.noUpcomingServices') }}</p>
     </div>
-
-    <button class="schedule-footer" type="button">
-      <v-icon :icon="mdiClockOutline" size="17" />
-      {{ t('dashboard.fullSchedule') }}
-      <v-icon :icon="mdiChevronRight" size="17" />
-    </button>
   </article>
 </template>

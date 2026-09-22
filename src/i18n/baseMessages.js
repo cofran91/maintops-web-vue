@@ -382,10 +382,10 @@ export const messages = {
         retry: 'Retry',
       },
       columns: {
-        assignedItems: 'Assigned items',
+        assignedItems: 'Assigned tasks',
         duration: 'Duration',
         email: 'Email',
-        item: 'Item',
+        item: 'Task',
         openOrders: 'Open orders',
         order: 'Order',
         plannedTime: 'Planned time',
@@ -396,24 +396,24 @@ export const messages = {
         workshop: 'Workshop',
       },
       empty: {
-        noActiveItemsDescription: 'No visible order items are currently in progress.',
-        noActiveItemsTitle: 'No active items',
-        noAssignedItemsTodayDescription: 'There are no assigned items for today.',
+        noActiveItemsDescription: 'No visible order tasks are currently in progress.',
+        noActiveItemsTitle: 'No active tasks',
+        noAssignedItemsTodayDescription: 'There are no assigned tasks for today.',
         noAvailableTechniciansDescription:
           'All visible technicians have assignments or no workshop is managed.',
         noAvailableTechniciansTitle: 'No available technicians',
-        noCurrentItemDescription: 'There is no item currently in progress.',
+        noCurrentItemDescription: 'There is no task currently in progress.',
         noItemsTodayQueueDescription:
-          'There are no scheduled or active visible items for today.',
-        noItemsTodayQueueTitle: "No items in today's queue",
-        noNextItemDescription: 'There is no upcoming scheduled item.',
+          'There are no scheduled or active visible tasks for today.',
+        noItemsTodayQueueTitle: "No tasks in today's queue",
+        noNextItemDescription: 'There is no upcoming scheduled task.',
         noOrdersAwaitingSchedulingDescription:
           'There are no approved orders waiting for schedule assignment.',
         noOrdersAwaitingSchedulingTitle: 'No orders awaiting scheduling',
         noOrdersFoundTitle: 'No orders found',
         noOrdersScheduledTodayTitle: 'No orders scheduled today',
         noScheduledActiveItemsAssignedTodayDescription:
-          'No scheduled or active items are assigned today.',
+          'No scheduled or active tasks are assigned today.',
         noUpcomingOrdersDescription: 'There are no upcoming visible maintenance orders.',
         noUpcomingOrdersTitle: 'No upcoming orders',
         noVisibleOrdersWorkflowDescription: 'There are no visible orders in this workflow.',
@@ -423,7 +423,7 @@ export const messages = {
       },
       labels: {
         active: 'Active',
-        itemNumber: 'Item #{id}',
+        itemNumber: 'Task #{id}',
         pendingOrScheduled: 'Pending or scheduled',
       },
       metrics: {
@@ -432,7 +432,7 @@ export const messages = {
         awaiting_scheduling: 'Awaiting schedule',
         completed_today: 'Completed today',
         open_orders: 'Open orders',
-        overdue_activities: 'Overdue items',
+        overdue_activities: 'Overdue tasks',
       },
       orderItemStatuses: {
         cancelled: 'Cancelled',
@@ -456,7 +456,7 @@ export const messages = {
       },
       page: {
         emptyDescription:
-          'There are no visible orders, items, or schedules in your authorized scope.',
+          'There are no visible orders, tasks, or schedules in your authorized scope.',
         emptyTitle: 'No operational activity',
         eyebrow: 'MaintOps',
         loading: 'Loading operational dashboard...',
@@ -464,8 +464,8 @@ export const messages = {
         title: 'Operational dashboard',
       },
       sections: {
-        activeItemsDescription: 'In-progress order items in managed workshops.',
-        activeItemsTitle: 'Active items',
+        activeItemsDescription: 'In-progress order tasks in managed workshops.',
+        activeItemsTitle: 'Active tasks',
         awaitingOwnerApprovalDescription: 'Orders waiting for owner decision.',
         awaitingOwnerApprovalTitle: 'Awaiting owner approval',
         awaitingSchedulingDescription:
@@ -474,29 +474,29 @@ export const messages = {
         availableTechniciansTodayDescription:
           'Active technicians without scheduled assignments today.',
         availableTechniciansTodayTitle: 'Available technicians today',
-        completedTodayDescription: 'Items completed in the current day.',
+        completedTodayDescription: 'Tasks completed in the current day.',
         completedTodayTitle: 'Completed today',
-        currentItemTitle: 'Current item',
-        nextItemTitle: 'Next item',
+        currentItemTitle: 'Current task',
+        nextItemTitle: 'Next task',
         openOrdersByWorkshopDescription: 'Workshop load across visible open orders.',
         openOrdersByWorkshopTitle: 'Open orders by workshop',
         orderItemsDescription: 'Pending, scheduled, and active task execution.',
-        orderItemsTitle: 'Order items',
+        orderItemsTitle: 'Order tasks',
         ordersByStatusDescription: 'Consolidated order counts.',
         ordersByStatusTitle: 'Orders by status',
-        partiallyApprovedDescription: 'Orders approved with rejected items.',
+        partiallyApprovedDescription: 'Orders approved with rejected tasks.',
         partiallyApprovedTitle: 'Partially approved',
         rejectedOrdersDescription: 'Orders rejected during approval.',
         rejectedOrdersTitle: 'Rejected orders',
         technicianWorkloadManagedDescription:
-          'Scheduled and active items in managed workshops.',
+          'Scheduled and active tasks in managed workshops.',
         technicianWorkloadTodayDescription:
-          'Assigned order items and planned time for today.',
+          'Assigned order tasks and planned time for today.',
         technicianWorkloadTodayTitle: 'Technician workload today',
         todayOrdersDescription:
           'Orders scheduled for the current day in your authorized scope.',
         todayOrdersTitle: "Today's orders",
-        todaysQueueDescription: 'Scheduled and active items assigned today.',
+        todaysQueueDescription: 'Scheduled and active tasks assigned today.',
         todaysQueueTitle: "Today's queue",
         upcomingDeliveriesDescription: 'Completed orders ready for delivery follow-up.',
         upcomingDeliveriesTitle: 'Upcoming deliveries',
@@ -2095,10 +2095,10 @@ export const messages = {
         retry: 'Reintentar',
       },
       columns: {
-        assignedItems: 'Items asignados',
+        assignedItems: 'Tareas asignadas',
         duration: 'Duracion',
         email: 'Correo',
-        item: 'Item',
+        item: 'Tarea',
         openOrders: 'Ordenes abiertas',
         order: 'Orden',
         plannedTime: 'Tiempo planificado',
@@ -2109,23 +2109,23 @@ export const messages = {
         workshop: 'Taller',
       },
       empty: {
-        noActiveItemsDescription: 'No hay items de orden visibles actualmente en progreso.',
-        noActiveItemsTitle: 'No hay items activos',
-        noAssignedItemsTodayDescription: 'No hay items asignados para hoy.',
+        noActiveItemsDescription: 'No hay tareas de orden visibles actualmente en progreso.',
+        noActiveItemsTitle: 'No hay tareas activas',
+        noAssignedItemsTodayDescription: 'No hay tareas asignadas para hoy.',
         noAvailableTechniciansDescription:
           'Todos los tecnicos visibles tienen asignaciones o no hay un taller administrado.',
         noAvailableTechniciansTitle: 'No hay tecnicos disponibles',
-        noCurrentItemDescription: 'No hay ningun item actualmente en progreso.',
-        noItemsTodayQueueDescription: 'No hay items visibles programados o activos para hoy.',
-        noItemsTodayQueueTitle: 'No hay items en la cola de hoy',
-        noNextItemDescription: 'No hay ningun item programado proximamente.',
+        noCurrentItemDescription: 'No hay ninguna tarea actualmente en progreso.',
+        noItemsTodayQueueDescription: 'No hay tareas visibles programadas o activas para hoy.',
+        noItemsTodayQueueTitle: 'No hay tareas en la cola de hoy',
+        noNextItemDescription: 'No hay ninguna tarea programada proximamente.',
         noOrdersAwaitingSchedulingDescription:
           'No hay ordenes aprobadas esperando asignacion de programacion.',
         noOrdersAwaitingSchedulingTitle: 'No hay ordenes esperando programacion',
         noOrdersFoundTitle: 'No se encontraron ordenes',
         noOrdersScheduledTodayTitle: 'No hay ordenes programadas hoy',
         noScheduledActiveItemsAssignedTodayDescription:
-          'No hay items programados o activos asignados hoy.',
+          'No hay tareas programadas o activas asignadas hoy.',
         noUpcomingOrdersDescription: 'No hay ordenes de mantenimiento visibles proximamente.',
         noUpcomingOrdersTitle: 'No hay proximas ordenes',
         noVisibleOrdersWorkflowDescription: 'No hay ordenes visibles en este flujo.',
@@ -2135,7 +2135,7 @@ export const messages = {
       },
       labels: {
         active: 'Activo',
-        itemNumber: 'Item #{id}',
+        itemNumber: 'Tarea #{id}',
         pendingOrScheduled: 'Pendientes o programados',
       },
       metrics: {
@@ -2144,7 +2144,7 @@ export const messages = {
         awaiting_scheduling: 'Esperando programacion',
         completed_today: 'Completadas hoy',
         open_orders: 'Ordenes abiertas',
-        overdue_activities: 'Items vencidos',
+        overdue_activities: 'Tareas vencidas',
       },
       orderItemStatuses: {
         cancelled: 'Cancelado',
@@ -2168,7 +2168,7 @@ export const messages = {
       },
       page: {
         emptyDescription:
-          'No hay ordenes, items ni programaciones visibles en tu alcance autorizado.',
+          'No hay ordenes, tareas ni programaciones visibles en tu alcance autorizado.',
         emptyTitle: 'Sin actividad operativa',
         eyebrow: 'MaintOps',
         loading: 'Cargando panel operativo...',
@@ -2177,8 +2177,8 @@ export const messages = {
         title: 'Panel operativo',
       },
       sections: {
-        activeItemsDescription: 'Items de orden en progreso en talleres administrados.',
-        activeItemsTitle: 'Items activos',
+        activeItemsDescription: 'Tareas de orden en progreso en talleres administrados.',
+        activeItemsTitle: 'Tareas activas',
         awaitingOwnerApprovalDescription:
           'Ordenes esperando decision del propietario.',
         awaitingOwnerApprovalTitle: 'Esperando aprobacion del propietario',
@@ -2188,29 +2188,29 @@ export const messages = {
         availableTechniciansTodayDescription:
           'Tecnicos activos sin asignaciones programadas hoy.',
         availableTechniciansTodayTitle: 'Tecnicos disponibles hoy',
-        completedTodayDescription: 'Items completados durante el dia actual.',
-        completedTodayTitle: 'Completados hoy',
-        currentItemTitle: 'Item actual',
-        nextItemTitle: 'Siguiente item',
+        completedTodayDescription: 'Tareas completadas durante el dia actual.',
+        completedTodayTitle: 'Completadas hoy',
+        currentItemTitle: 'Tarea actual',
+        nextItemTitle: 'Siguiente tarea',
         openOrdersByWorkshopDescription:
           'Carga por taller sobre ordenes abiertas visibles.',
         openOrdersByWorkshopTitle: 'Ordenes abiertas por taller',
         orderItemsDescription: 'Ejecucion de tareas pendientes, programadas y activas.',
-        orderItemsTitle: 'Items de orden',
+        orderItemsTitle: 'Tareas de orden',
         ordersByStatusDescription: 'Conteos consolidados de ordenes.',
         ordersByStatusTitle: 'Ordenes por estado',
-        partiallyApprovedDescription: 'Ordenes aprobadas con items rechazados.',
+        partiallyApprovedDescription: 'Ordenes aprobadas con tareas rechazadas.',
         partiallyApprovedTitle: 'Parcialmente aprobadas',
         rejectedOrdersDescription: 'Ordenes rechazadas durante la aprobacion.',
         rejectedOrdersTitle: 'Ordenes rechazadas',
         technicianWorkloadManagedDescription:
-          'Items programados y activos en talleres administrados.',
+          'Tareas programadas y activas en talleres administrados.',
         technicianWorkloadTodayDescription:
-          'Items de orden asignados y tiempo planificado para hoy.',
+          'Tareas de orden asignadas y tiempo planificado para hoy.',
         technicianWorkloadTodayTitle: 'Carga de tecnicos hoy',
         todayOrdersDescription: 'Ordenes programadas para hoy dentro de tu alcance autorizado.',
         todayOrdersTitle: 'Ordenes de hoy',
-        todaysQueueDescription: 'Items programados y activos asignados hoy.',
+        todaysQueueDescription: 'Tareas programadas y activas asignadas hoy.',
         todaysQueueTitle: 'Cola de hoy',
         upcomingDeliveriesDescription:
           'Ordenes completadas listas para seguimiento de entrega.',
