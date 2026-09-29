@@ -17,10 +17,6 @@ const { t } = useI18n()
         <h2>{{ t('dashboard.maintenanceActivity') }}</h2>
         <p>{{ t('dashboard.plannedCompleted') }}</p>
       </div>
-      <button class="period-selector" type="button">
-        {{ t('dashboard.thisWeek') }}
-        <v-icon :icon="mdiChevronDown" size="16" />
-      </button>
     </div>
 
     <div class="chart-legend">

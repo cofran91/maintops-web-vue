@@ -21,6 +21,7 @@ import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import DataImportDialog from '@/components/common/DataImportDialog.vue'
 import ResourceRowActions from '@/components/common/ResourceRowActions.vue'
 import { useWorkshops } from '@/modules/workshops/composables/useWorkshops'
+import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import workshopsApi from '@/modules/workshops/services/workshopsService'
 import { useAuthStore } from '@/stores/auth'
 import type { ImportSummaryField } from '@/types/import'
@@ -57,6 +58,8 @@ const {
   updatePerPage,
   workshops,
 } = useWorkshops()
+
+const { loading: loadingModelOptions, managerOptions, vehicleSystemOptions } = useModelFilterOptions({ users: true, vehicleSystems: true })
 
 const statusOptions = [
   { title: 'Todos los estados', value: '' },
@@ -291,7 +294,7 @@ const signOut = async () => {
               :items="statusOptions"
             />
             <div class="workshops-filters__actions">
-              <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
+              <v-btn color="primary" type="submit">Filtrar</v-btn>
               <v-btn
                 class="filters-advanced-toggle"
                 type="button"
@@ -303,7 +306,7 @@ const signOut = async () => {
                   class="mr-1"
                   size="15"
                 />
-                Avanzados
+                {{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}
               </v-btn>
               <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">
                 Limpiar
@@ -315,21 +318,27 @@ const signOut = async () => {
                 <v-text-field v-model="filters.name" clearable hide-details label="Nombre exacto" />
                 <v-text-field v-model="filters.phone" clearable hide-details label="Teléfono" />
                 <v-text-field v-model="filters.email" clearable hide-details label="Correo" />
-                <v-text-field
+                <v-select
                   v-model="filters.manager_user_id"
                   clearable
                   hide-details
-                  label="ID del responsable"
-                  min="1"
-                  type="number"
+                  item-title="title"
+                  item-value="value"
+                  label="Responsable"
+                  :items="managerOptions"
+                  :loading="loadingModelOptions"
+                  placeholder="Todos los responsables"
                 />
-                <v-text-field
+                <v-select
                   v-model="filters.vehicle_system_id"
                   clearable
                   hide-details
-                  label="ID del sistema"
-                  min="1"
-                  type="number"
+                  item-title="title"
+                  item-value="value"
+                  label="Sistema"
+                  :items="vehicleSystemOptions"
+                  :loading="loadingModelOptions"
+                  placeholder="Todos los sistemas"
                 />
                 <v-text-field
                   v-model="filters.created_from"

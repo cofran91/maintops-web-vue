@@ -22,6 +22,7 @@ import DataImportDialog from '@/components/common/DataImportDialog.vue'
 import ResourceRowActions from '@/components/common/ResourceRowActions.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useVehicles } from '@/modules/vehicles/composables/useVehicles'
+import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import vehiclesApi from '@/modules/vehicles/services/vehiclesService'
 import type { ImportSummaryField } from '@/types/import'
 import type { Vehicle } from '@/types/vehicle'
@@ -57,6 +58,8 @@ const {
   updatePerPage,
   vehicles,
 } = useVehicles()
+
+const { loading: loadingModelOptions, ownerOptions } = useModelFilterOptions({ owners: true })
 
 const pageSizeOptions = [10, 15, 25, 50].map((value) => ({
   title: String(value),
@@ -283,7 +286,7 @@ const signOut = async () => {
               type="number"
             />
             <div class="vehicles-filters__actions">
-              <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
+              <v-btn color="primary" type="submit">Filtrar</v-btn>
               <v-btn
                 class="filters-advanced-toggle"
                 type="button"
@@ -295,7 +298,7 @@ const signOut = async () => {
                   class="mr-1"
                   size="15"
                 />
-                Avanzados
+                {{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}
               </v-btn>
               <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">
                 Limpiar
@@ -305,13 +308,16 @@ const signOut = async () => {
               <div v-if="filtersExpanded" class="vehicles-filters__advanced">
                 <v-text-field v-model="filters.license_plate" clearable hide-details label="Placa exacta" />
                 <v-text-field v-model="filters.color" clearable hide-details label="Color" />
-                <v-text-field
+                <v-select
                   v-model="filters.owner_id"
                   clearable
                   hide-details
-                  label="ID del propietario"
-                  min="1"
-                  type="number"
+                  item-title="title"
+                  item-value="value"
+                  label="Propietario"
+                  :items="ownerOptions"
+                  :loading="loadingModelOptions"
+                  placeholder="Todos los propietarios"
                 />
                 <v-text-field
                   v-model="filters.created_from"

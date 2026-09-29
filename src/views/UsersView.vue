@@ -19,6 +19,7 @@ import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import ResourceRowActions from '@/components/common/ResourceRowActions.vue'
 import RealtimePresenceDot from '@/components/layout/RealtimePresenceDot.vue'
 import { useUsers } from '@/modules/users/composables/useUsers'
+import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import usersApi from '@/modules/users/services/usersService'
 import { useAuthStore } from '@/stores/auth'
 import type { User } from '@/types/user'
@@ -62,6 +63,8 @@ const statusOptions = [
   { title: 'Activos', value: 'active' },
   { title: 'Inactivos', value: 'inactive' },
 ]
+const { loading: loadingModelOptions, workshopOptions } = useModelFilterOptions({ workshops: true })
+
 const pageSizeOptions = [10, 15, 25, 50].map((value) => ({
   title: String(value),
   value,
@@ -247,7 +250,7 @@ const signOut = async () => {
               :items="statusOptions"
             />
             <div class="users-filters__actions">
-              <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
+              <v-btn color="primary" type="submit">Filtrar</v-btn>
               <v-btn
                 class="filters-advanced-toggle"
                 type="button"
@@ -259,7 +262,7 @@ const signOut = async () => {
                   class="mr-1"
                   size="15"
                 />
-                Avanzados
+                {{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}
               </v-btn>
               <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">
                 Limpiar
@@ -267,13 +270,16 @@ const signOut = async () => {
             </div>
             <v-expand-transition>
               <div v-if="filtersExpanded" class="users-filters__advanced">
-                <v-text-field
+                <v-select
                   v-model="filters.workshop_id"
                   clearable
                   hide-details
-                  label="ID del taller"
-                  min="1"
-                  type="number"
+                  item-title="title"
+                  item-value="value"
+                  label="Taller"
+                  :items="workshopOptions"
+                  :loading="loadingModelOptions"
+                  placeholder="Todos los talleres"
                 />
                 <v-checkbox
                   v-model="filters.without_workshop"

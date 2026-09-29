@@ -66,6 +66,28 @@ export const useAnalyticsOverview = () => {
     }
   }
 
+  let filterTimer: ReturnType<typeof setTimeout> | null = null
+  let filterSnapshot = { ...filters }
+
+  watch(filters, (next) => {
+    const changedKeys = (Object.keys(next) as Array<keyof typeof next>).filter((key) => next[key] !== filterSnapshot[key])
+    filterSnapshot = { ...next }
+    if (!changedKeys.length) return
+    if (filterTimer !== null) clearTimeout(filterTimer)
+    if (
+      changedKeys.includes('horizonDays') ||
+      changedKeys.includes('technicianId') ||
+      changedKeys.includes('workshopId')
+    ) {
+      void fetchAnalytics()
+      return
+    }
+    filterTimer = setTimeout(() => {
+      filterTimer = null
+      void fetchAnalytics()
+    }, 1000)
+  }, { deep: true })
+
   const resetFilters = () => {
     filters.startDate = ''
     filters.endDate = ''
@@ -79,7 +101,10 @@ export const useAnalyticsOverview = () => {
     if (value !== null) filters.workshopId = String(value)
   }, { immediate: true })
 
-  onBeforeUnmount(() => controller?.abort())
+  onBeforeUnmount(() => {
+    controller?.abort()
+    if (filterTimer !== null) clearTimeout(filterTimer)
+  })
 
   return {
     alerts, analyticsEnabled, canEditWorkshopFilter, errorMessage, fetchAnalytics, filters,

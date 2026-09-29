@@ -1,5 +1,6 @@
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { normalizeApiError } from '@/api/errors'
+import { useFilterAutoApply } from '@/modules/shared/composables/useFilterAutoApply'
 import auditsApi from '@/modules/audits/services/auditsService'
 import type { AuditFilters, AuditLog, AuditPage } from '@/types/audit'
 
@@ -62,6 +63,8 @@ export const useAudits = () => {
     pagination.value = { ...pagination.value, current_page: 1 }
     void fetchAudits(1)
   }
+
+  useFilterAutoApply(filters, applyFilters, { immediateKeys: ['event', 'user_id', 'created_from', 'created_to'] })
 
   const clearFilters = () => {
     Object.assign(filters, {

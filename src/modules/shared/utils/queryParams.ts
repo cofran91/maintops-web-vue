@@ -67,6 +67,24 @@ export const buildListQuery = (
   return query
 }
 
+export const replaceBrowserQuery = (query: LocationQueryRaw) => {
+  if (typeof window === 'undefined') return
+
+  const params = new URLSearchParams()
+
+  Object.entries(query).forEach(([key, value]) => {
+    const values = Array.isArray(value) ? value : [value]
+
+    values.forEach((item) => {
+      if (item !== null && item !== undefined) params.append(key, String(item))
+    })
+  })
+
+  const search = params.toString()
+  const nextUrl = `${window.location.pathname}${search ? `?${search}` : ''}${window.location.hash}`
+  window.history.replaceState(window.history.state, '', nextUrl)
+}
+
 export const syncQueryFilters = (
   filters: object,
   query: LocationQuery,

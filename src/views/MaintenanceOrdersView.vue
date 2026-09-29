@@ -16,6 +16,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useMaintenanceOrders } from '@/modules/maintenance-orders/composables/useMaintenanceOrders'
+import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import { useMaintenanceOrderRealtimeRefresh } from '@/modules/realtime/composables/useMaintenanceOrderRealtimeRefresh'
 import {
   MAINTENANCE_ORDER_STATUSES,
@@ -45,6 +46,15 @@ const {
   updatePage,
   updatePerPage,
 } = useMaintenanceOrders()
+
+const {
+  advisorOptions,
+  loading: loadingModelOptions,
+  ownerOptions,
+  technicianOptions,
+  vehicleOptions,
+  workshopOptions,
+} = useModelFilterOptions({ owners: true, users: true, vehicles: true, workshops: true })
 
 useMaintenanceOrderRealtimeRefresh(fetchOrders)
 
@@ -229,7 +239,7 @@ const signOut = async () => {
             />
 
             <div class="orders-filters__actions">
-              <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
+              <v-btn color="primary" type="submit">Filtrar</v-btn>
               <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn>
               <v-btn class="orders-advanced-toggle" size="small" type="button" variant="text" @click="filtersExpanded = !filtersExpanded">
                 <v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" class="mr-1" size="15" />
@@ -240,11 +250,11 @@ const signOut = async () => {
 
           <v-expand-transition>
             <div v-if="filtersExpanded" class="orders-filters__advanced">
-              <v-text-field v-model="filters.vehicle_id" clearable hide-details label="ID del vehículo" min="1" type="number" />
-              <v-text-field v-model="filters.owner_id" clearable hide-details label="ID del propietario" min="1" type="number" />
-              <v-text-field v-model="filters.advisor_id" clearable hide-details label="ID del asesor" min="1" type="number" />
-              <v-text-field v-model="filters.workshop_id" clearable hide-details :disabled="filters.without_workshop" label="ID del taller" min="1" type="number" />
-              <v-text-field v-model="filters.technician_id" clearable hide-details :disabled="filters.without_technician" label="ID del técnico" min="1" type="number" />
+              <v-select v-model="filters.vehicle_id" clearable hide-details item-title="title" item-value="value" label="Vehículo" :items="vehicleOptions" :loading="loadingModelOptions" placeholder="Todos los vehículos" />
+              <v-select v-model="filters.owner_id" clearable hide-details item-title="title" item-value="value" label="Propietario" :items="ownerOptions" :loading="loadingModelOptions" placeholder="Todos los propietarios" />
+              <v-select v-model="filters.advisor_id" clearable hide-details item-title="title" item-value="value" label="Asesor" :items="advisorOptions" :loading="loadingModelOptions" placeholder="Todos los asesores" />
+              <v-select v-model="filters.workshop_id" clearable hide-details :disabled="filters.without_workshop" item-title="title" item-value="value" label="Taller" :items="workshopOptions" :loading="loadingModelOptions" placeholder="Todos los talleres" />
+              <v-select v-model="filters.technician_id" clearable hide-details :disabled="filters.without_technician" item-title="title" item-value="value" label="Técnico" :items="technicianOptions" :loading="loadingModelOptions" placeholder="Todos los técnicos" />
               <v-checkbox v-model="filters.without_workshop" class="orders-boolean-filter" color="primary" hide-details label="Sin taller asignado" />
               <v-checkbox v-model="filters.without_technician" class="orders-boolean-filter" color="primary" hide-details label="Sin técnico asignado" />
               <v-text-field v-model="filters.scheduled_from" clearable hide-details label="Programada desde" type="date" />

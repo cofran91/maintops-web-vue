@@ -7,6 +7,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import AuditDetailPanel from '@/components/audits/AuditDetailPanel.vue'
 import { useAudits } from '@/modules/audits/composables/useAudits'
+import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import { actorLabel, auditableLabel, displayUrl, eventColor, eventLabel } from '@/modules/audits/utils/auditLabels'
 import { useAuthStore } from '@/stores/auth'
 import type { AuditLog } from '@/types/audit'
@@ -21,6 +22,7 @@ const eventOptions = [{ title: 'Todos los eventos', value: '' }, ...['created', 
 const pageSizeOptions = [10, 15, 25, 50]
 
 const { audits, filters, pagination, perPage, loading, errorMessage, fetchAudits, applyFilters, clearFilters, updatePage, updatePerPage } = useAudits()
+const { loading: loadingModelOptions, userOptions } = useModelFilterOptions({ users: true })
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() => userName.value.split(' ').map((part) => part.charAt(0)).join('').slice(0, 2).toUpperCase())
 const hasActiveFilters = computed(() => Object.values(filters).some(Boolean))
@@ -58,8 +60,8 @@ const signOut = async () => {
           <form class="audits-filters" @submit.prevent="applyFilters">
             <v-text-field v-model="filters.search" clearable hide-details label="Buscar" placeholder="Evento, URL, etiqueta o recurso" :prepend-inner-icon="mdiMagnify" />
             <v-select v-model="filters.event" hide-details item-title="title" item-value="value" label="Evento" :items="eventOptions" />
-            <v-text-field v-model="filters.user_id" hide-details label="ID del actor" min="1" placeholder="Todos" type="number" />
-            <div class="audits-filters__actions"><v-btn color="primary" type="submit">Aplicar</v-btn><v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn><v-btn :aria-label="filtersExpanded ? 'Ocultar filtros avanzados' : 'Mostrar filtros avanzados'" icon variant="tonal" @click="filtersExpanded = !filtersExpanded"><v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" /></v-btn></div>
+            <v-select v-model="filters.user_id" clearable hide-details item-title="title" item-value="value" label="Actor" :items="userOptions" :loading="loadingModelOptions" placeholder="Todos los usuarios" />
+            <div class="audits-filters__actions"><v-btn color="primary" type="submit">Filtrar</v-btn><v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn><v-btn class="audits-advanced-toggle" size="small" type="button" variant="text" @click="filtersExpanded = !filtersExpanded"><v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" class="mr-1" size="15" />{{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}</v-btn></div>
             <div v-if="filtersExpanded" class="audits-filters__advanced"><v-text-field v-model="filters.url" hide-details label="URL" placeholder="/api/v1/users" /><v-text-field v-model="filters.tags" hide-details label="Etiquetas" placeholder="users" /><v-text-field v-model="filters.created_from" hide-details label="Desde" type="date" /><v-text-field v-model="filters.created_to" hide-details label="Hasta" type="date" /></div>
           </form>
           <v-progress-linear v-if="loading" color="primary" indeterminate />

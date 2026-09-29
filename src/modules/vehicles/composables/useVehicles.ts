@@ -1,8 +1,9 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { normalizeApiError } from '@/api/errors'
 import vehiclesApi from '@/modules/vehicles/services/vehiclesService'
-import { buildListQuery, getNumberQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
+import { buildListQuery, getNumberQuery, replaceBrowserQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
+import { useFilterAutoApply } from '@/modules/shared/composables/useFilterAutoApply'
 import type { Vehicle, VehicleFilters, VehiclePage, VehiclePagination } from '@/types/vehicle'
 
 const DEFAULT_PER_PAGE = 15
@@ -44,7 +45,6 @@ const isCanceledRequest = (error: unknown) => {
 
 export const useVehicles = () => {
   const route = useRoute()
-  const router = useRouter()
   const vehicles = ref<Vehicle[]>([])
   const filters = reactive<VehicleFilters>({ ...EMPTY_FILTERS })
   const pagination = ref<VehiclePagination>({ ...DEFAULT_PAGINATION })
@@ -60,18 +60,12 @@ export const useVehicles = () => {
     syncQueryFilters(filters, route.query, EMPTY_FILTERS)
   }
 
-  const pushListQuery = (page: number, nextPerPage: number) =>
-    router.push({
-      name: 'vehicles',
-      query: buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE),
-    })
-
-  const fetchVehicles = async (page = getNumberQuery(route.query.page, 1)) => {
+  const fetchVehicles = async (page = pagination.value.current_page) => {
     controller?.abort()
 
     const nextController = new AbortController()
     controller = nextController
-    const currentPerPage = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+    const currentPerPage = perPage.value
     perPage.value = currentPerPage
     loading.value = true
     errorMessage.value = ''
@@ -109,28 +103,30 @@ export const useVehicles = () => {
     }
   }
 
-  const applyFilters = () => {
-    void pushListQuery(1, perPage.value)
+  const updateList = (page: number, nextPerPage: number) => {
+    perPage.value = nextPerPage
+    replaceBrowserQuery(buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE))
+    void fetchVehicles(page)
   }
 
+  const applyFilters = () => updateList(1, perPage.value)
+  const filterAutoApply = useFilterAutoApply(filters, applyFilters, { immediateKeys: ['owner_id'] })
+
   const clearFilters = () => {
-    Object.assign(filters, EMPTY_FILTERS)
+    filterAutoApply.suspend(() => Object.assign(filters, EMPTY_FILTERS))
     applyFilters()
   }
 
-  const updatePage = (page: number) => {
-    void pushListQuery(page, perPage.value)
-  }
+  const updatePage = (page: number) => updateList(page, perPage.value)
 
-  const updatePerPage = (value: number) => {
-    void pushListQuery(1, Number(value))
-  }
+  const updatePerPage = (value: number) => updateList(1, Number(value))
 
   watch(
     () => route.query,
     () => {
-      syncFiltersFromQuery()
-      void fetchVehicles()
+      filterAutoApply.suspend(syncFiltersFromQuery)
+      perPage.value = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+      void fetchVehicles(getNumberQuery(route.query.page, 1))
     },
     { immediate: true },
   )

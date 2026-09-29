@@ -7,7 +7,6 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import ActivityChart from '@/components/dashboard/ActivityChart.vue'
 import MetricCard from '@/components/dashboard/MetricCard.vue'
-import OrderStatusChart from '@/components/dashboard/OrderStatusChart.vue'
 import { useDashboardOverview } from '@/modules/dashboard/composables/useDashboardOverview'
 import type {
   DashboardUser,
@@ -403,7 +402,6 @@ const durationLabel = (minutes: unknown) => {
 
           <section class="insight-grid">
             <ActivityChart :data="weekActivity" />
-            <OrderStatusChart :statuses="statusBreakdown" />
           </section>
         </template>
       </div>

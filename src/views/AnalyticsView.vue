@@ -6,6 +6,7 @@ import { mdiAlertCircleOutline, mdiArrowRight, mdiChartBoxOutline, mdiRefresh } 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import AnalyticsFilters from '@/components/analytics/AnalyticsFilters.vue'
+import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import AnalyticsSummaryCards from '@/components/analytics/AnalyticsSummaryCards.vue'
 import OperationalSignalsPanel from '@/components/analytics/OperationalSignalsPanel.vue'
 import TechnicianEfficiencyPanel from '@/components/analytics/TechnicianEfficiencyPanel.vue'
@@ -37,6 +38,12 @@ const {
   technicianMetrics,
   workshopMetrics,
 } = useAnalyticsOverview()
+
+const {
+  loading: loadingModelOptions,
+  technicianOptions,
+  workshopOptions,
+} = useModelFilterOptions({ users: true, workshops: true })
 
 const fallbackResponse: AnalyticsEndpointResponse = { horizon_days: 0 }
 const forecastResponse = computed(() => overview.value?.workloadForecast ?? fallbackResponse)
@@ -88,6 +95,9 @@ const signOut = async () => {
           :can-edit-workshop-filter="canEditWorkshopFilter"
           :filters="filters"
           :loading="loading"
+          :loading-model-options="loadingModelOptions"
+          :technician-options="technicianOptions"
+          :workshop-options="workshopOptions"
           @apply="fetchAnalytics"
           @reset="resetFilters"
           @update="updateFilter"

@@ -1,8 +1,9 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { normalizeApiError } from '@/api/errors'
 import ownersApi from '@/modules/owners/services/ownersService'
-import { buildListQuery, getNumberQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
+import { buildListQuery, getNumberQuery, replaceBrowserQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
+import { useFilterAutoApply } from '@/modules/shared/composables/useFilterAutoApply'
 import type { Owner, OwnerFilters, OwnerPage } from '@/types/owner'
 
 const DEFAULT_PER_PAGE = 15
@@ -34,7 +35,6 @@ const isCanceledRequest = (error: unknown) => {
 
 export const useOwners = () => {
   const route = useRoute()
-  const router = useRouter()
   const owners = ref<Owner[]>([])
   const filters = reactive<OwnerFilters>({ ...EMPTY_FILTERS })
   const pagination = ref({ ...DEFAULT_PAGINATION })
@@ -52,18 +52,12 @@ export const useOwners = () => {
     }
   }
 
-  const pushListQuery = (page: number, nextPerPage: number) =>
-    router.push({
-      name: 'owners',
-      query: buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE),
-    })
-
-  const fetchOwners = async (page = getNumberQuery(route.query.page, 1)) => {
+  const fetchOwners = async (page = pagination.value.current_page) => {
     controller?.abort()
 
     const nextController = new AbortController()
     controller = nextController
-    const currentPerPage = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+    const currentPerPage = perPage.value
     perPage.value = currentPerPage
     loading.value = true
     errorMessage.value = ''
@@ -94,28 +88,30 @@ export const useOwners = () => {
     }
   }
 
-  const applyFilters = () => {
-    void pushListQuery(1, perPage.value)
+  const updateList = (page: number, nextPerPage: number) => {
+    perPage.value = nextPerPage
+    replaceBrowserQuery(buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE))
+    void fetchOwners(page)
   }
 
+  const applyFilters = () => updateList(1, perPage.value)
+  const filterAutoApply = useFilterAutoApply(filters, applyFilters, { immediateKeys: ['status'] })
+
   const clearFilters = () => {
-    Object.assign(filters, EMPTY_FILTERS)
+    filterAutoApply.suspend(() => Object.assign(filters, EMPTY_FILTERS))
     applyFilters()
   }
 
-  const updatePage = (page: number) => {
-    void pushListQuery(page, perPage.value)
-  }
+  const updatePage = (page: number) => updateList(page, perPage.value)
 
-  const updatePerPage = (value: number) => {
-    void pushListQuery(1, Number(value))
-  }
+  const updatePerPage = (value: number) => updateList(1, Number(value))
 
   watch(
     () => route.query,
     () => {
-      syncFiltersFromQuery()
-      void fetchOwners()
+      filterAutoApply.suspend(syncFiltersFromQuery)
+      perPage.value = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+      void fetchOwners(getNumberQuery(route.query.page, 1))
     },
     { immediate: true },
   )

@@ -21,6 +21,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useMaintenanceTasks } from '@/modules/maintenance-tasks/composables/useMaintenanceTasks'
+import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import maintenanceTasksApi from '@/modules/maintenance-tasks/services/maintenanceTasksService'
 import vehicleSystemsApi from '@/modules/vehicle-systems/services/vehicleSystemsService'
 import { MAINTENANCE_TASK_STATUS_LABELS, MAINTENANCE_TASK_STATUSES, type MaintenanceTask } from '@/types/maintenanceTask'
@@ -52,6 +53,8 @@ const {
   updatePage,
   updatePerPage,
 } = useMaintenanceTasks()
+
+const { loading: loadingModelOptions, vehicleOptions } = useModelFilterOptions({ vehicles: true })
 
 const pageSizeOptions = [10, 15, 25, 50].map((value) => ({ title: String(value), value }))
 const statusOptions = MAINTENANCE_TASK_STATUSES.map((value) => ({ title: MAINTENANCE_TASK_STATUS_LABELS[value], value }))
@@ -130,8 +133,8 @@ onMounted(() => void fetchVehicleSystems())
           <form class="tasks-filters" @submit.prevent="applyFilters">
             <v-text-field v-model="filters.search" clearable hide-details label="Buscar tarea" placeholder="Nombre, código o sistema" :prepend-inner-icon="mdiMagnify" />
             <v-text-field v-model="filters.code" clearable hide-details label="Código" placeholder="Ej. ACEITE-001" />
-            <v-select v-model="filters.vehicle_system_id" clearable hide-details item-title="title" item-value="value" label="Sistema" :items="vehicleSystems.map((system) => ({ title: system.name, value: String(system.id) }))" :loading="loadingSystems" />
-            <div class="tasks-filters__actions"><v-btn color="primary" type="submit">Aplicar</v-btn><v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn><v-btn class="tasks-advanced-toggle" size="small" type="button" variant="text" @click="filtersExpanded = !filtersExpanded"><v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" class="mr-1" size="15" />{{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}</v-btn></div>
+            <v-select v-model="filters.vehicle_system_id" clearable hide-details item-title="title" item-value="value" label="Sistema" :items="vehicleSystems.map((system) => ({ title: [system.code, system.name].filter(Boolean).join(' · '), value: String(system.id) }))" :loading="loadingSystems" />
+            <div class="tasks-filters__actions"><v-btn color="primary" type="submit">Filtrar</v-btn><v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn><v-btn class="tasks-advanced-toggle" size="small" type="button" variant="text" @click="filtersExpanded = !filtersExpanded"><v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" class="mr-1" size="15" />{{ filtersExpanded ? 'Menos filtros' : 'Más filtros' }}</v-btn></div>
           </form>
           <v-expand-transition>
             <div v-if="filtersExpanded" class="tasks-filters__advanced">
@@ -140,7 +143,7 @@ onMounted(() => void fetchVehicleSystems())
               <v-select v-model="filters.is_active" clearable hide-details item-title="title" item-value="value" label="Disponibilidad" :items="activeOptions" />
               <v-text-field v-model="filters.estimated_duration_from" clearable hide-details label="Duración desde (min)" min="1" type="number" />
               <v-text-field v-model="filters.estimated_duration_to" clearable hide-details label="Duración hasta (min)" min="1" type="number" />
-              <v-text-field v-model="filters.vehicle_id" clearable hide-details :disabled="filters.without_vehicle" label="ID del vehículo" min="1" type="number" />
+              <v-select v-model="filters.vehicle_id" clearable hide-details :disabled="filters.without_vehicle" item-title="title" item-value="value" label="Vehículo" :items="vehicleOptions" :loading="loadingModelOptions" placeholder="Todos los vehículos" />
               <v-checkbox v-model="filters.without_vehicle" class="tasks-reusable-filter" color="primary" hide-details label="Solo tareas reutilizables" />
               <v-text-field v-model="filters.created_from" clearable hide-details label="Creada desde" type="date" />
               <v-text-field v-model="filters.created_to" clearable hide-details label="Creada hasta" type="date" />

@@ -264,7 +264,7 @@ const signOut = async () => {
               :items="statusOptions"
             />
             <div class="owners-filters__actions">
-              <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
+              <v-btn color="primary" type="submit">Filtrar</v-btn>
               <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">
                 Limpiar
               </v-btn>

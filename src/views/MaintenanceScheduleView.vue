@@ -19,7 +19,8 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import AppTopbar from '@/components/layout/AppTopbar.vue'
 import { useMaintenanceSchedule, toDateKey, type ScheduleEvent } from '@/modules/maintenance-orders/composables/useMaintenanceSchedule'
 import { useAuthStore } from '@/stores/auth'
-import { buildListQuery, getStringQuery } from '@/modules/shared/utils/queryParams'
+import { buildListQuery, getStringQuery, replaceBrowserQuery } from '@/modules/shared/utils/queryParams'
+import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import { MAINTENANCE_ORDER_STATUSES, ORDER_STATUS_LABELS, type MaintenanceOrder } from '@/types/maintenanceOrder'
 
 interface CalendarDay {
@@ -76,13 +77,7 @@ const syncCalendarFromQuery = () => {
 
 const userName = computed(() => authStore.user?.name || 'Juan Martínez')
 const userInitials = computed(() => userName.value.split(' ').map((part) => part.charAt(0)).join('').slice(0, 2).toUpperCase())
-const workshopOptions = computed(() => {
-  const unique = new Map<number, string>()
-  orders.value.forEach((order) => {
-    if (order.workshop?.id) unique.set(order.workshop.id, [order.workshop.code, order.workshop.name].filter(Boolean).join(' · '))
-  })
-  return [{ title: 'Todos los talleres', value: '' }, ...Array.from(unique, ([value, title]) => ({ title, value: String(value) }))]
-})
+const { loading: loadingModelOptions, workshopOptions } = useModelFilterOptions({ workshops: true })
 
 const normalizedSearch = computed(() => search.value.trim().toLowerCase())
 const filteredEvents = computed(() => events.value.filter((event) => {
@@ -149,13 +144,10 @@ const signOut = async () => {
 }
 
 const persistScheduleQuery = () => {
-  void router.replace({
-    name: 'maintenance-schedule',
-    query: {
-      ...buildListQuery({ search: search.value, status: statusFilter.value, workshop_id: workshopFilter.value }, 1, 15),
-      month: monthKey(currentMonth.value),
-      day: selectedDay.value,
-    },
+  replaceBrowserQuery({
+    ...buildListQuery({ search: search.value, status: statusFilter.value, workshop_id: workshopFilter.value }, 1, 15),
+    month: monthKey(currentMonth.value),
+    day: selectedDay.value,
   })
 }
 
@@ -199,7 +191,7 @@ watch(
           <form class="maintenance-schedule-filters" @submit.prevent>
             <v-text-field v-model="search" clearable hide-details label="Buscar" placeholder="Orden, placa, vehículo o taller" :prepend-inner-icon="mdiMagnify" />
             <v-select v-model="statusFilter" hide-details item-title="title" item-value="value" label="Estado" :items="statusOptions" />
-            <v-select v-model="workshopFilter" hide-details item-title="title" item-value="value" label="Taller" :items="workshopOptions" />
+            <v-select v-model="workshopFilter" clearable hide-details item-title="title" item-value="value" label="Taller" :items="workshopOptions" :loading="loadingModelOptions" placeholder="Todos los talleres" />
             <v-btn variant="text" type="button" @click="resetFilters">Limpiar</v-btn>
           </form>
           <v-alert v-if="errorMessage" class="maintenance-schedule-alert" type="error" variant="tonal"><span>{{ errorMessage }}</span><template #append><v-btn size="small" variant="text" @click="fetchSchedule">Reintentar</v-btn></template></v-alert>

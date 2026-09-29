@@ -1,8 +1,9 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { normalizeApiError } from '@/api/errors'
 import maintenanceTasksApi from '@/modules/maintenance-tasks/services/maintenanceTasksService'
-import { buildListQuery, getNumberQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
+import { buildListQuery, getNumberQuery, replaceBrowserQuery, syncQueryFilters } from '@/modules/shared/utils/queryParams'
+import { useFilterAutoApply } from '@/modules/shared/composables/useFilterAutoApply'
 import type { MaintenanceTask, MaintenanceTaskFilters, MaintenanceTaskPage, MaintenanceTaskPagination } from '@/types/maintenanceTask'
 
 const DEFAULT_PER_PAGE = 15
@@ -39,7 +40,6 @@ const isCanceledRequest = (error: unknown) => {
 
 export const useMaintenanceTasks = () => {
   const route = useRoute()
-  const router = useRouter()
   const tasks = ref<MaintenanceTask[]>([])
   const filters = reactive<MaintenanceTaskFilters>({ ...EMPTY_FILTERS })
   const pagination = ref<MaintenanceTaskPagination>({ ...DEFAULT_PAGINATION })
@@ -61,16 +61,11 @@ export const useMaintenanceTasks = () => {
     }
   }
 
-  const pushListQuery = (page: number, nextPerPage: number) => router.push({
-    name: 'maintenance-tasks',
-    query: buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE),
-  })
-
-  const fetchTasks = async (page = getNumberQuery(route.query.page, 1)) => {
+  const fetchTasks = async (page = pagination.value.current_page) => {
     controller?.abort()
     const nextController = new AbortController()
     controller = nextController
-    const currentPerPage = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+    const currentPerPage = perPage.value
     perPage.value = currentPerPage
     loading.value = true
     errorMessage.value = ''
@@ -109,19 +104,29 @@ export const useMaintenanceTasks = () => {
     }
   }
 
-  const applyFilters = () => void pushListQuery(1, perPage.value)
+  const updateList = (page: number, nextPerPage: number) => {
+    perPage.value = nextPerPage
+    replaceBrowserQuery(buildListQuery(filters, page, nextPerPage, DEFAULT_PER_PAGE))
+    void fetchTasks(page)
+  }
+
+  const applyFilters = () => updateList(1, perPage.value)
+  const filterAutoApply = useFilterAutoApply(filters, applyFilters, {
+    immediateKeys: ['vehicle_system_id', 'status', 'is_active', 'vehicle_id', 'without_vehicle'],
+  })
   const clearFilters = () => {
-    Object.assign(filters, EMPTY_FILTERS)
+    filterAutoApply.suspend(() => Object.assign(filters, EMPTY_FILTERS))
     applyFilters()
   }
-  const updatePage = (page: number) => void pushListQuery(page, perPage.value)
-  const updatePerPage = (value: number) => void pushListQuery(1, Number(value))
+  const updatePage = (page: number) => updateList(page, perPage.value)
+  const updatePerPage = (value: number) => updateList(1, Number(value))
 
   watch(
     () => route.query,
     () => {
-      syncFiltersFromQuery()
-      void fetchTasks()
+      filterAutoApply.suspend(syncFiltersFromQuery)
+      perPage.value = getNumberQuery(route.query.per_page, DEFAULT_PER_PAGE)
+      void fetchTasks(getNumberQuery(route.query.page, 1))
     },
     { immediate: true },
   )

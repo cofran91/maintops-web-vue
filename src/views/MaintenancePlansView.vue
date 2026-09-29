@@ -158,7 +158,7 @@ const signOut = async () => {
               :items="statusOptions"
             />
             <div class="maintenance-plans-filters__actions">
-              <v-btn color="primary" type="submit">Aplicar filtros</v-btn>
+              <v-btn color="primary" type="submit">Filtrar</v-btn>
               <v-btn :disabled="!hasActiveFilters" variant="text" type="button" @click="clearFilters">Limpiar</v-btn>
               <v-btn class="maintenance-plans-advanced-toggle" size="small" type="button" variant="text" @click="filtersExpanded = !filtersExpanded">
                 <v-icon :icon="filtersExpanded ? mdiChevronUp : mdiChevronDown" class="mr-1" size="15" />

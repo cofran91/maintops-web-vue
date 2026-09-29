@@ -81,17 +81,21 @@
 .dashboard-table-empty { padding: 28px !important; color: #9ba5b6; text-align: center; }
 
 .sidebar {
+  width: min(270px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px);
   border-right: 0 !important;
 }
 
 .sidebar .v-navigation-drawer__content {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebar__content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100%;
+  height: auto;
   padding: 26px 18px 18px;
 }
 
@@ -1284,6 +1288,10 @@
 @media (max-width: 960px) {
   .topbar-menu {
     display: inline-flex;
+  }
+
+  .sidebar {
+    width: min(270px, calc(100vw - 24px)) !important;
   }
 
   .topbar-context,
