@@ -98,12 +98,6 @@ const isActive = (routeName?: string) => routeName === route.name
         <span>Maint<strong>Ops</strong></span>
       </div>
 
-      <div class="workspace-switcher">
-        <span class="workspace-avatar">AT</span>
-        <div><small>Organización</small><strong>Autofleet Transportes</strong></div>
-        <v-icon :icon="mdiChevronDown" size="17" />
-      </div>
-
       <nav class="sidebar-nav" aria-label="Navegación principal">
         <span class="nav-section-label">{{ t('nav.operation') }}</span>
         <button
@@ -131,17 +125,7 @@ const isActive = (routeName?: string) => routeName === route.name
         </button>
       </nav>
 
-      <div class="sidebar-help">
-        <span><v-icon :icon="mdiHelpCircleOutline" size="21" /></span>
-        <div><strong>{{ t('nav.help') }}</strong><small>{{ t('nav.supportCenter') }}</small></div>
-        <v-icon :icon="mdiChevronRight" size="18" />
-      </div>
-
       <div class="sidebar-bottom">
-        <button class="nav-item" type="button">
-          <v-icon :icon="mdiCogOutline" size="20" />
-          <span>{{ t('nav.settings') }}</span>
-        </button>
         <button class="nav-item" type="button" @click="emit('signOut')">
           <v-icon :icon="mdiLogoutVariant" size="20" />
           <span>{{ t('nav.signOut') }}</span>

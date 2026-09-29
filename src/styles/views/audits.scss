@@ -1,5 +1,21 @@
+.audits-shell {
+  min-height: 100dvh;
+  color: #17223c;
+  background: #f4f7fb;
+}
+
+.audits-main {
+  min-width: 0;
+  min-height: 100dvh;
+  background: #f4f7fb;
+}
+
 .audits-content {
-  max-width: 1480px;
+  width: 100%;
+  max-width: 1680px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 33px clamp(20px, 2.7vw, 44px) 48px;
 }
 
 .audits-header,
@@ -17,7 +33,8 @@
 
 .audits-header h1 {
   color: #1c2a45;
-  font-size: clamp(2rem, 3vw, 2.65rem);
+  font-size: clamp(25px, 2.2vw, 32px);
+  line-height: 1.2;
   letter-spacing: -0.04em;
   margin: 6px 0;
 }
@@ -26,6 +43,10 @@
 .audits-panel__heading p {
   color: #75839a;
   margin: 0;
+}
+
+.audits-header p {
+  font-size: 12.5px;
 }
 
 .audits-summary,
@@ -333,7 +354,12 @@
   .audits-filters__actions { grid-column: 1 / -1; justify-content: flex-end; }
 }
 
+@media (max-width: 960px) {
+  .audits-content { padding-top: 25px; }
+}
+
 @media (max-width: 720px) {
+  .audits-content { padding: 24px 14px 36px; }
   .audits-header,
   .audits-summary,
   .audits-pagination { align-items: flex-start; flex-direction: column; }
