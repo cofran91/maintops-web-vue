@@ -4,7 +4,8 @@ import { canAccessRoute } from '@/auth/permissions'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  scrollBehavior: (_to, _from, savedPosition) => savedPosition ?? { top: 0 },
+  scrollBehavior: (to, _from, savedPosition) =>
+    savedPosition ?? (to.hash ? { el: to.hash, top: 88, behavior: 'smooth' } : { top: 0 }),
   routes: [
     {
       path: '/',
@@ -107,9 +108,7 @@ const router = createRouter({
     },
     {
       path: '/maintenance-schedule',
-      name: 'maintenance-schedule',
-      component: () => import('@/views/MaintenanceScheduleView.vue'),
-      meta: { requiresAuth: true, title: 'Agenda operativa' },
+      redirect: { name: 'dashboard', hash: '#agenda-operativa' },
     },
     {
       path: '/maintenance-tasks',

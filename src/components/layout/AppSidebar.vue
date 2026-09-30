@@ -46,7 +46,6 @@ const navigation = [
   { labelKey: 'nav.owners', icon: mdiAccountGroupOutline, route: 'owners' },
   { labelKey: 'nav.plans', icon: mdiCalendarClockOutline, route: 'maintenance-plans' },
   { labelKey: 'nav.tasks', icon: mdiWrenchOutline, route: 'maintenance-tasks' },
-  { labelKey: 'nav.schedule', icon: mdiCalendarMonthOutline, route: 'maintenance-schedule' },
   { labelKey: 'nav.workshops', icon: mdiGarageVariant, route: 'workshops' },
   { labelKey: 'nav.users', icon: mdiAccountGroupOutline, route: 'users' },
 ]

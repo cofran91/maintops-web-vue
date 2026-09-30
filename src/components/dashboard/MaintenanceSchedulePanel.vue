@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
 import {
   mdiAlertOutline,
   mdiCalendarCheckOutline,
   mdiCalendarMonthOutline,
-  mdiCarMultiple,
   mdiChevronLeft,
   mdiChevronRight,
   mdiClockOutline,
@@ -15,11 +13,7 @@ import {
   mdiRefresh,
   mdiTuneVariant,
 } from '@mdi/js'
-import AppSidebar from '@/components/layout/AppSidebar.vue'
-import AppTopbar from '@/components/layout/AppTopbar.vue'
 import { useMaintenanceSchedule, toDateKey, type ScheduleEvent } from '@/modules/maintenance-orders/composables/useMaintenanceSchedule'
-import { useAuthStore } from '@/stores/auth'
-import { buildListQuery, getStringQuery, replaceBrowserQuery } from '@/modules/shared/utils/queryParams'
 import { useModelFilterOptions } from '@/modules/shared/composables/useModelFilterOptions'
 import { MAINTENANCE_ORDER_STATUSES, ORDER_STATUS_LABELS, type MaintenanceOrder } from '@/types/maintenanceOrder'
 
@@ -30,14 +24,10 @@ interface CalendarDay {
   isToday: boolean
 }
 
-const router = useRouter()
-const route = useRoute()
 const { locale } = useI18n()
-const authStore = useAuthStore()
-const mobileDrawer = ref(false)
-const search = ref(getStringQuery(route.query.search))
-const statusFilter = ref(getStringQuery(route.query.status))
-const workshopFilter = ref(getStringQuery(route.query.workshop_id))
+const search = ref('')
+const statusFilter = ref('')
+const workshopFilter = ref('')
 
 const {
   currentMonth,
@@ -60,23 +50,6 @@ const statusOptions = [
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const todayKey = toDateKey(new Date())
 
-const monthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-const syncCalendarFromQuery = () => {
-  const month = getStringQuery(route.query.month)
-  if (/^\d{4}-\d{2}$/.test(month)) {
-    const monthParts = month.split('-').map(Number)
-    const year = monthParts[0] ?? 0
-    const monthNumber = monthParts[1] ?? 0
-    const parsedMonth = new Date(year, monthNumber - 1, 1)
-    if (parsedMonth.getFullYear() === year && parsedMonth.getMonth() === monthNumber - 1) currentMonth.value = parsedMonth
-  }
-
-  const day = getStringQuery(route.query.day)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(day)) selectedDay.value = day
-}
-
-const userName = computed(() => authStore.user?.name || 'Juan Martínez')
-const userInitials = computed(() => userName.value.split(' ').map((part) => part.charAt(0)).join('').slice(0, 2).toUpperCase())
 const { loading: loadingModelOptions, workshopOptions } = useModelFilterOptions({ workshops: true })
 
 const normalizedSearch = computed(() => search.value.trim().toLowerCase())
@@ -138,47 +111,14 @@ const statusLabel = (status: string) => ORDER_STATUS_LABELS[status as keyof type
 const statusColor = (status: string) => ({ scheduled: '#397eea', in_progress: '#d58930', completed: '#239878', pending_owner_approval: '#d58930', cancelled: '#dc5967' }[status] || '#7c8ba6')
 const formatSelectedDate = (value: string) => new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short' }).format(new Date(`${value}T12:00:00`))
 
-const signOut = async () => {
-  await authStore.logout()
-  await router.push({ name: 'login' })
-}
-
-const persistScheduleQuery = () => {
-  replaceBrowserQuery({
-    ...buildListQuery({ search: search.value, status: statusFilter.value, workshop_id: workshopFilter.value }, 1, 15),
-    month: monthKey(currentMonth.value),
-    day: selectedDay.value,
-  })
-}
-
-syncCalendarFromQuery()
-watch(
-  [search, statusFilter, workshopFilter, selectedDay, () => currentMonth.value.getTime()],
-  persistScheduleQuery,
-  { flush: 'post' },
-)
-watch(
-  () => route.query,
-  () => {
-    search.value = getStringQuery(route.query.search)
-    statusFilter.value = getStringQuery(route.query.status)
-    workshopFilter.value = getStringQuery(route.query.workshop_id)
-    syncCalendarFromQuery()
-  },
-)
 </script>
 
 <template>
-  <div class="maintenance-schedule-shell">
-    <AppSidebar :mobile-open="mobileDrawer" @close="mobileDrawer = false" @sign-out="signOut" />
-    <AppTopbar :user-initials="userInitials" :user-name="userName" context="Agenda operativa" @open-menu="mobileDrawer = true" />
-
-    <v-main class="maintenance-schedule-main">
-      <div class="maintenance-schedule-content">
-        <header class="maintenance-schedule-header">
-          <div><span class="page-date">Planificación de mantenimiento</span><h1>Agenda operativa</h1><p>Coordina las órdenes programadas y visualiza la carga de trabajo del equipo.</p></div>
-          <v-btn :loading="loading" class="maintenance-schedule-refresh" height="42" variant="outlined" @click="fetchSchedule"><v-icon :icon="mdiRefresh" class="mr-2" size="18" /> Actualizar</v-btn>
-        </header>
+  <section id="agenda-operativa" class="dashboard-feature-section dashboard-schedule-section">
+    <div class="dashboard-section-heading dashboard-schedule-heading">
+      <div><span class="page-date">Planificación de mantenimiento</span><h2>Agenda operativa</h2><p>Coordina las órdenes programadas y visualiza la carga de trabajo del equipo.</p></div>
+      <v-btn :loading="loading" height="42" variant="outlined" @click="fetchSchedule"><v-icon :icon="mdiRefresh" class="mr-2" size="18" /> Actualizar</v-btn>
+    </div>
 
         <section class="maintenance-schedule-metrics">
           <article><span class="maintenance-schedule-metric__icon maintenance-schedule-metric__icon--blue"><v-icon :icon="mdiCalendarMonthOutline" size="20" /></span><div><strong>{{ currentMonthEvents.length }}</strong><span>órdenes este mes</span></div></article>
@@ -186,7 +126,7 @@ watch(
           <article><span class="maintenance-schedule-metric__icon maintenance-schedule-metric__icon--amber"><v-icon :icon="mdiClockOutline" size="20" /></span><div><strong>{{ activeOrders }}</strong><span>órdenes en atención</span></div></article>
         </section>
 
-        <section class="maintenance-schedule-panel">
+        <section class="maintenance-schedule-panel dashboard-feature-panel">
           <div class="maintenance-schedule-panel__heading"><div><h2>Calendario de órdenes</h2><p>Selecciona un día para consultar las órdenes programadas.</p></div><v-icon :icon="mdiTuneVariant" color="#8290aa" size="21" /></div>
           <form class="maintenance-schedule-filters" @submit.prevent>
             <v-text-field v-model="search" clearable hide-details label="Buscar" placeholder="Orden, placa, vehículo o taller" :prepend-inner-icon="mdiMagnify" />
@@ -230,9 +170,7 @@ watch(
 
           <div class="maintenance-schedule-legend"><span><i style="--legend-color: #397eea" />Programada</span><span><i style="--legend-color: #d58930" />En atención</span><span><i style="--legend-color: #239878" />Completada</span><span><i style="--legend-color: #dc5967" />Cancelada</span></div>
         </section>
-      </div>
-    </v-main>
-  </div>
+  </section>
 </template>
 
 <style src="@/styles/views/maintenance-schedule.scss" lang="scss"></style>

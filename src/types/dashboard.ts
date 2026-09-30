@@ -30,6 +30,19 @@ export interface DashboardOrderCard {
   technician?: DashboardUser | null
 }
 
+export interface DashboardWorkshopOrderRow {
+  workshop_id: number
+  workshop?: DashboardWorkshop | null
+  open_orders_count: number
+}
+
+export interface DashboardTechnicianWorkloadRow {
+  technician_id: number
+  technician?: DashboardUser | null
+  assigned_items_count: number
+  planned_minutes: number
+}
+
 export interface DashboardSummary {
   orders_by_status: Record<string, number>
   metrics: Record<string, number>

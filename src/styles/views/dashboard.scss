@@ -4,6 +4,22 @@
   background: #f4f7fb;
 }
 
+.dashboard-feature-section { min-width: 0; margin-top: 22px; }
+.dashboard-feature-panel { overflow: hidden; background: #fff; border: 1px solid #e8ecf2; border-radius: 15px; box-shadow: 0 5px 16px rgba(27, 41, 70, .025); }
+.dashboard-feature-heading { margin-bottom: 17px; }
+.dashboard-section-heading.dashboard-feature-heading h2 { margin: 0 0 5px; color: #24314a; font-size: 18px; font-weight: 740; }
+.dashboard-section-heading.dashboard-feature-heading p { margin: 0; color: #7b879b; font-size: 11px; }
+.dashboard-feature-heading__icon { display: grid; width: 40px; height: 40px; flex: 0 0 40px; color: #3158e7; background: #eaf0ff; border-radius: 11px; place-items: center; }
+.dashboard-feature-heading__icon--teal { color: #149782; background: #e5f7f3; }
+.dashboard-feature-heading__icon--amber { color: #d58930; background: #fff3e2; }
+.dashboard-operational-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px; margin-top: 22px; }
+.dashboard-operational-grid > .dashboard-feature-section { margin-top: 0; }
+.dashboard-chart-panel { padding: 20px 22px 22px; }
+.dashboard-data-table.dashboard-data-table--compact { min-width: 480px; }
+.dashboard-table-primary { color: #34415a; font-weight: 700; }
+.dashboard-count-pill { display: inline-grid; min-width: 30px; height: 26px; padding: 0 9px; color: #3158e7; font-weight: 740; background: #eaf0ff; border-radius: 8px; place-items: center; }
+.dashboard-count-pill--teal { color: #168774; background: #e5f7f3; }
+
 .dashboard-operational-card {
   padding: 22px;
   border: 1px solid #e7ebf3;
@@ -1307,6 +1323,10 @@
     grid-template-columns: 1fr;
   }
 
+  .dashboard-operational-grid {
+    grid-template-columns: 1fr;
+  }
+
 }
 
 @media (max-width: 760px) {
@@ -1385,7 +1405,7 @@
     margin-top: 15px;
   }
 
-  .activity-chart-card,
+  .dashboard-chart-panel,
   .status-card,
   .schedule-card {
     padding: 17px;

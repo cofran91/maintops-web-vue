@@ -130,7 +130,7 @@ const signOut = async () => {
 
           <section class="analytics-advanced-section-heading">
             <div><span class="analytics-card-eyebrow">Planeación</span><h2>Capacidad futura</h2><p>Anticipa presión de demanda sin ejecutar cambios automáticos.</p></div>
-            <v-btn variant="text" @click="router.push({ name: 'maintenance-schedule' })">Abrir agenda <v-icon :icon="mdiArrowRight" class="ml-1" size="16" /></v-btn>
+            <v-btn variant="text" :to="{ name: 'dashboard', hash: '#agenda-operativa' }">Abrir agenda <v-icon :icon="mdiArrowRight" class="ml-1" size="16" /></v-btn>
           </section>
           <WorkloadForecastPanel :algorithm-version="forecastResponse.algorithm_version" :forecasts="forecasts" />
 

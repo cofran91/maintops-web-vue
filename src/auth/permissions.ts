@@ -50,7 +50,6 @@ const routePermissions: Record<string, Role[]> = {
   'maintenance-tasks-new': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ADVISOR],
   'maintenance-tasks-detail': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ADVISOR],
   'maintenance-tasks-edit': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ADVISOR],
-  'maintenance-schedule': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.WORKSHOP_MANAGER, ROLES.ADVISOR, ROLES.TECHNICIAN],
 }
 
 const resourcePermissions: Record<string, Partial<Record<PermissionAction, Role[]>>> = {
